@@ -586,7 +586,7 @@
             <img id="sharedImageElement" src="" alt="Cena do Narrador" class="hidden max-h-full max-w-full object-contain transition-transform duration-300 select-none pointer-events-none z-0">
 
             <!-- Tokens Layer Container (Over Battlemap/Stage) -->
-            <div id="tokensLayer" class="absolute z-10 overflow-hidden pointer-events-auto hidden"></div>
+            <div id="tokensLayer" class="absolute inset-0 z-10 overflow-hidden pointer-events-auto"></div>
           </div>
 
           <!-- Fullscreen / Zoom Overlay Button -->
@@ -605,13 +605,17 @@
         
         <!-- Abas do Painel Direito: Dados vs Áudio & Atmosfera -->
         <div class="px-2 pt-2 pb-1 border-b border-vampire-ash flex items-center gap-1 bg-vampire-crypt flex-shrink-0">
-          <button type="button" id="tabBtnDice" onclick="switchRightTab('dice')" class="flex-1 py-1.5 px-2 rounded-lg font-gothic text-xs tracking-wider uppercase transition flex items-center justify-center gap-1 border border-red-950 bg-gradient-to-r from-vampire-driedBlood to-vampire-blood text-vampire-parchment shadow-blood-glow">
+          <button type="button" id="tabBtnDice" onclick="switchRightTab('dice')" class="flex-1 py-1.5 px-1 sm:px-2 rounded-lg font-gothic text-xs tracking-wider uppercase transition flex items-center justify-center gap-1 border border-red-950 bg-gradient-to-r from-vampire-driedBlood to-vampire-blood text-vampire-parchment shadow-blood-glow">
             <span class="text-vampire-gold">☥</span>
-            <span>Julgamento</span>
+            <span class="hidden sm:inline">Julgamento</span>
           </button>
-          <button type="button" id="tabBtnAudio" onclick="switchRightTab('audio')" class="flex-1 py-1.5 px-2 rounded-lg font-gothic text-xs tracking-wider uppercase transition flex items-center justify-center gap-1 border border-vampire-ash bg-vampire-black text-gray-500 hover:text-vampire-gold hover:border-vampire-gold/30">
+          <button type="button" id="tabBtnAudio" onclick="switchRightTab('audio')" class="flex-1 py-1.5 px-1 sm:px-2 rounded-lg font-gothic text-xs tracking-wider uppercase transition flex items-center justify-center gap-1 border border-vampire-ash bg-vampire-black text-gray-500 hover:text-vampire-gold hover:border-vampire-gold/30">
             <i data-lucide="music" class="w-3.5 h-3.5"></i>
-            <span>Áudio & Sombras</span>
+            <span class="hidden sm:inline">Áudio</span>
+          </button>
+          <button type="button" id="tabBtnChat" onclick="switchRightTab('chat')" class="flex-1 py-1.5 px-1 sm:px-2 rounded-lg font-gothic text-xs tracking-wider uppercase transition flex items-center justify-center gap-1 border border-vampire-ash bg-vampire-black text-gray-500 hover:text-vampire-gold hover:border-vampire-gold/30">
+            <i data-lucide="message-square" class="w-3.5 h-3.5"></i>
+            <span class="hidden sm:inline">Chat</span>
           </button>
         </div>
 
@@ -845,6 +849,24 @@
 
         </div>
 
+        <!-- CONTEÚDO DA ABA 3: CHAT DA COTERIE -->
+        <div id="rightTabChatContent" class="hidden flex-grow flex-col overflow-hidden bg-vampire-black">
+          <div id="chatFeedContainer" class="flex-grow overflow-y-auto p-2 space-y-2 flex flex-col">
+            <div class="text-center text-[10px] font-cinzel text-gray-600 mt-2 mb-2">
+              <span class="font-gothic text-lg text-vampire-goldMuted block mb-1">☥</span>
+              O silêncio do Elísio aguarda suas palavras...
+            </div>
+          </div>
+          <div class="p-2 border-t border-vampire-ash bg-vampire-crypt flex-shrink-0">
+            <form onsubmit="return handleSendChatMessage(event);" class="flex items-center gap-1.5">
+              <input type="text" id="inputChatMessage" placeholder="Sussurrar nas sombras..." autocomplete="off" class="flex-grow bg-vampire-black border border-vampire-ash focus:border-vampire-gold rounded-lg px-2.5 py-1.5 text-xs text-vampire-parchment focus:outline-none transition font-sans">
+              <button type="submit" class="p-1.5 rounded-lg bg-vampire-blood hover:bg-vampire-crimson text-vampire-bone border border-red-900 transition flex items-center justify-center shadow-blood-glow">
+                <i data-lucide="send" class="w-4 h-4"></i>
+              </button>
+            </form>
+          </div>
+        </div>
+
       </aside>
 
     </div>
@@ -967,7 +989,8 @@
       personalVolume: 0.75,
       isPersonalMuted: false,
       activeMasterTrack: null,
-      activeMasterTitle: 'Silêncio Sepulcral'
+      activeMasterTitle: 'Silêncio Sepulcral',
+      chatMessages: []
     };
 
     // Paleta de materiais realistas para os tokens (couro, minérios, latão, sangue seco)
@@ -1114,24 +1137,34 @@
       state.currentTab = tab;
       const btnDice = document.getElementById('tabBtnDice');
       const btnAudio = document.getElementById('tabBtnAudio');
+      const btnChat = document.getElementById('tabBtnChat');
+      
       const contentDice = document.getElementById('rightTabDiceContent');
       const contentAudio = document.getElementById('rightTabAudioContent');
+      const contentChat = document.getElementById('rightTabChatContent');
 
-      if (tab === 'dice') {
-        btnDice.className = 'flex-1 py-1.5 px-2 rounded-lg font-gothic text-xs tracking-wider uppercase transition flex items-center justify-center gap-1 border border-red-950 bg-gradient-to-r from-vampire-driedBlood to-vampire-blood text-vampire-parchment shadow-blood-glow';
-        btnAudio.className = 'flex-1 py-1.5 px-2 rounded-lg font-gothic text-xs tracking-wider uppercase transition flex items-center justify-center gap-1 border border-vampire-ash bg-vampire-black text-gray-500 hover:text-vampire-gold hover:border-vampire-gold/30';
-        contentDice.classList.remove('hidden');
-        contentDice.classList.add('flex');
-        contentAudio.classList.add('hidden');
-        contentAudio.classList.remove('flex');
-      } else {
-        btnAudio.className = 'flex-1 py-1.5 px-2 rounded-lg font-gothic text-xs tracking-wider uppercase transition flex items-center justify-center gap-1 border border-red-950 bg-gradient-to-r from-vampire-driedBlood to-vampire-blood text-vampire-parchment shadow-blood-glow';
-        btnDice.className = 'flex-1 py-1.5 px-2 rounded-lg font-gothic text-xs tracking-wider uppercase transition flex items-center justify-center gap-1 border border-vampire-ash bg-vampire-black text-gray-500 hover:text-vampire-gold hover:border-vampire-gold/30';
-        contentAudio.classList.remove('hidden');
-        contentAudio.classList.add('flex');
-        contentDice.classList.add('hidden');
-        contentDice.classList.remove('flex');
+      const activeBtnClass = 'flex-1 py-1.5 px-1 sm:px-2 rounded-lg font-gothic text-xs tracking-wider uppercase transition flex items-center justify-center gap-1 border border-red-950 bg-gradient-to-r from-vampire-driedBlood to-vampire-blood text-vampire-parchment shadow-blood-glow';
+      const inactiveBtnClass = 'flex-1 py-1.5 px-1 sm:px-2 rounded-lg font-gothic text-xs tracking-wider uppercase transition flex items-center justify-center gap-1 border border-vampire-ash bg-vampire-black text-gray-500 hover:text-vampire-gold hover:border-vampire-gold/30';
+
+      btnDice.className = tab === 'dice' ? activeBtnClass : inactiveBtnClass;
+      btnAudio.className = tab === 'audio' ? activeBtnClass : inactiveBtnClass;
+      btnChat.className = tab === 'chat' ? activeBtnClass : inactiveBtnClass;
+
+      contentDice.classList.toggle('hidden', tab !== 'dice');
+      contentDice.classList.toggle('flex', tab === 'dice');
+      
+      contentAudio.classList.toggle('hidden', tab !== 'audio');
+      contentAudio.classList.toggle('flex', tab === 'audio');
+
+      contentChat.classList.toggle('hidden', tab !== 'chat');
+      contentChat.classList.toggle('flex', tab === 'chat');
+
+      // Se mudou pro chat, joga o scroll lá pra baixo automaticamente
+      if (tab === 'chat') {
+        const feed = document.getElementById('chatFeedContainer');
+        if (feed) feed.scrollTop = feed.scrollHeight;
       }
+
       if (window.lucide) window.lucide.createIcons();
     };
 
@@ -2177,6 +2210,9 @@
         applyTrackStateLocally(payload.trackKey, payload.title, payload.customSrc);
       } else if (type === 'SYNC_AUDIO_STOP') {
         stopAllLocalTracks();
+      } else if (type === 'CHAT_MESSAGE') {
+        state.chatMessages.push(payload);
+        renderChatFeed();
       } else if (type === 'FORCE_RECONNECT') {
         if (payload && payload.senderId !== state.myPeerId) {
           if (payload.peerId) {
@@ -2241,7 +2277,15 @@
       const layer = document.getElementById('tokensLayer');
       const wrapper = document.getElementById('mapWrapper');
       
-      if (!img || !layer || !wrapper || img.classList.contains('hidden')) return;
+      if (!img || !layer || !wrapper) return;
+
+      if (img.classList.contains('hidden')) {
+        layer.style.width = '100%';
+        layer.style.height = '100%';
+        layer.style.left = '0';
+        layer.style.top = '0';
+        return;
+      }
 
       const rect = img.getBoundingClientRect();
       const wrapRect = wrapper.getBoundingClientRect();
@@ -2263,7 +2307,6 @@
       if (img && placeholder) {
         img.src = src;
         img.classList.remove('hidden');
-        if (layer) layer.classList.remove('hidden');
         placeholder.classList.add('hidden');
         if (actions) {
           actions.classList.remove('hidden');
@@ -2286,7 +2329,6 @@
         img.src = '';
         img.classList.add('hidden');
         if (layer) {
-          layer.classList.add('hidden');
           layer.style.width = '100%';
           layer.style.height = '100%';
           layer.style.left = '0';
@@ -3522,6 +3564,74 @@
         feed.appendChild(card);
       });
 
+      if (window.lucide) window.lucide.createIcons();
+    }
+
+    // ==========================================
+    // CHAT (SUSSURROS E COMUNICADOS)
+    // ==========================================
+    window.handleSendChatMessage = function(e) {
+      e.preventDefault();
+      const input = document.getElementById('inputChatMessage');
+      const text = input.value.trim();
+      if (!text) return false;
+
+      const msgData = {
+        id: 'msg_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5),
+        text: text,
+        playerName: state.name,
+        role: state.role,
+        timestamp: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
+      };
+
+      input.value = '';
+      state.chatMessages.push(msgData);
+      renderChatFeed();
+      
+      // Sincroniza a mensagem instantaneamente
+      broadcastRoomMessage({ type: 'CHAT_MESSAGE', payload: msgData });
+      return false;
+    };
+
+    function renderChatFeed() {
+      const feed = document.getElementById('chatFeedContainer');
+      if (!feed) return;
+
+      feed.innerHTML = '';
+      if (state.chatMessages.length === 0) {
+        feed.innerHTML = `
+          <div class="text-center text-[10px] font-cinzel text-gray-600 mt-2 mb-2">
+            <span class="font-gothic text-lg text-vampire-goldMuted block mb-1">☥</span>
+            O silêncio do Elísio aguarda suas palavras...
+          </div>
+        `;
+        return;
+      }
+
+      state.chatMessages.forEach(msg => {
+        const isMe = msg.playerName === state.name;
+        const isStoryteller = msg.role === 'storyteller';
+
+        const alignClass = isMe ? 'self-end' : 'self-start';
+        // Narrador usa balão com cor de sangue seco, jogadores usam balões ardósia
+        const bgClass = isStoryteller ? 'bg-vampire-driedBlood/50 border-red-950' : (isMe ? 'bg-vampire-slate/70 border-vampire-ash' : 'bg-vampire-crypt border-vampire-ash');
+        const textColor = isStoryteller ? 'text-vampire-gold' : 'text-vampire-parchment';
+        const roleBadge = isStoryteller ? '<i data-lucide="crown" class="w-3 h-3 text-vampire-gold inline-block mr-1"></i>' : '';
+        
+        const msgEl = document.createElement('div');
+        msgEl.className = `max-w-[85%] p-2 rounded-lg border ${bgClass} ${alignClass} mb-1.5 shadow-sm`;
+        msgEl.innerHTML = `
+          <div class="flex items-baseline justify-between gap-3 mb-1 border-b border-white/5 pb-0.5">
+            <span class="text-[9px] font-cinzel font-bold ${textColor} truncate flex items-center">${roleBadge}${msg.playerName}</span>
+            <span class="text-[8px] font-mono text-gray-500 flex-shrink-0">${msg.timestamp}</span>
+          </div>
+          <p class="text-xs text-gray-300 font-sans leading-relaxed break-words">${msg.text}</p>
+        `;
+        feed.appendChild(msgEl);
+      });
+      
+      // Auto-scroll sempre para a última mensagem
+      feed.scrollTop = feed.scrollHeight;
       if (window.lucide) window.lucide.createIcons();
     }
 
