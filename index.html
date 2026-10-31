@@ -1244,43 +1244,46 @@
       stopAllLocalTracks();
       const gain = getPersonalGainNode();
       
-      const reverb = new Tone.Reverb({ decay: 5.5, wet: 0.65 }).connect(gain);
-      const chorus = new Tone.Chorus(1.2, 3.5, 0.4).connect(reverb).start();
+      const reverb = new Tone.Reverb({ decay: 5.0, wet: 0.6 }).connect(gain);
       
       const organ = new Tone.PolySynth(Tone.Synth, {
-        oscillator: { type: 'fatsawtooth', count: 3, spread: 20 },
-        envelope: { attack: 1.8, decay: 2.2, sustain: 0.85, release: 3.5 }
-      }).connect(chorus);
-      organ.volume.value = -16;
-
-      const choir = new Tone.PolySynth(Tone.FMSynth, {
-        harmonicity: 2.0,
-        modulationIndex: 1.5,
-        oscillator: { type: 'sine' },
-        envelope: { attack: 2.5, decay: 3, sustain: 0.9, release: 4 }
+        maxPolyphony: 6,
+        oscillator: { type: 'triangle' },
+        envelope: { attack: 1.5, decay: 2.0, sustain: 0.8, release: 3.0 }
       }).connect(reverb);
-      choir.volume.value = -20;
+      organ.volume.value = -12;
+
+      const choir = new Tone.PolySynth(Tone.Synth, {
+        maxPolyphony: 6,
+        oscillator: { type: 'sine' },
+        envelope: { attack: 2.0, decay: 2.5, sustain: 0.85, release: 3.5 }
+      }).connect(reverb);
+      choir.volume.value = -14;
 
       const chords = [
-        { organ: ['D2', 'A2', 'D3', 'F3'], choir: ['A3', 'D4', 'F4'] },
-        { organ: ['Bb1', 'F2', 'Bb2', 'D3'], choir: ['F3', 'Bb3', 'D4'] },
-        { organ: ['G1', 'D2', 'G2', 'Bb2'], choir: ['D3', 'G3', 'Bb3'] },
-        { organ: ['A1', 'E2', 'A2', 'C#3'], choir: ['E3', 'A3', 'C#4'] }
+        { organ: ['D2', 'A2', 'D3'], choir: ['A3', 'D4', 'F4'] },
+        { organ: ['Bb1', 'F2', 'Bb2'], choir: ['F3', 'Bb3', 'D4'] },
+        { organ: ['G1', 'D2', 'G2'], choir: ['D3', 'G3', 'Bb3'] },
+        { organ: ['A1', 'E2', 'A2'], choir: ['E3', 'A3', 'C#4'] }
       ];
+      
       let step = 0;
-      organ.triggerAttack(chords[0].organ);
-      choir.triggerAttack(chords[0].choir);
+      const now = Tone.now();
+      organ.triggerAttack(chords[0].organ, now);
+      choir.triggerAttack(chords[0].choir, now);
 
       const interval = setInterval(() => {
         if (!currentToneTrack || currentToneTrack.type !== 'requiem') {
           clearInterval(interval);
           return;
         }
+        const time = Tone.now();
+        organ.releaseAll(time);
+        choir.releaseAll(time);
+        
         step = (step + 1) % chords.length;
-        organ.releaseAll();
-        choir.releaseAll();
-        organ.triggerAttack(chords[step].organ);
-        choir.triggerAttack(chords[step].choir);
+        organ.triggerAttack(chords[step].organ, time + 0.2);
+        choir.triggerAttack(chords[step].choir, time + 0.2);
       }, 6200);
       activeAudioIntervals.push(interval);
 
@@ -1289,12 +1292,14 @@
         stop: () => {
           clearInterval(interval);
           try {
-            organ.releaseAll();
-            choir.releaseAll();
-            organ.dispose();
-            choir.dispose();
-            chorus.dispose();
-            reverb.dispose();
+            const time = Tone.now();
+            organ.releaseAll(time);
+            choir.releaseAll(time);
+            setTimeout(() => {
+              organ.dispose();
+              choir.dispose();
+              reverb.dispose();
+            }, 4000);
           } catch (e) {}
         }
       };
