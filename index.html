@@ -1579,55 +1579,61 @@
     function playCustomAudio(src) {
       stopAllLocalTracks();
       const audioEl = document.getElementById('externalAudioPlayer');
-      audioEl.src = src;
-      audioEl.volume = state.isPersonalMuted ? 0 : state.personalVolume;
-      audioEl.loop = true;
-      audioEl.play().catch(e => console.debug("Audio play blocked:", e));
-      currentToneTrack = {
-        type: 'custom',
-        stop: () => {
-          audioEl.pause();
-          audioEl.src = '';
-        }
-      };
+      if (audioEl) {
+        audioEl.src = src;
+        audioEl.volume = state.isPersonalMuted ? 0 : state.personalVolume;
+        audioEl.loop = true;
+        audioEl.play().catch(e => console.debug("Audio play blocked:", e));
+        currentToneTrack = {
+          type: 'custom',
+          stop: () => {
+            audioEl.pause();
+            audioEl.src = '';
+          }
+        };
+      }
     }
 
     function applyTrackStateLocally(trackKey, titleText, customSrc = null) {
-      const startAudio = () => {
-        if (!trackKey) {
-          stopAllLocalTracks();
-          return;
+      try {
+        const startAudio = () => {
+          if (!trackKey) {
+            stopAllLocalTracks();
+            return;
+          }
+
+          if (trackKey === 'requiem') playTrackRequiem();
+          else if (trackKey === 'crypt') playTrackCrypt();
+          else if (trackKey === 'tension') playTrackTension();
+          else if (trackKey === 'elysium') playTrackElysium();
+          else if (trackKey === 'club') playTrackClub();
+          else if (trackKey === 'custom' && customSrc) playCustomAudio(customSrc);
+
+          state.activeMasterTrack = trackKey;
+          state.activeMasterTitle = titleText;
+
+          const indicator = document.getElementById('nowPlayingIndicator');
+          if (indicator) indicator.className = 'w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)] flex-shrink-0';
+          const titleEl = document.getElementById('nowPlayingTitle');
+          if (titleEl) titleEl.innerText = titleText;
+
+          const stopBtn = document.getElementById('btnStopMasterAudio');
+          if (stopBtn && state.role === 'storyteller') stopBtn.classList.remove('hidden');
+
+          document.querySelectorAll('.track-btn').forEach(btn => {
+            btn.classList.remove('border-vampire-crimson', 'bg-red-950/60');
+          });
+          const activeBtn = document.getElementById(`trackBtn_${trackKey}`);
+          if (activeBtn) activeBtn.classList.add('border-vampire-crimson', 'bg-red-950/60');
+        };
+
+        if (Tone.context.state !== 'running') {
+          Tone.start().then(startAudio).catch(startAudio);
+        } else {
+          startAudio();
         }
-
-        if (trackKey === 'requiem') playTrackRequiem();
-        else if (trackKey === 'crypt') playTrackCrypt();
-        else if (trackKey === 'tension') playTrackTension();
-        else if (trackKey === 'elysium') playTrackElysium();
-        else if (trackKey === 'club') playTrackClub();
-        else if (trackKey === 'custom' && customSrc) playCustomAudio(customSrc);
-
-        state.activeMasterTrack = trackKey;
-        state.activeMasterTitle = titleText;
-
-        const indicator = document.getElementById('nowPlayingIndicator');
-        if (indicator) indicator.className = 'w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)] flex-shrink-0';
-        const titleEl = document.getElementById('nowPlayingTitle');
-        if (titleEl) titleEl.innerText = titleText;
-
-        const stopBtn = document.getElementById('btnStopMasterAudio');
-        if (stopBtn && state.role === 'storyteller') stopBtn.classList.remove('hidden');
-
-        document.querySelectorAll('.track-btn').forEach(btn => {
-          btn.classList.remove('border-vampire-crimson', 'bg-red-950/60');
-        });
-        const activeBtn = document.getElementById(`trackBtn_${trackKey}`);
-        if (activeBtn) activeBtn.classList.add('border-vampire-crimson', 'bg-red-950/60');
-      };
-
-      if (Tone.context.state !== 'running') {
-        Tone.start().then(startAudio).catch(startAudio);
-      } else {
-        startAudio();
+      } catch (err) {
+        console.error("Audio Track error safe-caught:", err);
       }
     }
 
@@ -1766,19 +1772,27 @@
     window.joinAsPlayerInstead = function() {
       closeStorytellerOccupiedModal();
       selectRole('player');
-      const submitBtn = document.querySelector('#entryForm button[type="submit"]');
-      if (submitBtn) submitBtn.click();
+      setTimeout(() => {
+        const form = document.getElementById('entryForm');
+        if (form) {
+          handleJoinRoom({ 
+            preventDefault: () => {}, 
+            target: form 
+          });
+        }
+      }, 100);
     };
 
     window.handleJoinRoom = async function(e) {
-      e.preventDefault();
+      if (e && e.preventDefault) e.preventDefault();
+      
       const name = document.getElementById('inputPlayerName').value.trim();
       const room = document.getElementById('inputRoomName').value.trim().toUpperCase();
       const pass = document.getElementById('inputRoomPass').value.trim();
 
       if (!name || !room || !pass) return false;
 
-      const submitBtn = e.target.querySelector('button[type="submit"]');
+      const submitBtn = e.target && e.target.querySelector ? e.target.querySelector('button[type="submit"]') : document.querySelector('#entryForm button[type="submit"]');
       const originalBtnHtml = submitBtn ? submitBtn.innerHTML : '';
 
       try {
@@ -1836,8 +1850,8 @@
         renderAllTokens();
         if (window.lucide) window.lucide.createIcons();
       } catch (err) {
-        console.error("Erro ao entrar na sala:", err);
-        // Fallback de contingência para nunca prender o usuário
+        console.error("Erro seguro ao entrar na sala:", err);
+        // Garantimos sempre a transição de tela caso não tenha ocorrido
         document.getElementById('loginScreen').classList.add('hidden');
         document.getElementById('mainApp').classList.remove('hidden');
         document.getElementById('mainApp').classList.add('flex');
@@ -2497,26 +2511,30 @@
     }
 
     function displaySharedImage(src) {
-      state.sharedImage = src;
-      const img = document.getElementById('sharedImageElement');
-      const placeholder = document.getElementById('emptyImagePlaceholder');
-      const actions = document.getElementById('imageStageActions');
-      if (img && placeholder) {
-        img.onload = () => {
-          syncTokensLayerDimensions();
-          renderAllTokens();
-        };
-        img.src = src;
-        img.classList.remove('hidden');
-        placeholder.classList.add('hidden');
-        if (actions) {
-          actions.classList.remove('hidden');
-          actions.classList.add('flex');
+      try {
+        state.sharedImage = src;
+        const img = document.getElementById('sharedImageElement');
+        const placeholder = document.getElementById('emptyImagePlaceholder');
+        const actions = document.getElementById('imageStageActions');
+        if (img && placeholder) {
+          img.onload = () => {
+            syncTokensLayerDimensions();
+            renderAllTokens();
+          };
+          img.src = src;
+          img.classList.remove('hidden');
+          placeholder.classList.add('hidden');
+          if (actions) {
+            actions.classList.remove('hidden');
+            actions.classList.add('flex');
+          }
+          setTimeout(() => {
+            syncTokensLayerDimensions();
+            renderAllTokens();
+          }, 150);
         }
-        setTimeout(() => {
-          syncTokensLayerDimensions();
-          renderAllTokens();
-        }, 150);
+      } catch (err) {
+        console.error("Shared Image Error safe-caught:", err);
       }
     }
 
@@ -2977,206 +2995,210 @@
     });
 
     function renderAllCameraSlots() {
-      let narratorData = null;
-      const playersList = [];
+      try {
+        let narratorData = null;
+        const playersList = [];
 
-      // 1. Configura dados do usuário LOCAL
-      if (state.role === 'storyteller') {
-        narratorData = {
-          name: state.name + " (Você)",
-          isLocal: true,
-          role: 'storyteller',
-          peerId: state.myPeerId,
-          isCamActive: state.isCamActive,
-          isMicActive: state.isMicActive,
-          stream: state.localStream
-        };
-      } else {
-        playersList.push({
-          name: state.name + " (Você)",
-          isLocal: true,
-          role: 'player',
-          peerId: state.myPeerId,
-          isCamActive: state.isCamActive,
-          isMicActive: state.isMicActive,
-          stream: state.localStream
+        // 1. Configura dados do usuário LOCAL
+        if (state.role === 'storyteller') {
+          narratorData = {
+            name: state.name + " (Você)",
+            isLocal: true,
+            role: 'storyteller',
+            peerId: state.myPeerId,
+            isCamActive: state.isCamActive,
+            isMicActive: state.isMicActive,
+            stream: state.localStream
+          };
+        } else {
+          playersList.push({
+            name: state.name + " (Você)",
+            isLocal: true,
+            role: 'player',
+            peerId: state.myPeerId,
+            isCamActive: state.isCamActive,
+            isMicActive: state.isMicActive,
+            stream: state.localStream
+          });
+        }
+
+        // 2. Distribui os participantes REMOTOS garantindo separação rígida por ofício
+        state.activePeers.forEach((peer, peerKeyName) => {
+          const assignedStream = peer.stream || (peer.peerId ? peerStreams.get(peer.peerId) : null);
+          const resolvedPeer = { ...peer, stream: assignedStream, isLocal: false };
+
+          if (peer.role === 'storyteller') {
+            // O slot do Narrador só aceita quem é estritamente storyteller
+            // e o narrador local tem prioridade sobre sua própria tela
+            if (!narratorData || !narratorData.isLocal) {
+              narratorData = resolvedPeer;
+            }
+          } else {
+            // Jogador remoto: só entra na lista de jogadores
+            if (peer.name !== state.name && peerKeyName !== state.name) {
+              playersList.push(resolvedPeer);
+            }
+          }
         });
-      }
 
-      // 2. Distribui os participantes REMOTOS garantindo separação rígida por ofício
-      state.activePeers.forEach((peer, peerKeyName) => {
-        const assignedStream = peer.stream || (peer.peerId ? peerStreams.get(peer.peerId) : null);
-        const resolvedPeer = { ...peer, stream: assignedStream, isLocal: false };
+        const totalParticipants = (narratorData ? 1 : 0) + playersList.length;
+        const countBadge = document.getElementById('coterieCountBadge');
+        if (countBadge) countBadge.innerText = `${Math.min(6, totalParticipants)}/6`;
 
-        if (peer.role === 'storyteller') {
-          // O slot do Narrador só aceita quem é estritamente storyteller
-          // e o narrador local tem prioridade sobre sua própria tela
-          if (!narratorData || !narratorData.isLocal) {
-            narratorData = resolvedPeer;
-          }
-        } else {
-          // Jogador remoto: só entra na lista de jogadores
-          if (peer.name !== state.name && peerKeyName !== state.name) {
-            playersList.push(resolvedPeer);
-          }
-        }
-      });
+        // ==========================================
+        // SLOT 1: ESTRITAMENTE O NARRADOR
+        // ==========================================
+        const slotNarrator = document.getElementById('coterieSlotNarrator');
+        const videoNarrator = document.getElementById('videoSlotNarrator');
+        const fallbackNarrator = document.getElementById('fallbackSlotNarrator');
+        const nameNarrator = document.getElementById('nameSlotNarrator');
+        const statusNarrator = document.getElementById('statusSlotNarrator');
+        const micNarrator = document.getElementById('micSlotNarrator');
 
-      const totalParticipants = (narratorData ? 1 : 0) + playersList.length;
-      const countBadge = document.getElementById('coterieCountBadge');
-      if (countBadge) countBadge.innerText = `${Math.min(6, totalParticipants)}/6`;
-
-      // ==========================================
-      // SLOT 1: ESTRITAMENTE O NARRADOR
-      // ==========================================
-      const slotNarrator = document.getElementById('coterieSlotNarrator');
-      const videoNarrator = document.getElementById('videoSlotNarrator');
-      const fallbackNarrator = document.getElementById('fallbackSlotNarrator');
-      const nameNarrator = document.getElementById('nameSlotNarrator');
-      const statusNarrator = document.getElementById('statusSlotNarrator');
-      const micNarrator = document.getElementById('micSlotNarrator');
-
-      if (videoNarrator) {
-        videoNarrator.muted = true;
-      }
-
-      if (narratorData) {
-        nameNarrator.innerText = narratorData.name;
-        nameNarrator.className = 'font-cinzel text-[10px] font-bold text-vampire-gold truncate block leading-tight';
-        slotNarrator.classList.add('border-vampire-gold/60', 'shadow-blood-glow');
-        slotNarrator.classList.remove('opacity-50');
-
-        if (narratorData.isMicActive) {
-          micNarrator.className = 'w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_6px_rgba(16,185,129,0.8)]';
-        } else {
-          micNarrator.className = 'w-2 h-2 rounded-full bg-gray-600';
+        if (videoNarrator) {
+          videoNarrator.muted = true;
         }
 
-        const effectiveNarratorStream = narratorData.isLocal 
-          ? state.localStream 
-          : (narratorData.stream || (narratorData.peerId ? peerStreams.get(narratorData.peerId) : null));
+        if (narratorData) {
+          nameNarrator.innerText = narratorData.name;
+          nameNarrator.className = 'font-cinzel text-[10px] font-bold text-vampire-gold truncate block leading-tight';
+          slotNarrator.classList.add('border-vampire-gold/60', 'shadow-blood-glow');
+          slotNarrator.classList.remove('opacity-50');
 
-        const hasVideoTrack = effectiveNarratorStream && 
-          effectiveNarratorStream.getVideoTracks && 
-          effectiveNarratorStream.getVideoTracks().some(t => t.readyState === 'live' && t.enabled !== false);
-
-        if (narratorData.isCamActive && hasVideoTrack) {
-          if (videoNarrator.srcObject !== effectiveNarratorStream) {
-            videoNarrator.srcObject = effectiveNarratorStream;
+          if (narratorData.isMicActive) {
+            micNarrator.className = 'w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_6px_rgba(16,185,129,0.8)]';
+          } else {
+            micNarrator.className = 'w-2 h-2 rounded-full bg-gray-600';
           }
-          videoNarrator.classList.remove('hidden');
-          videoNarrator.play().catch(() => {});
-          if (narratorData.isLocal) videoNarrator.classList.add('video-mirror');
-          else videoNarrator.classList.remove('video-mirror');
-          fallbackNarrator.classList.add('hidden');
+
+          const effectiveNarratorStream = narratorData.isLocal 
+            ? state.localStream 
+            : (narratorData.stream || (narratorData.peerId ? peerStreams.get(narratorData.peerId) : null));
+
+          const hasVideoTrack = effectiveNarratorStream && 
+            effectiveNarratorStream.getVideoTracks && 
+            effectiveNarratorStream.getVideoTracks().some(t => t.readyState === 'live' && t.enabled !== false);
+
+          if (narratorData.isCamActive && hasVideoTrack) {
+            if (videoNarrator.srcObject !== effectiveNarratorStream) {
+              videoNarrator.srcObject = effectiveNarratorStream;
+            }
+            videoNarrator.classList.remove('hidden');
+            videoNarrator.play().catch(() => {});
+            if (narratorData.isLocal) videoNarrator.classList.add('video-mirror');
+            else videoNarrator.classList.remove('video-mirror');
+            fallbackNarrator.classList.add('hidden');
+          } else {
+            if (!narratorData.isLocal && videoNarrator.srcObject && !narratorData.isCamActive) {
+              videoNarrator.srcObject = null;
+            }
+            videoNarrator.classList.add('hidden');
+            fallbackNarrator.classList.remove('hidden');
+            statusNarrator.innerText = narratorData.isMicActive ? 'Voz Ativa' : 'Sem Câmera';
+          }
         } else {
-          if (!narratorData.isLocal && videoNarrator.srcObject && !narratorData.isCamActive) {
+          nameNarrator.innerText = 'Mestre Ausente';
+          nameNarrator.className = 'font-cinzel text-[10px] font-bold text-gray-500 truncate block leading-tight';
+          slotNarrator.classList.remove('border-vampire-gold/60', 'shadow-blood-glow');
+          slotNarrator.classList.add('opacity-50');
+          if (videoNarrator.srcObject) {
+            videoNarrator.pause();
             videoNarrator.srcObject = null;
           }
           videoNarrator.classList.add('hidden');
           fallbackNarrator.classList.remove('hidden');
-          statusNarrator.innerText = narratorData.isMicActive ? 'Voz Ativa' : 'Sem Câmera';
+          statusNarrator.innerText = 'Aguardando Narrador';
+          micNarrator.className = 'w-2 h-2 rounded-full bg-gray-700';
         }
-      } else {
-        nameNarrator.innerText = 'Mestre Ausente';
-        nameNarrator.className = 'font-cinzel text-[10px] font-bold text-gray-500 truncate block leading-tight';
-        slotNarrator.classList.remove('border-vampire-gold/60', 'shadow-blood-glow');
-        slotNarrator.classList.add('opacity-50');
-        if (videoNarrator.srcObject) {
-          videoNarrator.pause();
-          videoNarrator.srcObject = null;
-        }
-        videoNarrator.classList.add('hidden');
-        fallbackNarrator.classList.remove('hidden');
-        statusNarrator.innerText = 'Aguardando Narrador';
-        micNarrator.className = 'w-2 h-2 rounded-full bg-gray-700';
-      }
 
-      // ==========================================
-      // SLOTS 1 A 5 (JOGADORES)
-      // ==========================================
-      for (let i = 0; i < 5; i++) {
-        const slotEl = document.getElementById(`coterieSlot${i + 1}`);
-        const videoEl = document.getElementById(`videoSlot${i + 1}`);
-        if (!slotEl || !videoEl) continue;
+        // ==========================================
+        // SLOTS 1 A 5 (JOGADORES)
+        // ==========================================
+        for (let i = 0; i < 5; i++) {
+          const slotEl = document.getElementById(`coterieSlot${i + 1}`);
+          const videoEl = document.getElementById(`videoSlot${i + 1}`);
+          if (!slotEl || !videoEl) continue;
 
-        videoEl.muted = true;
+          videoEl.muted = true;
 
-        const player = playersList[i];
-        const nameEl = slotEl.querySelector('.slot-name');
-        const roleEl = slotEl.querySelector('.slot-role');
-        const statusEl = slotEl.querySelector('.slot-status');
-        const micEl = slotEl.querySelector('.slot-mic');
-        const fallbackEl = slotEl.querySelector('.fallback-slot');
+          const player = playersList[i];
+          const nameEl = slotEl.querySelector('.slot-name');
+          const roleEl = slotEl.querySelector('.slot-role');
+          const statusEl = slotEl.querySelector('.slot-status');
+          const micEl = slotEl.querySelector('.slot-mic');
+          const fallbackEl = slotEl.querySelector('.fallback-slot');
 
-        if (player) {
-          slotEl.classList.remove('opacity-50');
-          slotEl.classList.add('opacity-100', 'active-peer');
+          if (player) {
+            slotEl.classList.remove('opacity-50');
+            slotEl.classList.add('opacity-100', 'active-peer');
 
-          if (nameEl) {
-            nameEl.innerText = player.name;
-            nameEl.className = 'slot-name font-cinzel text-[10px] font-bold text-vampire-parchment truncate block leading-tight';
-          }
-          if (roleEl) {
-            roleEl.innerText = player.isLocal ? 'Você' : 'Jogador';
-            roleEl.className = 'slot-role text-[7px] font-mono font-bold px-1 py-0.2 rounded bg-black/95 border border-red-900/60 text-red-300';
-          }
-          if (micEl) {
-            micEl.className = player.isMicActive
-              ? 'slot-mic w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_6px_rgba(16,185,129,0.8)]'
-              : 'slot-mic w-2 h-2 rounded-full bg-gray-600';
-          }
-
-          const effectivePlayerStream = player.isLocal 
-            ? state.localStream 
-            : (player.stream || (player.peerId ? peerStreams.get(player.peerId) : null));
-
-          const hasPlayerVideoTrack = effectivePlayerStream && 
-            effectivePlayerStream.getVideoTracks && 
-            effectivePlayerStream.getVideoTracks().some(t => t.readyState === 'live' && t.enabled !== false);
-
-          if (player.isCamActive && hasPlayerVideoTrack) {
-            if (videoEl.srcObject !== effectivePlayerStream) {
-              videoEl.srcObject = effectivePlayerStream;
+            if (nameEl) {
+              nameEl.innerText = player.name;
+              nameEl.className = 'slot-name font-cinzel text-[10px] font-bold text-vampire-parchment truncate block leading-tight';
             }
-            videoEl.classList.remove('hidden');
-            videoEl.play().catch(() => {});
-            if (player.isLocal) videoEl.classList.add('video-mirror');
-            else videoEl.classList.remove('video-mirror');
-            if (fallbackEl) fallbackEl.classList.add('hidden');
+            if (roleEl) {
+              roleEl.innerText = player.isLocal ? 'Você' : 'Jogador';
+              roleEl.className = 'slot-role text-[7px] font-mono font-bold px-1 py-0.2 rounded bg-black/95 border border-red-900/60 text-red-300';
+            }
+            if (micEl) {
+              micEl.className = player.isMicActive
+                ? 'slot-mic w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_6px_rgba(16,185,129,0.8)]'
+                : 'slot-mic w-2 h-2 rounded-full bg-gray-600';
+            }
+
+            const effectivePlayerStream = player.isLocal 
+              ? state.localStream 
+              : (player.stream || (player.peerId ? peerStreams.get(player.peerId) : null));
+
+            const hasPlayerVideoTrack = effectivePlayerStream && 
+              effectivePlayerStream.getVideoTracks && 
+              effectivePlayerStream.getVideoTracks().some(t => t.readyState === 'live' && t.enabled !== false);
+
+            if (player.isCamActive && hasPlayerVideoTrack) {
+              if (videoEl.srcObject !== effectivePlayerStream) {
+                videoEl.srcObject = effectivePlayerStream;
+              }
+              videoEl.classList.remove('hidden');
+              videoEl.play().catch(() => {});
+              if (player.isLocal) videoEl.classList.add('video-mirror');
+              else videoEl.classList.remove('video-mirror');
+              if (fallbackEl) fallbackEl.classList.add('hidden');
+            } else {
+              if (!player.isLocal && videoEl.srcObject && !player.isCamActive) {
+                videoEl.srcObject = null;
+              }
+              videoEl.classList.add('hidden');
+              if (fallbackEl) fallbackEl.classList.remove('hidden');
+              if (statusEl) statusEl.innerText = player.isMicActive ? 'Voz Ativa' : 'Sem Câmera';
+            }
           } else {
-            if (!player.isLocal && videoEl.srcObject && !player.isCamActive) {
+            // VAGA VAZIA / LIBERADA
+            slotEl.classList.add('opacity-50');
+            slotEl.classList.remove('opacity-100', 'active-peer');
+            if (videoEl.srcObject) {
+              videoEl.pause();
               videoEl.srcObject = null;
             }
             videoEl.classList.add('hidden');
             if (fallbackEl) fallbackEl.classList.remove('hidden');
-            if (statusEl) statusEl.innerText = player.isMicActive ? 'Voz Ativa' : 'Sem Câmera';
-          }
-        } else {
-          // VAGA VAZIA / LIBERADA
-          slotEl.classList.add('opacity-50');
-          slotEl.classList.remove('opacity-100', 'active-peer');
-          if (videoEl.srcObject) {
-            videoEl.pause();
-            videoEl.srcObject = null;
-          }
-          videoEl.classList.add('hidden');
-          if (fallbackEl) fallbackEl.classList.remove('hidden');
 
-          if (nameEl) {
-            nameEl.innerText = `Vaga ${i + 1}`;
-            nameEl.className = 'slot-name font-cinzel text-[10px] font-bold text-gray-500 truncate block leading-tight';
+            if (nameEl) {
+              nameEl.innerText = `Vaga ${i + 1}`;
+              nameEl.className = 'slot-name font-cinzel text-[10px] font-bold text-gray-500 truncate block leading-tight';
+            }
+            if (roleEl) {
+              roleEl.innerText = 'Livre';
+              roleEl.className = 'slot-role text-[7px] font-mono font-bold px-1 py-0.2 rounded bg-black/95 border border-white/10 text-gray-500';
+            }
+            if (statusEl) statusEl.innerText = 'Vazio';
+            if (micEl) micEl.className = 'slot-mic w-2 h-2 rounded-full bg-gray-700';
           }
-          if (roleEl) {
-            roleEl.innerText = 'Livre';
-            roleEl.className = 'slot-role text-[7px] font-mono font-bold px-1 py-0.2 rounded bg-black/95 border border-white/10 text-gray-500';
-          }
-          if (statusEl) statusEl.innerText = 'Vazio';
-          if (micEl) micEl.className = 'slot-mic w-2 h-2 rounded-full bg-gray-700';
         }
-      }
 
-      if (window.lucide) window.lucide.createIcons();
+        if (window.lucide) window.lucide.createIcons();
+      } catch (err) {
+        console.error("Camera Slots Render Error safe-caught:", err);
+      }
     }
 
     window.toggleLocalCamera = async function() {
