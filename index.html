@@ -1241,32 +1241,38 @@
       stopAllLocalTracks();
       const gain = getPersonalGainNode();
       
-      const reverb = new Tone.Reverb({ decay: 5.5, wet: 0.65 }).connect(gain);
-      const chorus = new Tone.Chorus(1.2, 3.5, 0.4).connect(reverb).start();
-      
+      // Reverb suave e filtro de abóbada gótica otimizados para baixo consumo de CPU
+      const cathedralReverb = new Tone.Reverb({ decay: 4.0, wet: 0.45 }).connect(gain);
+      const pipeFilter = new Tone.Filter({ frequency: 2200, type: "lowpass" }).connect(cathedralReverb);
+
+      // Órgão Litúrgico de Catedral (Vozes de tubos em ondas puras, sem sobrecarga de fatsawtooth)
       const organ = new Tone.PolySynth(Tone.Synth, {
-        oscillator: { type: 'fatsawtooth', count: 3, spread: 20 },
-        envelope: { attack: 1.8, decay: 2.2, sustain: 0.85, release: 3.5 }
-      }).connect(chorus);
-      organ.volume.value = -16;
+        maxPolyphony: 6,
+        oscillator: { type: 'triangle' },
+        envelope: { attack: 0.8, decay: 1.5, sustain: 0.8, release: 2.2 }
+      }).connect(pipeFilter);
+      organ.volume.value = -12;
 
-      const choir = new Tone.PolySynth(Tone.FMSynth, {
-        harmonicity: 2.0,
-        modulationIndex: 1.5,
+      // Camada coral sacra atmosférica etérea (Sine suave com ataque lento)
+      const choirSynth = new Tone.PolySynth(Tone.Synth, {
+        maxPolyphony: 4,
         oscillator: { type: 'sine' },
-        envelope: { attack: 2.5, decay: 3, sustain: 0.9, release: 4 }
-      }).connect(reverb);
-      choir.volume.value = -20;
+        envelope: { attack: 1.5, decay: 2.0, sustain: 0.7, release: 2.5 }
+      }).connect(pipeFilter);
+      choirSynth.volume.value = -18;
 
+      // Progressão sacra melancólica (Ré menor, Si bemol, Sol menor, Lá maior)
       const chords = [
-        { organ: ['D2', 'A2', 'D3', 'F3'], choir: ['A3', 'D4', 'F4'] },
-        { organ: ['Bb1', 'F2', 'Bb2', 'D3'], choir: ['F3', 'Bb3', 'D4'] },
-        { organ: ['G1', 'D2', 'G2', 'Bb2'], choir: ['D3', 'G3', 'Bb3'] },
-        { organ: ['A1', 'E2', 'A2', 'C#3'], choir: ['E3', 'A3', 'C#4'] }
+        { organ: ['D3', 'F3', 'A3', 'D4'], choir: ['A3', 'D4'] },
+        { organ: ['Bb2', 'D3', 'F3', 'Bb3'], choir: ['F3', 'Bb3'] },
+        { organ: ['G2', 'Bb2', 'D3', 'G3'], choir: ['D3', 'G3'] },
+        { organ: ['A2', 'C#3', 'E3', 'A3'], choir: ['E3', 'A3'] }
       ];
       let step = 0;
-      organ.triggerAttack(chords[0].organ);
-      choir.triggerAttack(chords[0].choir);
+
+      // Executa o primeiro acorde com duração controlada para evitar acúmulo de vozes
+      organ.triggerAttackRelease(chords[0].organ, '4m');
+      choirSynth.triggerAttackRelease(chords[0].choir, '4m');
 
       const interval = setInterval(() => {
         if (!currentToneTrack || currentToneTrack.type !== 'requiem') {
@@ -1274,11 +1280,9 @@
           return;
         }
         step = (step + 1) % chords.length;
-        organ.releaseAll();
-        choir.releaseAll();
-        organ.triggerAttack(chords[step].organ);
-        choir.triggerAttack(chords[step].choir);
-      }, 6200);
+        organ.triggerAttackRelease(chords[step].organ, '4m');
+        choirSynth.triggerAttackRelease(chords[step].choir, '4m');
+      }, 6500);
       activeAudioIntervals.push(interval);
 
       currentToneTrack = {
@@ -1287,11 +1291,11 @@
           clearInterval(interval);
           try {
             organ.releaseAll();
-            choir.releaseAll();
+            choirSynth.releaseAll();
             organ.dispose();
-            choir.dispose();
-            chorus.dispose();
-            reverb.dispose();
+            choirSynth.dispose();
+            pipeFilter.dispose();
+            cathedralReverb.dispose();
           } catch (e) {}
         }
       };
