@@ -605,17 +605,18 @@
         
         <!-- Abas do Painel Direito: Dados vs Áudio & Atmosfera -->
         <div class="px-2 pt-2 pb-1 border-b border-vampire-ash flex items-center gap-1 bg-vampire-crypt flex-shrink-0">
-          <button type="button" id="tabBtnDice" onclick="switchRightTab('dice')" class="flex-1 py-1.5 px-1 sm:px-2 rounded-lg font-gothic text-xs tracking-wider uppercase transition flex items-center justify-center gap-1 border border-red-950 bg-gradient-to-r from-vampire-driedBlood to-vampire-blood text-vampire-parchment shadow-blood-glow">
+          <button type="button" id="tabBtnDice" onclick="switchRightTab('dice')" class="relative flex-1 py-1.5 px-1 sm:px-2 rounded-lg font-gothic text-xs tracking-wider uppercase transition flex items-center justify-center gap-1 border border-red-950 bg-gradient-to-r from-vampire-driedBlood to-vampire-blood text-vampire-parchment shadow-blood-glow">
             <span class="text-vampire-gold">☥</span>
             <span class="hidden sm:inline">Julgamento</span>
           </button>
-          <button type="button" id="tabBtnAudio" onclick="switchRightTab('audio')" class="flex-1 py-1.5 px-1 sm:px-2 rounded-lg font-gothic text-xs tracking-wider uppercase transition flex items-center justify-center gap-1 border border-vampire-ash bg-vampire-black text-gray-500 hover:text-vampire-gold hover:border-vampire-gold/30">
+          <button type="button" id="tabBtnAudio" onclick="switchRightTab('audio')" class="relative flex-1 py-1.5 px-1 sm:px-2 rounded-lg font-gothic text-xs tracking-wider uppercase transition flex items-center justify-center gap-1 border border-vampire-ash bg-vampire-black text-gray-500 hover:text-vampire-gold hover:border-vampire-gold/30">
             <i data-lucide="music" class="w-3.5 h-3.5"></i>
             <span class="hidden sm:inline">Áudio</span>
           </button>
-          <button type="button" id="tabBtnChat" onclick="switchRightTab('chat')" class="flex-1 py-1.5 px-1 sm:px-2 rounded-lg font-gothic text-xs tracking-wider uppercase transition flex items-center justify-center gap-1 border border-vampire-ash bg-vampire-black text-gray-500 hover:text-vampire-gold hover:border-vampire-gold/30">
+          <button type="button" id="tabBtnChat" onclick="switchRightTab('chat')" class="relative flex-1 py-1.5 px-1 sm:px-2 rounded-lg font-gothic text-xs tracking-wider uppercase transition flex items-center justify-center gap-1 border border-vampire-ash bg-vampire-black text-gray-500 hover:text-vampire-gold hover:border-vampire-gold/30">
             <i data-lucide="message-square" class="w-3.5 h-3.5"></i>
             <span class="hidden sm:inline">Chat</span>
+            <span id="chatUnreadBadge" class="hidden absolute -top-1.5 -right-1.5 min-w-[16px] h-4 px-1 rounded-full bg-vampire-blood border border-red-900 text-[9px] font-mono font-bold text-vampire-bone flex items-center justify-center shadow-blood-glow z-10 pointer-events-none"></span>
           </button>
         </div>
 
@@ -990,7 +991,8 @@
       isPersonalMuted: false,
       activeMasterTrack: null,
       activeMasterTitle: 'Silêncio Sepulcral',
-      chatMessages: []
+      chatMessages: [],
+      unreadChat: 0
     };
 
     // Paleta de materiais realistas para os tokens (couro, minérios, latão, sangue seco)
@@ -1143,8 +1145,8 @@
       const contentAudio = document.getElementById('rightTabAudioContent');
       const contentChat = document.getElementById('rightTabChatContent');
 
-      const activeBtnClass = 'flex-1 py-1.5 px-1 sm:px-2 rounded-lg font-gothic text-xs tracking-wider uppercase transition flex items-center justify-center gap-1 border border-red-950 bg-gradient-to-r from-vampire-driedBlood to-vampire-blood text-vampire-parchment shadow-blood-glow';
-      const inactiveBtnClass = 'flex-1 py-1.5 px-1 sm:px-2 rounded-lg font-gothic text-xs tracking-wider uppercase transition flex items-center justify-center gap-1 border border-vampire-ash bg-vampire-black text-gray-500 hover:text-vampire-gold hover:border-vampire-gold/30';
+      const activeBtnClass = 'relative flex-1 py-1.5 px-1 sm:px-2 rounded-lg font-gothic text-xs tracking-wider uppercase transition flex items-center justify-center gap-1 border border-red-950 bg-gradient-to-r from-vampire-driedBlood to-vampire-blood text-vampire-parchment shadow-blood-glow';
+      const inactiveBtnClass = 'relative flex-1 py-1.5 px-1 sm:px-2 rounded-lg font-gothic text-xs tracking-wider uppercase transition flex items-center justify-center gap-1 border border-vampire-ash bg-vampire-black text-gray-500 hover:text-vampire-gold hover:border-vampire-gold/30';
 
       btnDice.className = tab === 'dice' ? activeBtnClass : inactiveBtnClass;
       btnAudio.className = tab === 'audio' ? activeBtnClass : inactiveBtnClass;
@@ -1161,6 +1163,8 @@
 
       // Se mudou pro chat, joga o scroll lá pra baixo automaticamente
       if (tab === 'chat') {
+        state.unreadChat = 0;
+        updateChatBadge();
         const feed = document.getElementById('chatFeedContainer');
         if (feed) feed.scrollTop = feed.scrollHeight;
       }
@@ -2260,6 +2264,12 @@
       } else if (type === 'CHAT_MESSAGE') {
         state.chatMessages.push(payload);
         renderChatFeed();
+        
+        // Se a mensagem chegou e o jogador não estiver com a aba chat aberta, acende a notificação
+        if (state.currentTab !== 'chat') {
+          state.unreadChat++;
+          updateChatBadge();
+        }
       } else if (type === 'FORCE_RECONNECT') {
         if (payload && payload.senderId !== state.myPeerId) {
           if (payload.peerId) {
@@ -3642,6 +3652,17 @@
       broadcastRoomMessage({ type: 'CHAT_MESSAGE', payload: msgData });
       return false;
     };
+
+    function updateChatBadge() {
+      const badge = document.getElementById('chatUnreadBadge');
+      if (!badge) return;
+      if (state.unreadChat > 0) {
+        badge.innerText = state.unreadChat > 99 ? '99+' : state.unreadChat;
+        badge.classList.remove('hidden');
+      } else {
+        badge.classList.add('hidden');
+      }
+    }
 
     function renderChatFeed() {
       const feed = document.getElementById('chatFeedContainer');
