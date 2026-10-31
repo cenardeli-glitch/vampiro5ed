@@ -583,11 +583,14 @@
             <p id="emptyStageText" class="text-xs font-cinzel text-gray-400 max-w-sm mt-1 leading-relaxed drop-shadow-[0_1px_4px_rgba(0,0,0,0.9)]">Aguardando o Narrador desvelar o mapa ou retrato.</p>
           </div>
 
-          <!-- Displayed Shared Image -->
-          <img id="sharedImageElement" src="" alt="Cena do Narrador" class="hidden max-h-full max-w-full object-contain transition-transform duration-300 select-none pointer-events-none z-0">
+          <!-- Map & Tokens Wrapper: Delimita exatamente o retângulo ocupado pela imagem -->
+          <div id="mapWrapper" class="relative max-h-full max-w-full flex items-center justify-center">
+            <!-- Displayed Shared Image -->
+            <img id="sharedImageElement" src="" alt="Cena do Narrador" class="hidden max-h-full max-w-full object-contain transition-transform duration-300 select-none pointer-events-none block z-0">
 
-          <!-- Tokens Layer Container (Over Battlemap/Stage) -->
-          <div id="tokensLayer" class="absolute inset-0 z-10 overflow-hidden pointer-events-auto"></div>
+            <!-- Tokens Layer Container (Acoplado estritamente à área visível da imagem do mapa) -->
+            <div id="tokensLayer" class="absolute inset-0 z-10 overflow-visible pointer-events-auto"></div>
+          </div>
 
           <!-- Fullscreen / Zoom Overlay Button -->
           <div id="imageStageActions" class="absolute bottom-2 right-2 hidden gap-2 z-20">
@@ -2406,12 +2409,41 @@
     // ==========================================
     // TOKENS & MURAL DO NARRADOR
     // ==========================================
+    function syncTokensLayerDimensions() {
+      const img = document.getElementById('sharedImageElement');
+      const tokensLayer = document.getElementById('tokensLayer');
+      const mapWrapper = document.getElementById('mapWrapper');
+      const stageContainer = document.getElementById('imageStageContainer');
+
+      if (!tokensLayer || !stageContainer) return;
+
+      if (img && !img.classList.contains('hidden') && img.clientWidth > 0 && img.clientHeight > 0) {
+        // Quando há imagem de mapa ativa, fixa a camada de tokens exatamente sobre os pixels da imagem
+        tokensLayer.style.position = 'absolute';
+        tokensLayer.style.left = `${img.offsetLeft}px`;
+        tokensLayer.style.top = `${img.offsetTop}px`;
+        tokensLayer.style.width = `${img.clientWidth}px`;
+        tokensLayer.style.height = `${img.clientHeight}px`;
+      } else {
+        // Quando não há mapa, preenche o altar central completo
+        tokensLayer.style.position = 'absolute';
+        tokensLayer.style.left = '0px';
+        tokensLayer.style.top = '0px';
+        tokensLayer.style.width = '100%';
+        tokensLayer.style.height = '100%';
+      }
+    }
+
     function displaySharedImage(src) {
       state.sharedImage = src;
       const img = document.getElementById('sharedImageElement');
       const placeholder = document.getElementById('emptyImagePlaceholder');
       const actions = document.getElementById('imageStageActions');
       if (img && placeholder) {
+        img.onload = () => {
+          syncTokensLayerDimensions();
+          renderAllTokens();
+        };
         img.src = src;
         img.classList.remove('hidden');
         placeholder.classList.add('hidden');
@@ -2419,6 +2451,21 @@
           actions.classList.remove('hidden');
           actions.classList.add('flex');
         }
+      }
+    }
+
+    function clearSharedImageLocal() {
+      state.sharedImage = null;
+      const img = document.getElementById('sharedImageElement');
+      const placeholder = document.getElementById('emptyImagePlaceholder');
+      const actions = document.getElementById('imageStageActions');
+      if (img && placeholder) {
+        img.src = '';
+        img.classList.add('hidden');
+        placeholder.classList.remove('hidden');
+        if (actions) actions.classList.add('hidden');
+        syncTokensLayerDimensions();
+        renderAllTokens();
       }
     }
 
@@ -3686,8 +3733,18 @@
 
       // Atualiza o posicionamento relativo dos tokens ao redimensionar a tela
       window.addEventListener('resize', () => {
+        syncTokensLayerDimensions();
         renderAllTokens();
       });
+
+      // Observador de mutação e redimensionamento da imagem de mapa
+      const imgEl = document.getElementById('sharedImageElement');
+      if (window.ResizeObserver && imgEl) {
+        const ro = new ResizeObserver(() => {
+          syncTokensLayerDimensions();
+        });
+        ro.observe(imgEl);
+      }
 
       if (window.lucide) window.lucide.createIcons();
     });
