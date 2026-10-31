@@ -1778,49 +1778,80 @@
 
       if (!name || !room || !pass) return false;
 
-      // Validação de vaga exclusiva do Narrador
-      if (state.role === 'storyteller') {
-        const isOccupied = await checkIsStorytellerOccupiedPreflight(room, pass, name);
-        if (isOccupied) {
-          const modal = document.getElementById('storytellerOccupiedModal');
-          const msg = document.getElementById('occupiedStorytellerMsg');
-          if (msg) {
-            msg.innerHTML = `O Elísio <strong class="text-vampire-gold">${room}</strong> já possui um Mestre da Noite ativo (<span class="text-red-400 font-bold">${isOccupied.name || 'Outro Narrador'}</span>).<br><br>Não é permitido mais de um Narrador na mesma sala. Deseja entrar como Vampiro (Jogador)?`;
+      const submitBtn = e.target.querySelector('button[type="submit"]');
+      const originalBtnHtml = submitBtn ? submitBtn.innerHTML : '';
+
+      try {
+        if (submitBtn) {
+          submitBtn.disabled = true;
+          submitBtn.innerHTML = '<span class="animate-spin inline-block mr-2">☥</span> Invocando o Elísio...';
+        }
+
+        // Validação de vaga exclusiva do Narrador com timeout tolerante a falhas
+        if (state.role === 'storyteller') {
+          let isOccupied = false;
+          try {
+            isOccupied = await checkIsStorytellerOccupiedPreflight(room, pass, name);
+          } catch (preflightErr) {
+            console.debug("Preflight bypass on error:", preflightErr);
           }
-          if (modal) {
-            modal.classList.remove('hidden');
-            modal.classList.add('flex');
+
+          if (isOccupied) {
+            if (submitBtn) {
+              submitBtn.disabled = false;
+              submitBtn.innerHTML = originalBtnHtml;
+            }
+            const modal = document.getElementById('storytellerOccupiedModal');
+            const msg = document.getElementById('occupiedStorytellerMsg');
+            if (msg) {
+              msg.innerHTML = `O Elísio <strong class="text-vampire-gold">${room}</strong> já possui um Mestre da Noite ativo (<span class="text-red-400 font-bold">${isOccupied.name || 'Outro Narrador'}</span>).<br><br>Não é permitido mais de um Narrador na mesma sala. Deseja entrar como Vampiro (Jogador)?`;
+            }
+            if (modal) {
+              modal.classList.remove('hidden');
+              modal.classList.add('flex');
+            }
+            if (window.lucide) window.lucide.createIcons();
+            return false;
           }
-          if (window.lucide) window.lucide.createIcons();
-          return false;
+        }
+
+        state.name = name;
+        state.room = room;
+        state.password = pass;
+
+        document.getElementById('topRoomDisplay').innerText = room;
+        document.getElementById('topPlayerDisplay').innerText = name;
+        document.getElementById('tokenCharNameInput').value = name;
+        
+        applyRoleUI();
+
+        document.getElementById('loginScreen').classList.add('hidden');
+        document.getElementById('mainApp').classList.remove('hidden');
+        document.getElementById('mainApp').classList.add('flex');
+
+        initWebRTCPeer();
+        initRoomSync();
+        updateHungerUI();
+        updatePoolUI();
+        renderAllTokens();
+        if (window.lucide) window.lucide.createIcons();
+      } catch (err) {
+        console.error("Erro ao entrar na sala:", err);
+        // Fallback de contingência para nunca prender o usuário
+        document.getElementById('loginScreen').classList.add('hidden');
+        document.getElementById('mainApp').classList.remove('hidden');
+        document.getElementById('mainApp').classList.add('flex');
+      } finally {
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = originalBtnHtml;
         }
       }
-
-      state.name = name;
-      state.room = room;
-      state.password = pass;
-
-      document.getElementById('topRoomDisplay').innerText = room;
-      document.getElementById('topPlayerDisplay').innerText = name;
-      document.getElementById('tokenCharNameInput').value = name;
-      
-      applyRoleUI();
-
-      document.getElementById('loginScreen').classList.add('hidden');
-      document.getElementById('mainApp').classList.remove('hidden');
-      document.getElementById('mainApp').classList.add('flex');
-
-      initWebRTCPeer();
-      initRoomSync();
-      updateHungerUI();
-      updatePoolUI();
-      renderAllTokens();
-      if (window.lucide) window.lucide.createIcons();
 
       return false;
     };
 
-    // Verificação de ocupação do trono do Narrador antes de confirmar a entrada
+    // Verificação de ocupação do trono do Narrador antes de confirmar a entrada (com timeout rápido)
     function checkIsStorytellerOccupiedPreflight(room, pass, myName) {
       return new Promise((resolve) => {
         const cleanRoom = room.toLowerCase().replace(/[^a-z0-9]/g, '');
@@ -1829,6 +1860,19 @@
         const queryChannelName = `v5_${cleanRoom}_${cleanPass}`;
         let occupied = false;
         let occupantData = null;
+        let settled = false;
+
+        const finish = (result) => {
+          if (settled) return;
+          settled = true;
+          if (bc) {
+            try { bc.close(); } catch(e){}
+          }
+          if (tempMqtt) {
+            try { tempMqtt.end(true); } catch(e){}
+          }
+          resolve(result);
+        };
 
         let bc = null;
         try {
@@ -1840,6 +1884,7 @@
               if (p && p.role === 'storyteller' && p.name !== myName) {
                 occupied = true;
                 occupantData = p;
+                finish(occupantData);
               }
             }
           };
@@ -1852,7 +1897,7 @@
             tempMqtt = mqtt.connect('wss://broker.emqx.io:8084/mqtt', {
               clientId: 'v5_chk_' + Math.random().toString(16).substr(2, 8),
               clean: true,
-              connectTimeout: 2000
+              connectTimeout: 1500
             });
 
             tempMqtt.on('connect', () => {
@@ -1874,6 +1919,7 @@
                   if (p && p.role === 'storyteller' && p.name !== myName) {
                     occupied = true;
                     occupantData = p;
+                    finish(occupantData);
                   }
                 }
               } catch (e) {}
@@ -1881,15 +1927,10 @@
           }
         } catch (e) {}
 
+        // Timeout curto de 700ms para evitar qualquer travamento na entrada
         setTimeout(() => {
-          if (bc) {
-            try { bc.close(); } catch(e){}
-          }
-          if (tempMqtt) {
-            try { tempMqtt.end(true); } catch(e){}
-          }
-          resolve(occupied ? occupantData : false);
-        }, 1100);
+          finish(occupied ? occupantData : false);
+        }, 700);
       });
     }
 
@@ -3290,33 +3331,23 @@
 
       broadcastRoomMessage({
         type: 'PEER_MEDIA_UPDATE',
-        myPeer.on('call', (call) => {
-          try {
-            // Se já tínhamos chamada aberta para este mesmo peer, fechamos com segurança
-            if (activeCalls.has(call.peer)) {
-              try { activeCalls.get(call.peer).close(); } catch(e){}
-            }
+        payload: {
+          name: state.name,
+          peerId: state.myPeerId,
+          isCamActive: state.isCamActive,
+          isMicActive: state.isMicActive
+        }
+      });
+    };
 
-            const streamToSend = state.localStream || createDummyStreamWithVideoAndAudio();
-            call.answer(streamToSend);
+    window.reconnectAllCameras = function() {
+      const icon = document.getElementById('reconnectIcon');
+      if (icon) icon.classList.add('animate-spin');
 
-            call.on('stream', (remoteStream) => {
-              attachRemoteStreamToPeer(call.peer, remoteStream);
-            });
-
-            call.on('close', () => {
-              activeCalls.delete(call.peer);
-              renderAllCameraSlots();
-            });
-
-            call.on('error', () => {
-              activeCalls.delete(call.peer);
-            });
-
-            activeCalls.set(call.peer, call);
-          } catch (callErr) {
-            console.debug("Erro ao atender chamada:", callErr);
-          }
+      try {
+        broadcastRoomMessage({
+          type: 'FORCE_RECONNECT',
+          payload: { senderId: state.myPeerId, peerId: state.myPeerId }
         });
 
         // Recria as conexões com os outros membros
