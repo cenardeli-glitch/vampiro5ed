@@ -586,7 +586,7 @@
           <!-- Map & Tokens Wrapper: Dimensionado e centralizado corretamente -->
           <div id="mapWrapper" class="w-full h-full relative flex items-center justify-center overflow-hidden">
             <!-- Displayed Shared Image -->
-            <img id="sharedImageElement" src="" alt="Cena do Narrador" class="hidden max-h-full max-w-full object-contain transition-transform duration-200 select-none pointer-events-none block z-0">
+            <img id="sharedImageElement" src="" alt="Cena do Narrador" class="hidden w-full h-full object-contain transition-transform duration-200 select-none pointer-events-none block z-0">
 
             <!-- Tokens Layer Container (Calibrado de forma absoluta sobre a imagem ou sobre o altar) -->
             <div id="tokensLayer" class="absolute inset-0 z-10 overflow-visible pointer-events-auto"></div>
@@ -2454,23 +2454,38 @@
       const img = document.getElementById('sharedImageElement');
       const tokensLayer = document.getElementById('tokensLayer');
       const mapWrapper = document.getElementById('mapWrapper');
-      const stageContainer = document.getElementById('imageStageContainer');
 
       if (!tokensLayer || !mapWrapper) return;
 
-      if (img && !img.classList.contains('hidden') && img.clientWidth > 0 && img.clientHeight > 0) {
+      if (img && !img.classList.contains('hidden') && img.naturalWidth > 0 && img.naturalHeight > 0) {
         const wrapperRect = mapWrapper.getBoundingClientRect();
-        const imgRect = img.getBoundingClientRect();
+        
+        if (wrapperRect.width === 0 || wrapperRect.height === 0) return;
 
-        // Posiciona a camada de tokens exatamente sobre a área retangular desenhada pela imagem do mapa
-        const offsetLeft = imgRect.left - wrapperRect.left;
-        const offsetTop = imgRect.top - wrapperRect.top;
+        const imgRatio = img.naturalWidth / img.naturalHeight;
+        const wrapperRatio = wrapperRect.width / wrapperRect.height;
+
+        let renderWidth, renderHeight;
+        
+        // Simulação matemática perfeita do CSS 'object-contain'
+        if (wrapperRatio > imgRatio) {
+          // O container é mais largo que a proporção da imagem -> Pillarbox (barras nas laterais)
+          renderHeight = wrapperRect.height;
+          renderWidth = renderHeight * imgRatio;
+        } else {
+          // O container é mais alto que a proporção da imagem -> Letterbox (barras em cima/embaixo)
+          renderWidth = wrapperRect.width;
+          renderHeight = renderWidth / imgRatio;
+        }
+
+        const offsetLeft = (wrapperRect.width - renderWidth) / 2;
+        const offsetTop = (wrapperRect.height - renderHeight) / 2;
 
         tokensLayer.style.position = 'absolute';
-        tokensLayer.style.left = `${Math.max(0, offsetLeft)}px`;
-        tokensLayer.style.top = `${Math.max(0, offsetTop)}px`;
-        tokensLayer.style.width = `${imgRect.width}px`;
-        tokensLayer.style.height = `${imgRect.height}px`;
+        tokensLayer.style.left = `${offsetLeft}px`;
+        tokensLayer.style.top = `${offsetTop}px`;
+        tokensLayer.style.width = `${renderWidth}px`;
+        tokensLayer.style.height = `${renderHeight}px`;
       } else {
         // Quando não há mapa, preenche o altar completo
         tokensLayer.style.position = 'absolute';
@@ -2872,10 +2887,11 @@
           const rect = currentLayer.getBoundingClientRect();
           if (rect.width === 0 || rect.height === 0) return;
 
-          const clientX = evt.clientX || (evt.touches && evt.touches[0].clientX);
-          const clientY = evt.clientY || (evt.touches && evt.touches[0].clientY);
+          // PointerEvents já fornecem clientX/clientY para mouse e touch nativamente
+          const clientX = evt.clientX;
+          const clientY = evt.clientY;
 
-          // Converte o ponteiro diretamente para percentual proporcional do mural
+          // Converte o ponteiro diretamente para percentual proporcional do mural pintado
           let pctX = ((clientX - rect.left) / rect.width) * 100;
           let pctY = ((clientY - rect.top) / rect.height) * 100;
 
@@ -3767,13 +3783,13 @@
         renderAllTokens();
       });
 
-      // Observador de mutação e redimensionamento da imagem de mapa
-      const imgEl = document.getElementById('sharedImageElement');
-      if (window.ResizeObserver && imgEl) {
+      // Observador de mutação e redimensionamento da área do mapa (wrapper)
+      const mapWrapperEl = document.getElementById('mapWrapper');
+      if (window.ResizeObserver && mapWrapperEl) {
         const ro = new ResizeObserver(() => {
           syncTokensLayerDimensions();
         });
-        ro.observe(imgEl);
+        ro.observe(mapWrapperEl);
       }
 
       if (window.lucide) window.lucide.createIcons();
