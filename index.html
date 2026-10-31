@@ -1551,6 +1551,11 @@
           return;
         }
 
+        // PREVENÇÃO DE ENGASGOS: Se a trilha já estiver tocando, não reinicia do zero
+        if (state.activeMasterTrack === trackKey && trackKey !== 'custom') {
+          return;
+        }
+
         if (trackKey === 'requiem') playTrackRequiem();
         else if (trackKey === 'crypt') playTrackCrypt();
         else if (trackKey === 'tension') playTrackTension();
@@ -3526,6 +3531,7 @@
       // Desbloqueio universal de áudio nos navegadores (Autoplay Policy Unlock)
       const unlockAudio = () => {
         if (Tone.context.state !== 'running') {
+          Tone.context.lookAhead = 0.1; // Garante estabilidade para o áudio não picotar
           Tone.start().catch(() => {});
         }
         const ext = document.getElementById('externalAudioPlayer');
