@@ -583,12 +583,12 @@
             <p id="emptyStageText" class="text-xs font-cinzel text-gray-400 max-w-sm mt-1 leading-relaxed drop-shadow-[0_1px_4px_rgba(0,0,0,0.9)]">Aguardando o Narrador desvelar o mapa ou retrato.</p>
           </div>
 
-          <!-- Map & Tokens Wrapper: Delimita exatamente o retângulo ocupado pela imagem -->
-          <div id="mapWrapper" class="relative max-h-full max-w-full flex items-center justify-center">
+          <!-- Map & Tokens Wrapper: Dimensionado e centralizado corretamente -->
+          <div id="mapWrapper" class="w-full h-full relative flex items-center justify-center overflow-hidden">
             <!-- Displayed Shared Image -->
-            <img id="sharedImageElement" src="" alt="Cena do Narrador" class="hidden max-h-full max-w-full object-contain transition-transform duration-300 select-none pointer-events-none block z-0">
+            <img id="sharedImageElement" src="" alt="Cena do Narrador" class="hidden max-h-full max-w-full object-contain transition-transform duration-200 select-none pointer-events-none block z-0">
 
-            <!-- Tokens Layer Container (Acoplado estritamente à área visível da imagem do mapa) -->
+            <!-- Tokens Layer Container (Calibrado de forma absoluta sobre a imagem ou sobre o altar) -->
             <div id="tokensLayer" class="absolute inset-0 z-10 overflow-visible pointer-events-auto"></div>
           </div>
 
@@ -2415,17 +2415,23 @@
       const mapWrapper = document.getElementById('mapWrapper');
       const stageContainer = document.getElementById('imageStageContainer');
 
-      if (!tokensLayer || !stageContainer) return;
+      if (!tokensLayer || !mapWrapper) return;
 
       if (img && !img.classList.contains('hidden') && img.clientWidth > 0 && img.clientHeight > 0) {
-        // Quando há imagem de mapa ativa, fixa a camada de tokens exatamente sobre os pixels da imagem
+        const wrapperRect = mapWrapper.getBoundingClientRect();
+        const imgRect = img.getBoundingClientRect();
+
+        // Posiciona a camada de tokens exatamente sobre a área retangular desenhada pela imagem do mapa
+        const offsetLeft = imgRect.left - wrapperRect.left;
+        const offsetTop = imgRect.top - wrapperRect.top;
+
         tokensLayer.style.position = 'absolute';
-        tokensLayer.style.left = `${img.offsetLeft}px`;
-        tokensLayer.style.top = `${img.offsetTop}px`;
-        tokensLayer.style.width = `${img.clientWidth}px`;
-        tokensLayer.style.height = `${img.clientHeight}px`;
+        tokensLayer.style.left = `${Math.max(0, offsetLeft)}px`;
+        tokensLayer.style.top = `${Math.max(0, offsetTop)}px`;
+        tokensLayer.style.width = `${imgRect.width}px`;
+        tokensLayer.style.height = `${imgRect.height}px`;
       } else {
-        // Quando não há mapa, preenche o altar central completo
+        // Quando não há mapa, preenche o altar completo
         tokensLayer.style.position = 'absolute';
         tokensLayer.style.left = '0px';
         tokensLayer.style.top = '0px';
@@ -2451,6 +2457,10 @@
           actions.classList.remove('hidden');
           actions.classList.add('flex');
         }
+        setTimeout(() => {
+          syncTokensLayerDimensions();
+          renderAllTokens();
+        }, 150);
       }
     }
 
@@ -2466,19 +2476,6 @@
         if (actions) actions.classList.add('hidden');
         syncTokensLayerDimensions();
         renderAllTokens();
-      }
-    }
-
-    function clearSharedImageLocal() {
-      state.sharedImage = null;
-      const img = document.getElementById('sharedImageElement');
-      const placeholder = document.getElementById('emptyImagePlaceholder');
-      const actions = document.getElementById('imageStageActions');
-      if (img && placeholder) {
-        img.src = '';
-        img.classList.add('hidden');
-        placeholder.classList.remove('hidden');
-        if (actions) actions.classList.add('hidden');
       }
     }
 
@@ -2815,16 +2812,18 @@
         let hasMoved = false;
 
         const onPointerDown = (evt) => {
+          if (evt.cancelable) evt.preventDefault();
           window.selectToken(token.id);
           isDragging = true;
           hasMoved = false;
           el.setPointerCapture?.(evt.pointerId);
-          document.addEventListener('pointermove', onPointerMove);
+          document.addEventListener('pointermove', onPointerMove, { passive: false });
           document.addEventListener('pointerup', onPointerUp);
         };
 
         const onPointerMove = (evt) => {
           if (!isDragging) return;
+          if (evt.cancelable) evt.preventDefault();
           hasMoved = true;
           
           const currentLayer = document.getElementById('tokensLayer');
@@ -3291,32 +3290,32 @@
 
       broadcastRoomMessage({
         type: 'PEER_MEDIA_UPDATE',
-        payload: {
-          name: state.name,
-          peerId: state.myPeerId,
-          isCamActive: state.isCamActive,
-          isMicActive: state.isMicActive
-        }
-      });
+        myPeer.on('call', (call) => {
+          try {
+            // Se já tínhamos chamada aberta para este mesmo peer, fechamos com segurança
+            if (activeCalls.has(call.peer)) {
+              try { activeCalls.get(call.peer).close(); } catch(e){}
+            }
 
-      if (window.lucide) window.lucide.createIcons();
-    };
+            const streamToSend = state.localStream || createDummyStreamWithVideoAndAudio();
+            call.answer(streamToSend);
 
-    window.reconnectAllCameras = function() {
-      const icon = document.getElementById('reconnectIcon');
-      if (icon) icon.classList.add('animate-spin');
+            call.on('stream', (remoteStream) => {
+              attachRemoteStreamToPeer(call.peer, remoteStream);
+            });
 
-      try {
-        // Envia ordem de sincronização forçada para todos na sala
-        broadcastRoomMessage({
-          type: 'FORCE_RECONNECT',
-          payload: {
-            senderId: state.myPeerId,
-            peerId: state.myPeerId,
-            name: state.name,
-            role: state.role,
-            isCamActive: state.isCamActive,
-            isMicActive: state.isMicActive
+            call.on('close', () => {
+              activeCalls.delete(call.peer);
+              renderAllCameraSlots();
+            });
+
+            call.on('error', () => {
+              activeCalls.delete(call.peer);
+            });
+
+            activeCalls.set(call.peer, call);
+          } catch (callErr) {
+            console.debug("Erro ao atender chamada:", callErr);
           }
         });
 
