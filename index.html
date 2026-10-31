@@ -1237,68 +1237,84 @@
       state.activeMasterTrack = null;
     }
 
+    // Gerador de buffer de Órgão de Tubos de Catedral pré-renderizado
+    // Elimina qualquer falha de CPU ou latência de osciladores em tempo real
     function playTrackRequiem() {
       stopAllLocalTracks();
       const gain = getPersonalGainNode();
-      
-      // Reverb suave e filtro de abóbada gótica otimizados para baixo consumo de CPU
-      const cathedralReverb = new Tone.Reverb({ decay: 4.0, wet: 0.45 }).connect(gain);
-      const pipeFilter = new Tone.Filter({ frequency: 2200, type: "lowpass" }).connect(cathedralReverb);
 
-      // Órgão Litúrgico de Catedral (Vozes de tubos em ondas puras, sem sobrecarga de fatsawtooth)
-      const organ = new Tone.PolySynth(Tone.Synth, {
-        maxPolyphony: 6,
-        oscillator: { type: 'triangle' },
-        envelope: { attack: 0.8, decay: 1.5, sustain: 0.8, release: 2.2 }
-      }).connect(pipeFilter);
-      organ.volume.value = -12;
+      try {
+        const audioCtx = Tone.context.rawContext;
+        const sampleRate = audioCtx.sampleRate;
+        const duration = 16; // Loop de 16 segundos com transição imperceptível
+        const numChannels = 2;
+        const totalFrames = sampleRate * duration;
+        const buffer = audioCtx.createBuffer(numChannels, totalFrames, sampleRate);
 
-      // Camada coral sacra atmosférica etérea (Sine suave com ataque lento)
-      const choirSynth = new Tone.PolySynth(Tone.Synth, {
-        maxPolyphony: 4,
-        oscillator: { type: 'sine' },
-        envelope: { attack: 1.5, decay: 2.0, sustain: 0.7, release: 2.5 }
-      }).connect(pipeFilter);
-      choirSynth.volume.value = -18;
+        // Frequências fundamentais e harmônicas do Órgão de Catedral
+        // Acordes em Ré menor (Dm) -> Si bemol (Bb) -> Sol menor (Gm) -> Lá maior (A)
+        const chordProgression = [
+          [146.83, 174.61, 220.00, 293.66], // Dm: D3, F3, A3, D4
+          [116.54, 146.83, 174.61, 233.08], // Bb: Bb2, D3, F3, Bb3
+          [98.00, 146.83, 196.00, 293.66],  // Gm: G2, D3, G3, D4
+          [110.00, 138.59, 164.81, 220.00]  // A:  A2, C#3, E3, A3
+        ];
 
-      // Progressão sacra melancólica (Ré menor, Si bemol, Sol menor, Lá maior)
-      const chords = [
-        { organ: ['D3', 'F3', 'A3', 'D4'], choir: ['A3', 'D4'] },
-        { organ: ['Bb2', 'D3', 'F3', 'Bb3'], choir: ['F3', 'Bb3'] },
-        { organ: ['G2', 'Bb2', 'D3', 'G3'], choir: ['D3', 'G3'] },
-        { organ: ['A2', 'C#3', 'E3', 'A3'], choir: ['E3', 'A3'] }
-      ];
-      let step = 0;
+        for (let ch = 0; ch < numChannels; ch++) {
+          const data = buffer.getChannelData(ch);
+          const channelDetune = ch === 0 ? 1.0012 : 0.9988;
 
-      // Executa o primeiro acorde com duração controlada para evitar acúmulo de vozes
-      organ.triggerAttackRelease(chords[0].organ, '4m');
-      choirSynth.triggerAttackRelease(chords[0].choir, '4m');
+          for (let i = 0; i < totalFrames; i++) {
+            const time = i / sampleRate;
+            const segment = Math.floor((time / duration) * 4) % 4;
+            const segTime = (time % 4) / 4;
 
-      const interval = setInterval(() => {
-        if (!currentToneTrack || currentToneTrack.type !== 'requiem') {
-          clearInterval(interval);
-          return;
+            // Envelope suave de transição entre os acordes sacros
+            const env = Math.sin(Math.PI * segTime);
+
+            let sample = 0;
+            const currentChord = chordProgression[segment];
+
+            for (let f = 0; f < currentChord.length; f++) {
+              const freq = currentChord[f] * channelDetune;
+              // Timbre de Órgão de Tubos: Fundamental + 2º harmônico + 3º harmônico suave
+              const pipe1 = Math.sin(2 * Math.PI * freq * time);
+              const pipe2 = 0.45 * Math.sin(2 * Math.PI * freq * 2 * time);
+              const pipe3 = 0.20 * Math.sin(2 * Math.PI * freq * 3 * time);
+              sample += (pipe1 + pipe2 + pipe3) * 0.12;
+            }
+
+            // Coral etéreo subjacente (oitava superior)
+            const choirFreq = currentChord[2] * 2 * channelDetune;
+            const choir = 0.15 * Math.sin(2 * Math.PI * choirFreq * time + Math.sin(2 * Math.PI * 0.3 * time) * 0.5);
+
+            // Cauda e modulação litúrgica
+            data[i] = (sample + choir) * env * 0.45;
+          }
         }
-        step = (step + 1) % chords.length;
-        organ.triggerAttackRelease(chords[step].organ, '4m');
-        choirSynth.triggerAttackRelease(chords[step].choir, '4m');
-      }, 6500);
-      activeAudioIntervals.push(interval);
 
-      currentToneTrack = {
-        type: 'requiem',
-        stop: () => {
-          clearInterval(interval);
-          try {
-            organ.releaseAll();
-            choirSynth.releaseAll();
-            organ.dispose();
-            choirSynth.dispose();
-            pipeFilter.dispose();
-            cathedralReverb.dispose();
-          } catch (e) {}
-        }
-      };
+        // Reproduz usando o Web Audio Nativo através do nó de volume Master
+        const sourceNode = audioCtx.createBufferSource();
+        sourceNode.buffer = buffer;
+        sourceNode.loop = true;
+
+        // Conecta ao Tone.js Gain Node sem sobrecarregar o motor
+        const nativeGainNode = gain.input ? gain.input : gain;
+        sourceNode.connect(nativeGainNode);
+        sourceNode.start(0);
+
+        currentToneTrack = {
+          type: 'requiem',
+          stop: () => {
+            try {
+              sourceNode.stop();
+              sourceNode.disconnect();
+            } catch (e) {}
+          }
+        };
+      } catch (err) {
+        console.error("Falha ao gerar Requiem:", err);
+      }
     }
 
     function playTrackCrypt() {
