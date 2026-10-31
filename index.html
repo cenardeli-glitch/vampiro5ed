@@ -1,0 +1,3513 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vampiro: A Máscara V5 - Mesa Virtual da Coterie</title>
+  
+  <!-- Favicons Temáticos de Vampiro: A Máscara (Substitui o ícone verde padrão do Netlify) -->
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23070607'/%3E%3Ccircle cx='32' cy='32' r='29' stroke='%23420b11' stroke-width='2.5' fill='%23131114'/%3E%3Ccircle cx='32' cy='22' r='9' stroke='%23ad8c4f' stroke-width='3.2' fill='none'/%3E%3Cpath d='M32 31v24M20 37h24' stroke='%23ad8c4f' stroke-width='3.2' stroke-linecap='round'/%3E%3Ccircle cx='32' cy='37' r='2' fill='%23631017'/%3E%3C/svg%3E">
+  <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23070607'/%3E%3Ccircle cx='32' cy='32' r='29' stroke='%23420b11' stroke-width='2.5' fill='%23131114'/%3E%3Ccircle cx='32' cy='22' r='9' stroke='%23ad8c4f' stroke-width='3.2' fill='none'/%3E%3Cpath d='M32 31v24M20 37h24' stroke='%23ad8c4f' stroke-width='3.2' stroke-linecap='round'/%3E%3Ccircle cx='32' cy='37' r='2' fill='%23631017'/%3E%3C/svg%3E">
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Google Fonts: Pirata One, Cinzel Decorative, Cinzel, UnifrakturMaguntia, Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Cinzel:wght@500;700;900&family=Pirata+One&family=UnifrakturMaguntia&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  
+  <!-- Tone.js for Soundboard & Procedural Audio -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.min.js"></script>
+
+  <!-- PeerJS para transmissão REAL de Câmera e Microfone WebRTC entre computadores -->
+  <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+
+  <!-- MQTT Client para sincronização de dados, rolagens e tokens pela Internet -->
+  <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            gothic: ['Pirata One', 'Cinzel Decorative', 'serif'],
+            blackletter: ['UnifrakturMaguntia', 'serif'],
+            cinzelDeco: ['Cinzel Decorative', 'Cinzel', 'serif'],
+            cinzel: ['Cinzel', 'serif'],
+            sans: ['Inter', 'sans-serif'],
+          },
+          colors: {
+            vampire: {
+              void: '#070607',
+              black: '#0d0c0e',
+              obsidian: '#131114',
+              crypt: '#171519',
+              slate: '#1e1c21',
+              ash: '#2a262e',
+              coffin: '#35303a',
+              driedBlood: '#260609',
+              blood: '#420b11',
+              crimson: '#631017',
+              brightBlood: '#7e141c',
+              flesh: '#1a1415',
+              gold: '#ad8c4f',
+              goldHover: '#c4a465',
+              goldMuted: '#6f572d',
+              parchment: '#cfc19f',
+              bone: '#e4dcc4',
+            }
+          },
+          boxShadow: {
+            'blood-glow': '0 2px 10px 1px rgba(66, 11, 17, 0.45)',
+            'beast-fury': '0 0 20px 2px rgba(99, 16, 23, 0.5), inset 0 0 14px rgba(0, 0, 0, 0.9)',
+            'gothic-relic': '0 10px 25px -4px rgba(0, 0, 0, 0.95), inset 0 1px 0 rgba(173, 140, 79, 0.25)',
+            'vampire-card': '0 8px 18px -2px rgba(0, 0, 0, 0.85), inset 0 1px 1px rgba(255, 255, 255, 0.03)',
+            'crypt-well': 'inset 0 0 45px 12px rgba(0, 0, 0, 0.96), inset 0 1px 0 rgba(255, 255, 255, 0.02)',
+            'die-bevel': 'inset 0 1px 1px rgba(255, 255, 255, 0.15), inset 0 -2px 3px rgba(0, 0, 0, 0.7), 0 4px 8px rgba(0, 0, 0, 0.9)',
+            'die-hunger-bevel': 'inset 0 1px 2px rgba(255, 180, 180, 0.25), inset 0 -3px 4px rgba(15, 0, 2, 0.85), 0 4px 10px rgba(38, 6, 9, 0.85)',
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    /* Custom Scrollbar - Couro e pedra desgastada */
+    ::-webkit-scrollbar {
+      width: 4px;
+      height: 4px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #060506;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #252227;
+      border-radius: 1px;
+      border: 1px solid #151416;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #4a0d13;
+    }
+
+    /* Iluminação física natural de mesa de mogno escurecido e cera de vela */
+    body {
+      background-color: #070607;
+      background-image: 
+        radial-gradient(circle at 50% 12%, rgba(173, 140, 79, 0.04) 0%, transparent 60%),
+        radial-gradient(circle at 82% 85%, rgba(38, 6, 9, 0.3) 0%, transparent 55%),
+        radial-gradient(circle at 18% 85%, rgba(19, 17, 20, 0.8) 0%, transparent 60%),
+        linear-gradient(180deg, #070607 0%, #0d0c0e 50%, #070607 100%);
+    }
+
+    /* Vinheta de cantos escuros naturais de iluminação de câmara */
+    .abyssal-vignette {
+      box-shadow: inset 0 0 140px 35px rgba(0, 0, 0, 0.96);
+    }
+
+    /* Altar de Pedra e Madeira Nobre com Profundidade Física Realista */
+    .altar-stone-bg {
+      background-color: #0b0a0c;
+      background-image: 
+        radial-gradient(circle at 50% 45%, rgba(173, 140, 79, 0.02) 0%, transparent 65%),
+        radial-gradient(circle at 20% 20%, rgba(38, 6, 9, 0.16) 0%, transparent 55%),
+        linear-gradient(180deg, #110f13 0%, #09080a 100%);
+      border: 1px solid #231f26;
+      box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.8), inset 0 -1px 1px rgba(173, 140, 79, 0.08);
+    }
+
+    /* Moldura Lapidar em Latão Escurecido com Chanfro Mecânico Realista */
+    .gothic-border {
+      border: 1px solid rgba(173, 140, 79, 0.28);
+      position: relative;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04), 0 8px 24px rgba(0, 0, 0, 0.8);
+    }
+    .gothic-border::before, .gothic-border::after {
+      content: '✠';
+      position: absolute;
+      font-size: 8px;
+      color: #ad8c4f;
+      opacity: 0.6;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.9);
+    }
+    .gothic-border::before { top: -5px; left: 5px; }
+    .gothic-border::after { bottom: -5px; right: 5px; }
+
+    /* The Beast Vignette - Pulsação arterial orgânica sutil */
+    @keyframes beastHeartbeatPulse {
+      0%, 100% { box-shadow: inset 0 0 60px 10px rgba(0,0,0,0.92); }
+      50% { box-shadow: inset 0 0 95px 22px rgba(66, 11, 17, 0.28); }
+    }
+    .beast-aura {
+      animation: beastHeartbeatPulse 6.5s ease-in-out infinite;
+    }
+
+    /* DADOS REALISTAS: Textura de Ardósia Grafite e Resina Mineral de Sangue Coagulado */
+    .die-normal {
+      background: linear-gradient(145deg, #28242b 0%, #171519 55%, #0f0e11 100%);
+      box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.12), inset 0 -2px 3px rgba(0, 0, 0, 0.85), 0 3px 6px rgba(0, 0, 0, 0.85);
+      border: 1px solid #36313b;
+      position: relative;
+    }
+    .die-normal::after {
+      content: '';
+      position: absolute;
+      inset: 1px;
+      border-radius: 4px;
+      border: 1px solid rgba(255, 255, 255, 0.03);
+      pointer-events: none;
+    }
+
+    .die-hunger {
+      background: linear-gradient(145deg, #6b1219 0%, #3d080d 50%, #1a0204 100%);
+      box-shadow: inset 0 1px 2px rgba(255, 180, 180, 0.22), inset 0 -2px 4px rgba(0, 0, 0, 0.9), 0 3px 8px rgba(38, 6, 9, 0.75);
+      border: 1px solid #520c13;
+      position: relative;
+    }
+    .die-hunger::after {
+      content: '';
+      position: absolute;
+      inset: 1px;
+      border-radius: 4px;
+      border: 1px solid rgba(255, 150, 150, 0.08);
+      pointer-events: none;
+    }
+
+    .video-mirror {
+      transform: scaleX(-1);
+    }
+    .token-container {
+      touch-action: none;
+      user-select: none;
+      outline: none !important;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    /* Token Selection: Sem halos brancos ou artificiais */
+    .token-selected {
+      outline: none !important;
+      box-shadow: none !important;
+    }
+
+    /* 6-Camera Left Vertical Grid Styling - Molduras Físicas de Madeira Nobre e Bronze */
+    .coterie-left-strip {
+      display: grid;
+      grid-template-rows: repeat(6, minmax(0, 1fr));
+      gap: 5px;
+      height: 100%;
+    }
+    .coterie-cameo {
+      background: linear-gradient(180deg, #161418 0%, #0c0b0d 100%);
+      border: 1px solid rgba(173, 140, 79, 0.22);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03), 0 2px 6px rgba(0, 0, 0, 0.75);
+      position: relative;
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .coterie-cameo:hover {
+      border-color: rgba(173, 140, 79, 0.45);
+      background: linear-gradient(180deg, #1c1a1f 0%, #0f0e11 100%);
+    }
+    .coterie-cameo.active-peer {
+      border-color: rgba(99, 16, 23, 0.55);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04), 0 3px 8px rgba(0, 0, 0, 0.85);
+    }
+
+    /* Painéis com Textura de Ardósia e Linho Envelhecido */
+    .crypt-panel {
+      background-color: #0e0d10;
+      background-image: 
+        radial-gradient(circle at 50% 0%, rgba(66, 11, 17, 0.12) 0%, transparent 60%),
+        linear-gradient(180deg, #131115 0%, #0b0a0d 100%);
+      border: 1px solid #232027;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
+    }
+  </style>
+</head>
+<body class="bg-vampire-void text-gray-300 min-h-screen font-sans selection:bg-vampire-driedBlood selection:text-vampire-bone flex flex-col overflow-x-hidden beast-aura abyssal-vignette">
+
+  <!-- ========================================== -->
+  <!-- 1. TELA INICIAL (LOGIN / ENTRADA NA SALA) -->
+  <!-- ========================================== -->
+  <div id="loginScreen" class="fixed inset-0 z-50 bg-black/98 flex items-center justify-center p-4 backdrop-blur-md">
+    <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-vampire-driedBlood/40 via-vampire-void/90 to-black pointer-events-none"></div>
+
+    <div class="relative w-full max-w-md bg-vampire-obsidian/95 border-2 border-vampire-gold/30 rounded-2xl p-6 sm:p-8 shadow-2xl shadow-black gothic-border">
+      
+      <!-- Gothic Header -->
+      <div class="text-center mb-6">
+        <div class="relative inline-block mb-3">
+          <div class="w-16 h-16 mx-auto rounded-full bg-gradient-to-b from-vampire-crimson/80 via-vampire-blood to-vampire-void flex items-center justify-center border border-vampire-gold/50 shadow-gothic-relic">
+            <span class="font-gothic text-3xl text-vampire-gold drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)]">☥</span>
+          </div>
+          <span class="absolute -bottom-1 -right-1 text-[10px] bg-black px-1.5 py-0.5 rounded border border-vampire-gold/40 text-vampire-gold font-mono shadow">V5</span>
+        </div>
+        <h1 class="font-gothic text-2xl sm:text-3xl tracking-widest text-vampire-parchment drop-shadow-[0_2px_8px_rgba(0,0,0,0.95)] uppercase">Vampiro: A Máscara</h1>
+        <p class="font-cinzel text-[10px] text-vampire-goldMuted tracking-[0.35em] uppercase mt-1">Cripta & Santuário da Coterie</p>
+        <div class="w-24 h-[1px] bg-gradient-to-r from-transparent via-vampire-gold/50 to-transparent mx-auto mt-2.5"></div>
+      </div>
+
+      <form id="entryForm" onsubmit="return handleJoinRoom(event);" class="space-y-4">
+        
+        <!-- Seleção de Papel -->
+        <div>
+          <label class="block text-xs font-cinzel text-vampire-parchment font-bold mb-1.5 flex items-center gap-1.5">
+            <span class="text-vampire-gold">✠</span> Escolha o seu Ofício:
+          </label>
+          <div class="grid grid-cols-2 gap-2">
+            <button type="button" id="roleBtnPlayer" onclick="selectRole('player')" class="role-btn py-2.5 px-3 rounded-xl border border-vampire-crimson/80 bg-gradient-to-b from-vampire-crimson/90 to-vampire-blood text-vampire-bone font-cinzel text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.15),0_2px_6px_rgba(0,0,0,0.7)]">
+              <i data-lucide="user" class="w-3.5 h-3.5 text-vampire-gold"></i>
+              <span>Vampiro (Jogador)</span>
+            </button>
+            <button type="button" id="roleBtnStoryteller" onclick="selectRole('storyteller')" class="role-btn py-2.5 px-3 rounded-xl border border-vampire-ash bg-vampire-slate/70 text-gray-400 hover:text-white font-cinzel text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-sm">
+              <i data-lucide="crown" class="w-3.5 h-3.5 text-vampire-gold"></i>
+              <span>Narrador (Mestre)</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Nome do Personagem / Narrador -->
+        <div>
+          <label id="lblPlayerName" class="block text-xs font-cinzel text-vampire-parchment font-bold mb-1">Nome do seu Condenado:</label>
+          <input type="text" id="inputPlayerName" required placeholder="Ex: Julian de Toreador" maxlength="28" class="w-full bg-vampire-black/95 border border-vampire-ash focus:border-vampire-gold rounded-xl px-3.5 py-2.5 text-sm text-vampire-parchment focus:outline-none font-cinzel placeholder:text-gray-600 transition shadow-[inset_0_1px_3px_rgba(0,0,0,0.8)]">
+        </div>
+
+        <!-- Nome da Sala -->
+        <div>
+          <label class="block text-xs font-cinzel text-vampire-parchment font-bold mb-1">Nome do Elísio (Sala):</label>
+          <div class="relative">
+            <input type="text" id="inputRoomName" required placeholder="Digite o nome da sala..." maxlength="24" class="w-full bg-vampire-black/95 border border-vampire-ash focus:border-vampire-gold rounded-xl px-3.5 py-2.5 text-sm text-vampire-gold focus:outline-none font-mono font-bold uppercase transition tracking-wider shadow-[inset_0_1px_3px_rgba(0,0,0,0.8)]">
+          </div>
+        </div>
+
+        <!-- Senha da Sala -->
+        <div>
+          <label class="block text-xs font-cinzel text-vampire-parchment font-bold mb-1">Palavra de Sangue (Senha):</label>
+          <input type="password" id="inputRoomPass" required placeholder="Segredo da noite" maxlength="32" class="w-full bg-vampire-black/95 border border-vampire-ash focus:border-vampire-gold rounded-xl px-3.5 py-2.5 text-sm text-vampire-parchment focus:outline-none font-mono transition shadow-[inset_0_1px_3px_rgba(0,0,0,0.8)]">
+          <p class="text-[10px] text-gray-500 mt-1 italic font-cinzel">Apenas quem compartilhar desta senha e sala entrará no mesmo Elísio.</p>
+        </div>
+
+        <button type="submit" class="w-full py-3.5 mt-3 rounded-xl bg-gradient-to-b from-vampire-blood via-vampire-driedBlood to-vampire-void hover:from-vampire-crimson hover:to-vampire-blood text-vampire-bone font-gothic text-lg tracking-widest uppercase transition shadow-[inset_0_1px_0_rgba(255,255,255,0.1),0_4px_12px_rgba(0,0,0,0.85)] flex items-center justify-center gap-2 border border-red-950">
+          <span class="text-vampire-gold">☥</span>
+          <span>Despertar na Noite</span>
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ========================================== -->
+  <!-- 2. APLICAÇÃO PRINCIPAL (EM 3 PARTES)       -->
+  <!-- ========================================== -->
+  <div id="mainApp" class="hidden flex-col h-screen overflow-hidden">
+    
+    <!-- Top Header Bar - Moldura de Ébano e Bronze -->
+    <header class="border-b border-vampire-ash bg-vampire-void/98 px-4 py-2 flex items-center justify-between flex-shrink-0 z-30 shadow-[0_4px_15px_rgba(0,0,0,0.9)] backdrop-blur-md">
+      <div class="flex items-center gap-3">
+        <div class="w-9 h-9 rounded-full bg-gradient-to-b from-vampire-blood to-vampire-black flex items-center justify-center border border-vampire-gold/45 shadow-[inset_0_1px_0_rgba(255,255,255,0.1),0_2px_6px_rgba(0,0,0,0.8)]">
+          <span class="font-gothic text-xl text-vampire-gold">☥</span>
+        </div>
+        <div>
+          <h1 class="font-gothic text-lg sm:text-xl tracking-wider text-vampire-parchment flex items-center gap-2">
+            <span>Vampiro: A Máscara</span>
+            <span id="badgeRole" class="text-[9px] font-cinzel px-2 py-0.5 rounded font-bold uppercase bg-vampire-blood/60 text-vampire-parchment border border-red-900/60">Jogador</span>
+          </h1>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2 text-xs">
+        <!-- Quick Camera & Mic Bar in Header -->
+        <div class="flex items-center gap-1 bg-vampire-black/90 px-2 py-1 rounded-lg border border-vampire-ash">
+          <button id="btnToggleCam" onclick="toggleLocalCamera()" class="px-2 py-0.5 rounded bg-vampire-slate hover:bg-vampire-ash text-[10px] font-cinzel text-gray-300 transition flex items-center gap-1">
+            <i id="camIcon" data-lucide="video" class="w-3 h-3 text-emerald-400"></i>
+            <span id="camText" class="hidden sm:inline">Câmera</span>
+          </button>
+          <button id="btnToggleMic" onclick="toggleLocalMic()" class="px-2 py-0.5 rounded bg-vampire-slate hover:bg-vampire-ash text-[10px] font-cinzel text-gray-300 transition flex items-center gap-1">
+            <i id="micIcon" data-lucide="mic" class="w-3 h-3 text-emerald-400"></i>
+            <span id="micText" class="hidden sm:inline">Voz</span>
+          </button>
+          <button id="btnReconnectCams" onclick="reconnectAllCameras()" title="Atualizar e reconectar todas as câmeras" class="px-2 py-0.5 rounded bg-vampire-slate hover:bg-vampire-ash text-[10px] font-cinzel text-gray-400 hover:text-vampire-gold transition flex items-center gap-1 border border-transparent hover:border-vampire-gold/30">
+            <i id="reconnectIcon" data-lucide="refresh-cw" class="w-3 h-3 text-vampire-gold"></i>
+            <span class="hidden md:inline">Reconectar</span>
+          </button>
+        </div>
+
+        <!-- Ambient Drone Audio Toggle -->
+        <button id="btnAmbientSound" onclick="toggleAmbientMusic()" class="px-2.5 py-1 rounded-lg bg-vampire-slate/70 border border-vampire-ash text-gray-400 hover:text-vampire-gold transition flex items-center gap-1.5" title="Música Ambiente Sombria">
+          <i id="ambientIcon" data-lucide="volume-x" class="w-3.5 h-3.5"></i>
+          <span id="ambientText" class="font-cinzel text-[11px] hidden sm:inline">Silêncio</span>
+        </button>
+
+        <div class="flex items-center bg-vampire-slate/60 border border-vampire-gold/25 rounded-lg px-2.5 py-1 gap-1.5">
+          <span class="text-gray-500 font-cinzel text-[11px]">Elísio:</span>
+          <span id="topRoomDisplay" class="font-mono font-bold text-vampire-gold text-[11px]">CRIPTA</span>
+        </div>
+        <div class="flex items-center bg-vampire-slate/60 border border-vampire-ash rounded-lg px-2.5 py-1 gap-1.5">
+          <i data-lucide="skull" class="w-3.5 h-3.5 text-vampire-crimson"></i>
+          <span id="topPlayerDisplay" class="font-semibold text-gray-300 text-[11px]">Personagem</span>
+        </div>
+        <button onclick="handleLeaveRoom()" title="Abandonar a Noite" class="p-1.5 rounded-lg bg-vampire-slate/70 border border-vampire-ash text-gray-400 hover:text-red-400 transition">
+          <i data-lucide="log-out" class="w-3.5 h-3.5"></i>
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Workspace: Stage with Left Cameras + Right Sidebar for Dice/Audio -->
+    <div class="flex-grow flex flex-col lg:flex-row overflow-hidden relative">
+      
+      <!-- ======================================================== -->
+      <!-- PARTE 1: COLUNA LATERAL ESQUERDA (6 CÂMERAS DA COTERIE)  -->
+      <!-- ======================================================== -->
+      <aside class="w-full lg:w-48 xl:w-52 flex-shrink-0 bg-vampire-void/95 border-b lg:border-b-0 lg:border-r border-vampire-ash p-2 flex flex-col h-auto lg:h-full overflow-hidden shadow-2xl z-20">
+        <div class="flex items-center justify-between mb-1.5 px-1 flex-shrink-0">
+          <span class="font-cinzel text-[10px] font-bold text-vampire-parchment flex items-center gap-1.5">
+            <span class="text-vampire-crimson">✠</span>
+            Catacumbas
+          </span>
+          <span id="coterieCountBadge" class="text-[9px] font-mono text-vampire-gold bg-black/90 px-1.5 py-0.5 rounded border border-vampire-gold/25">1/6</span>
+        </div>
+
+        <!-- Grade Vertical de 6 Câmeras -->
+        <div id="videoGrid" class="coterie-left-strip flex-grow">
+          
+          <!-- Slot 1: Reservado estritamente para o NARRADOR -->
+          <div id="coterieSlotNarrator" class="coterie-cameo rounded-lg overflow-hidden flex flex-col justify-between border-vampire-gold/60 p-1 shadow-blood-glow min-h-[64px]">
+            <div class="relative flex-grow w-full bg-black rounded flex items-center justify-center overflow-hidden">
+              <video id="videoSlotNarrator" autoplay playsinline muted class="w-full h-full object-cover hidden"></video>
+              <div id="fallbackSlotNarrator" class="flex flex-col items-center justify-center text-gray-600 gap-0.5">
+                <i data-lucide="crown" class="w-4 h-4 text-vampire-gold"></i>
+                <span id="statusSlotNarrator" class="text-[8px] font-cinzel uppercase tracking-wider text-vampire-gold/70">Aguardando Mestre</span>
+              </div>
+              <div class="absolute top-0.5 left-1">
+                <span class="text-[7px] font-mono font-bold px-1 py-0.2 rounded bg-black/95 border border-vampire-gold/60 text-vampire-gold">Narrador</span>
+              </div>
+              <div class="absolute bottom-1 right-1 flex items-center">
+                <span id="micSlotNarrator" class="w-2 h-2 rounded-full bg-gray-600"></span>
+              </div>
+            </div>
+            <div class="w-full text-center pt-0.5 flex-shrink-0">
+              <span id="nameSlotNarrator" class="font-cinzel text-[10px] font-bold text-vampire-gold truncate block leading-tight">Mestre da Noite</span>
+            </div>
+          </div>
+
+          <!-- Slot 2 (Jogador 1) -->
+          <div id="coterieSlot1" class="coterie-slot coterie-cameo rounded-lg overflow-hidden flex flex-col justify-between p-1 opacity-50 transition-all min-h-[64px]">
+            <div class="relative flex-grow w-full bg-black rounded flex items-center justify-center overflow-hidden">
+              <video id="videoSlot1" autoplay playsinline class="w-full h-full object-cover hidden"></video>
+              <div class="fallback-slot flex flex-col items-center justify-center text-gray-700 gap-0.5">
+                <i data-lucide="moon" class="w-3.5 h-3.5 text-vampire-driedBlood"></i>
+                <span class="slot-status text-[7px] font-cinzel uppercase tracking-wider text-gray-600">Vazio</span>
+              </div>
+              <div class="absolute top-0.5 left-1">
+                <span class="slot-role text-[7px] font-mono font-bold px-1 py-0.2 rounded bg-black/95 border border-white/10 text-gray-500">Jogador</span>
+              </div>
+              <div class="absolute bottom-1 right-1 flex items-center">
+                <span class="slot-mic w-2 h-2 rounded-full bg-gray-600"></span>
+              </div>
+            </div>
+            <div class="w-full text-center pt-0.5 flex-shrink-0">
+              <span class="slot-name font-cinzel text-[10px] font-bold text-gray-500 truncate block leading-tight">Vaga 1</span>
+            </div>
+          </div>
+
+          <!-- Slot 3 (Jogador 2) -->
+          <div id="coterieSlot2" class="coterie-slot coterie-cameo rounded-lg overflow-hidden flex flex-col justify-between p-1 opacity-50 transition-all min-h-[64px]">
+            <div class="relative flex-grow w-full bg-black rounded flex items-center justify-center overflow-hidden">
+              <video id="videoSlot2" autoplay playsinline class="w-full h-full object-cover hidden"></video>
+              <div class="fallback-slot flex flex-col items-center justify-center text-gray-700 gap-0.5">
+                <i data-lucide="moon" class="w-3.5 h-3.5 text-vampire-driedBlood"></i>
+                <span class="slot-status text-[7px] font-cinzel uppercase tracking-wider text-gray-600">Vazio</span>
+              </div>
+              <div class="absolute top-0.5 left-1">
+                <span class="slot-role text-[7px] font-mono font-bold px-1 py-0.2 rounded bg-black/95 border border-white/10 text-gray-500">Jogador</span>
+              </div>
+              <div class="absolute bottom-1 right-1 flex items-center">
+                <span class="slot-mic w-2 h-2 rounded-full bg-gray-600"></span>
+              </div>
+            </div>
+            <div class="w-full text-center pt-0.5 flex-shrink-0">
+              <span class="slot-name font-cinzel text-[10px] font-bold text-gray-500 truncate block leading-tight">Vaga 2</span>
+            </div>
+          </div>
+
+          <!-- Slot 4 (Jogador 3) -->
+          <div id="coterieSlot3" class="coterie-slot coterie-cameo rounded-lg overflow-hidden flex flex-col justify-between p-1 opacity-50 transition-all min-h-[64px]">
+            <div class="relative flex-grow w-full bg-black rounded flex items-center justify-center overflow-hidden">
+              <video id="videoSlot3" autoplay playsinline class="w-full h-full object-cover hidden"></video>
+              <div class="fallback-slot flex flex-col items-center justify-center text-gray-700 gap-0.5">
+                <i data-lucide="moon" class="w-3.5 h-3.5 text-vampire-driedBlood"></i>
+                <span class="slot-status text-[7px] font-cinzel uppercase tracking-wider text-gray-600">Vazio</span>
+              </div>
+              <div class="absolute top-0.5 left-1">
+                <span class="slot-role text-[7px] font-mono font-bold px-1 py-0.2 rounded bg-black/95 border border-white/10 text-gray-500">Jogador</span>
+              </div>
+              <div class="absolute bottom-1 right-1 flex items-center">
+                <span class="slot-mic w-2 h-2 rounded-full bg-gray-600"></span>
+              </div>
+            </div>
+            <div class="w-full text-center pt-0.5 flex-shrink-0">
+              <span class="slot-name font-cinzel text-[10px] font-bold text-gray-500 truncate block leading-tight">Vaga 3</span>
+            </div>
+          </div>
+
+          <!-- Slot 5 (Jogador 4) -->
+          <div id="coterieSlot4" class="coterie-slot coterie-cameo rounded-lg overflow-hidden flex flex-col justify-between p-1 opacity-50 transition-all min-h-[64px]">
+            <div class="relative flex-grow w-full bg-black rounded flex items-center justify-center overflow-hidden">
+              <video id="videoSlot4" autoplay playsinline class="w-full h-full object-cover hidden"></video>
+              <div class="fallback-slot flex flex-col items-center justify-center text-gray-700 gap-0.5">
+                <i data-lucide="moon" class="w-3.5 h-3.5 text-vampire-driedBlood"></i>
+                <span class="slot-status text-[7px] font-cinzel uppercase tracking-wider text-gray-600">Vazio</span>
+              </div>
+              <div class="absolute top-0.5 left-1">
+                <span class="slot-role text-[7px] font-mono font-bold px-1 py-0.2 rounded bg-black/95 border border-white/10 text-gray-500">Jogador</span>
+              </div>
+              <div class="absolute bottom-1 right-1 flex items-center">
+                <span class="slot-mic w-2 h-2 rounded-full bg-gray-600"></span>
+              </div>
+            </div>
+            <div class="w-full text-center pt-0.5 flex-shrink-0">
+              <span class="slot-name font-cinzel text-[10px] font-bold text-gray-500 truncate block leading-tight">Vaga 4</span>
+            </div>
+          </div>
+
+          <!-- Slot 6 (Jogador 5) -->
+          <div id="coterieSlot5" class="coterie-slot coterie-cameo rounded-lg overflow-hidden flex flex-col justify-between p-1 opacity-50 transition-all min-h-[64px]">
+            <div class="relative flex-grow w-full bg-black rounded flex items-center justify-center overflow-hidden">
+              <video id="videoSlot5" autoplay playsinline class="w-full h-full object-cover hidden"></video>
+              <div class="fallback-slot flex flex-col items-center justify-center text-gray-700 gap-0.5">
+                <i data-lucide="moon" class="w-3.5 h-3.5 text-vampire-driedBlood"></i>
+                <span class="slot-status text-[7px] font-cinzel uppercase tracking-wider text-gray-600">Vazio</span>
+              </div>
+              <div class="absolute top-0.5 left-1">
+                <span class="slot-role text-[7px] font-mono font-bold px-1 py-0.2 rounded bg-black/95 border border-white/10 text-gray-500">Jogador</span>
+              </div>
+              <div class="absolute bottom-1 right-1 flex items-center">
+                <span class="slot-mic w-2 h-2 rounded-full bg-gray-600"></span>
+              </div>
+            </div>
+            <div class="w-full text-center pt-0.5 flex-shrink-0">
+              <span class="slot-name font-cinzel text-[10px] font-bold text-gray-500 truncate block leading-tight">Vaga 5</span>
+            </div>
+          </div>
+
+        </div>
+      </aside>
+
+      <!-- ======================================================== -->
+      <!-- PARTE 2: ÁREA CENTRAL (ALTAR DAS SOMBRAS & TOKENS)       -->
+      <!-- ======================================================== -->
+      <section class="flex-grow flex flex-col h-full overflow-hidden bg-vampire-void p-2 sm:p-3 relative min-w-0">
+        
+        <!-- Narrator Controls Bar (VISÍVEL SOMENTE PARA O NARRADOR) -->
+        <div id="narratorControlsBar" class="hidden flex-wrap items-center justify-between gap-1.5 bg-vampire-obsidian/95 border border-vampire-gold/30 rounded-xl px-2.5 py-1.5 mb-2 shadow-2xl z-20">
+          <div class="flex items-center gap-1.5">
+            <span class="font-gothic text-sm sm:text-base text-vampire-gold flex items-center gap-1">
+              <span>☥</span>
+              Mural das Sombras:
+            </span>
+          </div>
+
+          <div class="flex items-center gap-1.5 flex-wrap">
+            <!-- Upload de Arquivo -->
+            <label class="px-2 py-1 rounded-lg bg-vampire-black hover:bg-vampire-slate border border-vampire-gold/30 text-[11px] font-cinzel text-vampire-parchment cursor-pointer transition flex items-center gap-1 shadow-sm">
+              <i data-lucide="upload" class="w-3 h-3 text-vampire-gold"></i>
+              <span>Imagem</span>
+              <input type="file" id="imageFileInput" accept="image/*" class="hidden" onchange="handleImageFileUpload(event)">
+            </label>
+
+            <!-- Link URL -->
+            <button onclick="promptImageUrl()" class="px-2 py-1 rounded-lg bg-vampire-black hover:bg-vampire-slate border border-vampire-ash text-[11px] font-cinzel text-vampire-parchment transition flex items-center gap-1">
+              <i data-lucide="link" class="w-3 h-3 text-vampire-gold"></i>
+              <span>URL</span>
+            </button>
+
+            <!-- Limpar Imagem -->
+            <button onclick="clearSharedImage()" class="px-2 py-1 rounded-lg bg-vampire-driedBlood/50 hover:bg-vampire-driedBlood text-red-200 border border-red-950 text-[11px] font-cinzel transition flex items-center gap-1">
+              <i data-lucide="x" class="w-3 h-3"></i>
+              <span>Limpar</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Tokens Action Bar (Access for both Storyteller and Players) -->
+        <div class="flex items-center justify-between gap-2 mb-2 z-20 flex-shrink-0">
+          <div class="flex items-center gap-2 flex-wrap">
+            <button id="btnOpenTokenModal" onclick="openTokenModal()" class="px-2.5 py-1 rounded-lg bg-gradient-to-r from-vampire-driedBlood via-vampire-blood to-vampire-driedBlood hover:from-vampire-crimson text-vampire-parchment text-[11px] font-cinzel font-bold border border-red-900/60 shadow-blood-glow flex items-center gap-1.5 transition disabled:opacity-40 disabled:cursor-not-allowed">
+              <span class="text-vampire-gold">☥</span>
+              <span>Invocar Token</span>
+            </button>
+
+            <!-- Barra Superior de Configuração do Token Selecionado -->
+            <div id="topTokenControls" class="flex items-center gap-1 bg-vampire-black/95 px-2 py-0.5 rounded-lg border border-vampire-gold/25 opacity-40 pointer-events-none transition-all">
+              <span id="selectedTokenLabel" class="text-[10px] font-cinzel text-gray-500 mr-1 max-w-[90px] sm:max-w-[120px] truncate">Nenhum</span>
+              <button type="button" onclick="modifySelectedTokenSize(-10)" title="Diminuir Diâmetro" class="w-5 h-5 rounded bg-vampire-slate hover:bg-vampire-ash text-gray-400 hover:text-white text-xs font-bold flex items-center justify-center border border-vampire-ash">-</button>
+              <button type="button" onclick="modifySelectedTokenSize(10)" title="Aumentar Diâmetro" class="w-5 h-5 rounded bg-vampire-slate hover:bg-vampire-ash text-gray-400 hover:text-white text-xs font-bold flex items-center justify-center border border-vampire-ash">+</button>
+              
+              <!-- Seletor de Cor da Borda do Token -->
+              <div class="relative flex items-center" title="Cor da Borda">
+                <input type="color" id="selectedTokenColorPicker" oninput="changeSelectedTokenColor(this.value)" class="w-5 h-5 rounded cursor-pointer border border-vampire-ash bg-transparent p-0 overflow-hidden appearance-none">
+              </div>
+
+              <button type="button" onclick="toggleSelectedTokenMark()" title="Alternar Marcação X Vermelho" class="px-1.5 h-5 rounded bg-vampire-slate hover:bg-red-950 text-red-500 hover:text-red-300 text-[11px] font-bold flex items-center justify-center border border-vampire-ash">✕</button>
+              <button type="button" onclick="deleteSelectedToken()" title="Apagar Token" class="w-5 h-5 rounded bg-vampire-slate hover:bg-red-950 text-gray-400 hover:text-white text-xs flex items-center justify-center border border-vampire-ash">🗑</button>
+            </div>
+
+            <span class="text-[10px] text-gray-500 hidden sm:inline font-cinzel">Selecione para configurar</span>
+          </div>
+          <div id="tokenNotice" class="text-[10px] font-mono text-vampire-gold bg-black/90 px-2 py-0.5 rounded border border-vampire-gold/25">
+            <span id="activeTokensCount">Tokens: 0</span>
+          </div>
+        </div>
+
+        <!-- Stage Display Area (Gothic Atmosphere - Altar das Sombras) -->
+        <div id="imageStageContainer" class="flex-grow rounded-2xl altar-stone-bg border border-vampire-ash flex items-center justify-center relative overflow-hidden shadow-crypt-well group w-full">
+          
+          <!-- Ornate Filigree Corner Accents - Cruzes Lapidares Antigas -->
+          <div class="absolute top-2 left-2 text-vampire-gold/30 text-xs select-none pointer-events-none font-gothic">✠ ╔</div>
+          <div class="absolute top-2 right-2 text-vampire-gold/30 text-xs select-none pointer-events-none font-gothic">╗ ✠</div>
+          <div class="absolute bottom-2 left-2 text-vampire-gold/30 text-xs select-none pointer-events-none font-gothic">✠ ╚</div>
+          <div class="absolute bottom-2 right-2 text-vampire-gold/30 text-xs select-none pointer-events-none font-gothic">╝ ✠</div>
+
+          <!-- Default Placeholder when no image is shared -->
+          <div id="emptyImagePlaceholder" class="text-center p-6 flex flex-col items-center justify-center pointer-events-none select-none z-0 relative">
+            <div class="w-16 h-16 rounded-full bg-vampire-crypt/80 border border-vampire-gold/30 flex items-center justify-center text-vampire-goldMuted mb-3 shadow-inner backdrop-blur-sm">
+              <span class="font-gothic text-3xl text-vampire-gold/80">☥</span>
+            </div>
+            <h3 class="font-gothic text-xl sm:text-2xl text-vampire-parchment tracking-widest uppercase drop-shadow-[0_2px_8px_rgba(0,0,0,1)]">Altar das Sombras</h3>
+            <div class="w-20 h-[1px] bg-gradient-to-r from-transparent via-vampire-gold/40 to-transparent my-1.5"></div>
+            <p id="emptyStageText" class="text-xs font-cinzel text-gray-400 max-w-sm mt-1 leading-relaxed drop-shadow-[0_1px_4px_rgba(0,0,0,0.9)]">Aguardando o Narrador desvelar o mapa ou retrato.</p>
+          </div>
+
+          <!-- Displayed Shared Image -->
+          <img id="sharedImageElement" src="" alt="Cena do Narrador" class="hidden max-h-full max-w-full object-contain transition-transform duration-300 select-none pointer-events-none z-0">
+
+          <!-- Tokens Layer Container (Over Battlemap/Stage) -->
+          <div id="tokensLayer" class="absolute inset-0 z-10 overflow-hidden pointer-events-auto"></div>
+
+          <!-- Fullscreen / Zoom Overlay Button -->
+          <div id="imageStageActions" class="absolute bottom-2 right-2 hidden gap-2 z-20">
+            <button onclick="toggleImageFullscreen()" class="p-1.5 rounded-lg bg-black/90 text-vampire-parchment hover:text-vampire-gold border border-vampire-gold/25 transition backdrop-blur shadow-2xl" title="Ver em Tela Cheia">
+              <i data-lucide="maximize-2" class="w-3.5 h-3.5"></i>
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ======================================================== -->
+      <!-- PARTE 3: LADO DIREITO (ROLADOR DE DADOS COMPACTO E FEED) -->
+      <!-- ======================================================== -->
+      <aside class="w-full lg:w-72 xl:w-80 flex-shrink-0 bg-vampire-void/95 border-t lg:border-t-0 lg:border-l border-vampire-ash flex flex-col h-auto lg:h-full overflow-hidden shadow-2xl">
+        
+        <!-- Abas do Painel Direito: Dados vs Áudio & Atmosfera -->
+        <div class="px-2 pt-2 pb-1 border-b border-vampire-ash flex items-center gap-1 bg-vampire-crypt flex-shrink-0">
+          <button type="button" id="tabBtnDice" onclick="switchRightTab('dice')" class="flex-1 py-1.5 px-2 rounded-lg font-gothic text-xs tracking-wider uppercase transition flex items-center justify-center gap-1 border border-red-950 bg-gradient-to-r from-vampire-driedBlood to-vampire-blood text-vampire-parchment shadow-blood-glow">
+            <span class="text-vampire-gold">☥</span>
+            <span>Julgamento</span>
+          </button>
+          <button type="button" id="tabBtnAudio" onclick="switchRightTab('audio')" class="flex-1 py-1.5 px-2 rounded-lg font-gothic text-xs tracking-wider uppercase transition flex items-center justify-center gap-1 border border-vampire-ash bg-vampire-black text-gray-500 hover:text-vampire-gold hover:border-vampire-gold/30">
+            <i data-lucide="music" class="w-3.5 h-3.5"></i>
+            <span>Áudio & Sombras</span>
+          </button>
+        </div>
+
+        <!-- CONTEÚDO DA ABA 1: ROLADOR DE DADOS (JULGAMENTO) -->
+        <div id="rightTabDiceContent" class="flex-grow flex flex-col overflow-hidden">
+          
+          <!-- Header do Rolador -->
+          <div class="px-3 py-1.5 border-b border-vampire-ash flex items-center justify-between bg-vampire-slate/40 flex-shrink-0">
+            <span class="font-cinzel text-[10px] text-gray-500 uppercase tracking-wider">Parada de Sangue</span>
+            <button type="button" id="btnRouseCheck" onclick="performRouseCheck()" class="px-2 py-0.5 rounded-lg bg-gradient-to-r from-vampire-driedBlood to-vampire-blood hover:from-vampire-crimson text-vampire-parchment font-cinzel text-[10px] font-bold transition shadow-blood-glow flex items-center gap-1 border border-red-900/60">
+              <i data-lucide="droplet" class="w-2.5 h-2.5 text-red-400"></i>
+              <span>Incitar</span>
+            </button>
+          </div>
+
+          <!-- Parada, Fome e Dificuldade (Compacto e Direto) -->
+          <div class="p-2.5 bg-vampire-crypt border-b border-vampire-ash space-y-2 flex-shrink-0">
+            
+            <!-- Pool -->
+            <div>
+              <div class="flex items-center justify-between text-[11px] mb-0.5">
+                <span class="font-cinzel text-vampire-parchment font-semibold">Parada de Dados:</span>
+                <div class="flex items-center gap-1">
+                  <button type="button" onclick="adjustPool(-1)" class="w-4 h-4 rounded bg-vampire-black border border-vampire-ash text-[10px] font-bold text-gray-400 hover:border-vampire-gold transition">-</button>
+                  <span id="poolValueBadge" class="font-mono font-bold text-vampire-gold text-[11px] px-1.5 bg-black rounded border border-vampire-gold/30">6</span>
+                  <button type="button" onclick="adjustPool(1)" class="w-4 h-4 rounded bg-vampire-black border border-vampire-ash text-[10px] font-bold text-gray-400 hover:border-vampire-gold transition">+</button>
+                </div>
+              </div>
+              <input type="range" id="inputPool" min="1" max="20" value="6" class="w-full h-1 bg-vampire-black rounded appearance-none cursor-pointer accent-vampire-crimson">
+            </div>
+
+            <!-- Fome -->
+            <div>
+              <div class="flex items-center justify-between text-[11px] mb-0.5">
+                <span class="font-cinzel text-red-400 font-bold flex items-center gap-1">
+                  <i data-lucide="flame" class="w-3 h-3 text-vampire-crimson"></i> 
+                  Fome da Besta:
+                </span>
+                <span id="hungerValueBadge" class="font-mono font-bold text-red-500 text-[11px] px-1.5 bg-black rounded border border-red-950 shadow-blood-glow">1</span>
+              </div>
+              <div class="grid grid-cols-6 gap-1" id="hungerDotsContainer"></div>
+            </div>
+
+            <!-- Dificuldade vs Disputa -->
+            <div>
+              <div class="flex items-center justify-between text-[11px] mb-0.5">
+                <span class="font-cinzel text-vampire-parchment font-semibold">Dificuldade:</span>
+                <button type="button" id="btnToggleOpposed" onclick="toggleOpposedMode()" class="text-[9px] font-cinzel font-bold text-vampire-gold hover:text-white px-1 py-0.2 rounded border border-vampire-gold/30 bg-vampire-black">
+                  <span id="opposedModeText">Fixa</span>
+                </button>
+              </div>
+              <div id="difficultyRow" class="grid grid-cols-7 gap-0.5">
+                <button type="button" onclick="setDifficulty(1)" class="diff-btn py-0.5 rounded bg-vampire-black border border-vampire-ash text-[10px] font-mono font-bold text-gray-400">1</button>
+                <button type="button" onclick="setDifficulty(2)" class="diff-btn py-0.5 rounded bg-vampire-blood border border-red-900 text-white text-[10px] font-mono font-bold shadow-blood-glow">2</button>
+                <button type="button" onclick="setDifficulty(3)" class="diff-btn py-0.5 rounded bg-vampire-black border border-vampire-ash text-[10px] font-mono font-bold text-gray-400">3</button>
+                <button type="button" onclick="setDifficulty(4)" class="diff-btn py-0.5 rounded bg-vampire-black border border-vampire-ash text-[10px] font-mono font-bold text-gray-400">4</button>
+                <button type="button" onclick="setDifficulty(5)" class="diff-btn py-0.5 rounded bg-vampire-black border border-vampire-ash text-[10px] font-mono font-bold text-gray-400">5</button>
+                <button type="button" onclick="setDifficulty(6)" class="diff-btn py-0.5 rounded bg-vampire-black border border-vampire-ash text-[10px] font-mono font-bold text-gray-400">6</button>
+                <button type="button" onclick="setDifficulty(7)" class="diff-btn py-0.5 rounded bg-vampire-black border border-vampire-ash text-[10px] font-mono font-bold text-gray-400">7+</button>
+              </div>
+              <div id="opposedNotice" class="hidden p-1 mt-1 rounded bg-vampire-driedBlood/30 border border-vampire-driedBlood text-[9px] text-red-300 font-cinzel leading-tight">
+                Modo Disputa: Sem dificuldade fixa.
+              </div>
+            </div>
+
+            <!-- Botão Rolar -->
+            <button type="button" onclick="performRoll()" class="w-full py-2 rounded-xl bg-gradient-to-r from-vampire-driedBlood via-vampire-blood to-vampire-driedBlood hover:from-vampire-crimson hover:to-vampire-blood text-vampire-parchment font-gothic text-sm tracking-widest uppercase transition shadow-blood-glow flex items-center justify-center gap-1.5 border border-red-900/60">
+              <span class="text-vampire-gold">☥</span>
+              <span>Rolar Dados</span>
+            </button>
+          </div>
+
+          <!-- Feed Histórico de Rolagens -->
+          <div class="px-2.5 py-1.5 border-b border-vampire-ash flex items-center justify-between text-xs bg-vampire-black flex-shrink-0">
+            <span class="font-cinzel text-vampire-parchment font-bold text-[11px] flex items-center gap-1">
+              <span class="w-1.5 h-1.5 rounded-full bg-vampire-crimson inline-block shadow-blood-glow"></span>
+              Crônicas <span id="rollsCountBadge" class="text-vampire-gold font-mono">(0)</span>
+            </span>
+            <button onclick="clearRoomRolls()" class="text-[10px] text-gray-500 hover:text-red-400 font-cinzel flex items-center gap-0.5 transition">
+              <i data-lucide="trash-2" class="w-2.5 h-2.5"></i>
+              <span>Limpar</span>
+            </button>
+          </div>
+
+          <div id="rollsFeedContainer" class="flex-grow overflow-y-auto p-2 space-y-2">
+            <div id="emptyFeedState" class="border border-dashed border-vampire-ash/60 rounded-xl p-4 text-center text-[11px] text-gray-600 flex flex-col items-center justify-center gap-1.5">
+              <span class="font-gothic text-xl text-vampire-goldMuted">☥</span>
+              <span class="font-cinzel">Nenhum dado rolou na escuridão.</span>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- CONTEÚDO DA ABA 2: ÁUDIO & SOMBRAS (SOUNDBOARD & AMBIÊNCIA) -->
+        <div id="rightTabAudioContent" class="hidden flex-grow flex-col overflow-y-auto p-2.5 space-y-3">
+          
+          <!-- Controle de Volume Pessoal (Disponível para TODOS) -->
+          <div class="bg-vampire-black p-2.5 rounded-xl border border-vampire-gold/25 shadow-md">
+            <div class="flex items-center justify-between text-xs mb-1.5">
+              <span class="font-cinzel text-vampire-parchment font-bold flex items-center gap-1.5">
+                <i data-lucide="volume-2" class="w-3.5 h-3.5 text-vampire-gold"></i>
+                <span>Volume Pessoal</span>
+              </span>
+              <span id="personalVolumeLabel" class="font-mono text-vampire-gold text-[11px]">75%</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <button type="button" id="btnPersonalMute" onclick="togglePersonalMute()" class="p-1 rounded bg-vampire-slate hover:bg-vampire-ash text-gray-400 hover:text-vampire-gold border border-vampire-ash" title="Mudo Pessoal">
+                <i id="personalMuteIcon" data-lucide="volume" class="w-3.5 h-3.5"></i>
+              </button>
+              <input type="range" id="inputPersonalVolume" min="0" max="100" value="75" oninput="handlePersonalVolumeChange(this.value)" class="w-full h-1.5 bg-vampire-slate rounded appearance-none cursor-pointer accent-vampire-gold">
+            </div>
+            <p class="text-[9px] font-cinzel text-gray-500 mt-1">Este controle ajusta apenas o som no seu navegador individual.</p>
+          </div>
+
+          <!-- Status do Áudio Atual (Sincronizado na Sala) -->
+          <div class="bg-vampire-crypt p-2 rounded-xl border border-vampire-ash flex items-center justify-between">
+            <div class="flex items-center gap-2 truncate">
+              <div id="nowPlayingIndicator" class="w-2.5 h-2.5 rounded-full bg-gray-700 flex-shrink-0"></div>
+              <div class="truncate">
+                <span class="text-[9px] font-cinzel text-gray-500 block uppercase">Em Reprodução na Coterie</span>
+                <span id="nowPlayingTitle" class="font-cinzel text-xs font-bold text-vampire-parchment truncate block">Silêncio Sepulcral</span>
+              </div>
+            </div>
+            <button id="btnStopMasterAudio" onclick="triggerStopTrack()" class="hidden text-[10px] font-cinzel px-2 py-0.5 rounded bg-red-950 hover:bg-vampire-driedBlood border border-red-900 text-red-200 transition">
+              Cessar Som
+            </button>
+          </div>
+
+          <!-- ÁREA EXCLUSIVA DO NARRADOR: PAINEL MESTRE DE ÁUDIO -->
+          <div id="narratorAudioSection" class="space-y-3">
+            <div class="flex items-center justify-between pt-1 border-t border-vampire-ash">
+              <span class="font-gothic text-sm text-vampire-gold flex items-center gap-1">
+                <span>☥</span> Mestre das Frequências
+              </span>
+              <span class="text-[9px] font-mono text-vampire-goldMuted px-1.5 py-0.2 rounded bg-black border border-vampire-gold/25">Narrador</span>
+            </div>
+
+            <!-- Seleção de Músicas da Noite (Biblioteca Gótica do Narrador) -->
+            <div>
+              <div class="flex items-center justify-between mb-1.5">
+                <label class="text-[11px] font-cinzel text-vampire-parchment font-bold flex items-center gap-1">
+                  <i data-lucide="music-2" class="w-3.5 h-3.5 text-vampire-gold"></i>
+                  <span>Músicas & Trilha de Fundo:</span>
+                </label>
+                <button type="button" onclick="triggerStopTrack()" class="text-[9px] font-cinzel text-gray-500 hover:text-red-400 underline">Silenciar Tudo</button>
+              </div>
+
+              <!-- Lista de Músicas Temáticas de Vampiro -->
+              <div class="space-y-1.5" id="soundtrackListContainer">
+                <button type="button" onclick="triggerMasterTrack('requiem')" id="trackBtn_requiem" class="track-btn w-full p-2 rounded-lg bg-vampire-slate/60 hover:bg-vampire-slate border border-vampire-ash text-left transition flex items-center justify-between group">
+                  <div class="flex items-center gap-2">
+                    <span class="w-6 h-6 rounded-full bg-black border border-vampire-gold/30 flex items-center justify-center text-vampire-gold text-xs group-hover:border-vampire-gold">🎵</span>
+                    <div>
+                      <span class="font-cinzel text-xs font-bold text-vampire-parchment group-hover:text-vampire-gold block">Requiem Gótico da Catedral</span>
+                      <span class="text-[8px] text-gray-500 font-cinzel block">Órgão Litúrgico, Corais Sacros & Reverberação Eterna</span>
+                    </div>
+                  </div>
+                  <i data-lucide="play" class="w-3 h-3 text-gray-600 group-hover:text-vampire-gold"></i>
+                </button>
+
+                <button type="button" onclick="triggerMasterTrack('elysium')" id="trackBtn_elysium" class="track-btn w-full p-2 rounded-lg bg-vampire-slate/60 hover:bg-vampire-slate border border-vampire-ash text-left transition flex items-center justify-between group">
+                  <div class="flex items-center gap-2">
+                    <span class="w-6 h-6 rounded-full bg-black border border-vampire-gold/30 flex items-center justify-center text-vampire-gold text-xs group-hover:border-vampire-gold">🍷</span>
+                    <div>
+                      <span class="font-cinzel text-xs font-bold text-vampire-parchment group-hover:text-vampire-gold block">Elísio da Alta Sociedade</span>
+                      <span class="text-[8px] text-gray-500 font-cinzel block">Piano Melancólico, Cordas Clássicas & Textura Noir</span>
+                    </div>
+                  </div>
+                  <i data-lucide="play" class="w-3 h-3 text-gray-600 group-hover:text-vampire-gold"></i>
+                </button>
+
+                <button type="button" onclick="triggerMasterTrack('club')" id="trackBtn_club" class="track-btn w-full p-2 rounded-lg bg-vampire-slate/60 hover:bg-vampire-slate border border-red-950 text-left transition flex items-center justify-between group">
+                  <div class="flex items-center gap-2">
+                    <span class="w-6 h-6 rounded-full bg-black border border-red-900/40 flex items-center justify-center text-red-500 text-xs group-hover:border-red-500">🦇</span>
+                    <div>
+                      <span class="font-cinzel text-xs font-bold text-vampire-parchment group-hover:text-red-400 block">Boate Gótica / Industrial</span>
+                      <span class="text-[8px] text-gray-500 font-cinzel block">Batidas Sombrias, Baixo Sintetizado & Pulso Noturno</span>
+                    </div>
+                  </div>
+                  <i data-lucide="play" class="w-3 h-3 text-gray-600 group-hover:text-red-400"></i>
+                </button>
+
+                <button type="button" onclick="triggerMasterTrack('crypt')" id="trackBtn_crypt" class="track-btn w-full p-2 rounded-lg bg-vampire-slate/60 hover:bg-vampire-slate border border-vampire-ash text-left transition flex items-center justify-between group">
+                  <div class="flex items-center gap-2">
+                    <span class="w-6 h-6 rounded-full bg-black border border-vampire-ash flex items-center justify-center text-gray-400 text-xs group-hover:border-vampire-gold">🕯️</span>
+                    <div>
+                      <span class="font-cinzel text-xs font-bold text-vampire-parchment group-hover:text-vampire-gold block">Cripta & Mausoléu Esquecido</span>
+                      <span class="text-[8px] text-gray-500 font-cinzel block">Drone Abissal, Vento Frio & Gotejamento Subterrâneo</span>
+                    </div>
+                  </div>
+                  <i data-lucide="play" class="w-3 h-3 text-gray-600 group-hover:text-vampire-gold"></i>
+                </button>
+
+                <button type="button" onclick="triggerMasterTrack('tension')" id="trackBtn_tension" class="track-btn w-full p-2 rounded-lg bg-vampire-slate/60 hover:bg-vampire-slate border border-vampire-ash text-left transition flex items-center justify-between group">
+                  <div class="flex items-center gap-2">
+                    <span class="w-6 h-6 rounded-full bg-black border border-red-900/40 flex items-center justify-center text-vampire-crimson text-xs group-hover:border-red-400">🩸</span>
+                    <div>
+                      <span class="font-cinzel text-xs font-bold text-vampire-parchment group-hover:text-red-400 block">A Caçada dos Condenados</span>
+                      <span class="text-[8px] text-gray-500 font-cinzel block">Pulso Arterial Acelerado, Tensão Urbana & Respiração</span>
+                    </div>
+                  </div>
+                  <i data-lucide="play" class="w-3 h-3 text-gray-600 group-hover:text-red-400"></i>
+                </button>
+              </div>
+            </div>
+
+            <!-- Transmitir Música Própria (Link MP3/Stream ou Arquivo do Narrador) -->
+            <div class="pt-2 border-t border-vampire-ash">
+              <label class="block text-[11px] font-cinzel text-vampire-parchment font-bold mb-1">Transmitir Música Externa ou Própria:</label>
+              <div class="flex gap-1 mb-1.5">
+                <input type="text" id="inputCustomAudioUrl" placeholder="Link de música / áudio (.mp3 / stream)" class="w-full bg-vampire-black border border-vampire-ash rounded-lg px-2 py-1 text-xs text-vampire-parchment focus:outline-none focus:border-vampire-gold font-mono">
+                <button type="button" onclick="triggerCustomAudioUrl()" class="px-2.5 py-1 rounded-lg bg-vampire-slate hover:bg-vampire-ash border border-vampire-ash text-vampire-gold text-xs font-cinzel font-bold">Tocar</button>
+              </div>
+              <label class="w-full py-1.5 px-2 rounded-lg bg-vampire-black hover:bg-vampire-slate border border-dashed border-vampire-ash text-[10px] font-cinzel text-gray-400 hover:text-white flex items-center justify-center gap-1 cursor-pointer transition">
+                <i data-lucide="upload" class="w-3 h-3 text-vampire-gold"></i>
+                <span>Carregar Música do seu Computador (MP3/WAV)</span>
+                <input type="file" id="inputCustomAudioFile" accept="audio/*" class="hidden" onchange="handleAudioFileUpload(event)">
+              </label>
+            </div>
+
+          </div>
+
+          <!-- Aviso para Jogadores (Apenas o Narrador escolhe o som) -->
+          <div id="playerAudioNotice" class="hidden p-3 rounded-xl bg-vampire-black/80 border border-vampire-ash text-center space-y-1">
+            <span class="font-gothic text-base text-vampire-goldMuted">☥</span>
+            <p class="font-cinzel text-xs text-vampire-parchment font-bold">Ouvidos da Máscara</p>
+            <p class="text-[10px] font-cinzel text-gray-500 leading-relaxed">
+              O Narrador rege a ambientação da noite. Quando nenhum ambiente for invocado, reinará o silêncio sepulcral. Regule seus decibéis no <strong class="text-vampire-gold">Volume Pessoal</strong>.
+            </p>
+          </div>
+
+        </div>
+
+      </aside>
+
+    </div>
+  </div>
+
+  <!-- Audio Element invisível para streaming de URLs/Arquivos externos -->
+  <audio id="externalAudioPlayer" preload="auto" class="hidden"></audio>
+
+  <!-- Modal Criação de Token -->
+  <div id="tokenModal" class="fixed inset-0 z-50 bg-black/95 backdrop-blur-md hidden items-center justify-center p-4">
+    <div class="bg-vampire-obsidian border-2 border-vampire-gold/30 rounded-2xl max-w-md w-full p-6 shadow-2xl gothic-border">
+      <div class="flex items-center justify-between pb-2 border-b border-vampire-ash mb-4">
+        <h3 class="font-gothic text-lg font-bold text-vampire-parchment flex items-center gap-2">
+          <span class="text-vampire-crimson">☥</span>
+          Invocar Brasão / Token
+        </h3>
+        <button onclick="closeTokenModal()" class="text-gray-500 hover:text-white">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+
+      <div class="space-y-4">
+        <div>
+          <label class="block text-xs font-cinzel text-vampire-parchment font-bold mb-1">Nome no Brasão:</label>
+          <input type="text" id="tokenCharNameInput" maxlength="24" class="w-full bg-vampire-black border border-vampire-ash rounded-xl px-3 py-2 text-sm text-vampire-parchment focus:outline-none focus:border-vampire-gold font-cinzel">
+        </div>
+
+        <div>
+          <label class="block text-xs font-cinzel text-vampire-parchment font-bold mb-1.5">Retrato do Condenado:</label>
+          <div class="grid grid-cols-2 gap-2 mb-2">
+            <label class="cursor-pointer py-2 px-3 rounded-xl bg-vampire-slate hover:bg-vampire-ash border border-vampire-ash text-xs font-cinzel text-vampire-parchment text-center flex items-center justify-center gap-1.5 transition">
+              <i data-lucide="upload" class="w-3.5 h-3.5 text-vampire-gold"></i>
+              <span>Enviar Arquivo</span>
+              <input type="file" id="tokenFileInput" accept="image/*" class="hidden" onchange="handleTokenFileUpload(event)">
+            </label>
+            <button type="button" onclick="promptTokenUrl()" class="py-2 px-3 rounded-xl bg-vampire-slate hover:bg-vampire-ash border border-vampire-ash text-xs font-cinzel text-vampire-parchment text-center flex items-center justify-center gap-1.5 transition">
+              <i data-lucide="link" class="w-3.5 h-3.5 text-vampire-gold"></i>
+              <span>Por Link / URL</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Token Preview -->
+        <div class="flex items-center gap-4 bg-vampire-black p-3 rounded-xl border border-vampire-ash">
+          <div id="tokenPreviewCircle" class="w-16 h-16 rounded-full border-2 border-vampire-gold/60 overflow-hidden bg-vampire-slate flex items-center justify-center flex-shrink-0 relative">
+            <img id="tokenPreviewImg" src="" alt="Preview" class="w-full h-full object-cover hidden">
+            <span id="tokenPreviewPlaceholder" class="font-gothic text-2xl text-vampire-goldMuted">☥</span>
+          </div>
+          <div class="text-xs text-gray-500">
+            <p class="font-cinzel font-bold text-vampire-parchment mb-0.5">Selo Circular</p>
+            <p class="text-[11px] leading-tight font-cinzel">Controle exclusivo do seu token: arraste, mude o diâmetro, marque com a cruz carmim ou retire de cena.</p>
+          </div>
+        </div>
+
+        <div class="pt-2 flex items-center justify-end gap-2 border-t border-vampire-ash">
+          <button type="button" onclick="closeTokenModal()" class="px-4 py-2 rounded-xl bg-vampire-slate hover:bg-vampire-ash text-xs font-cinzel text-gray-400">
+            Cancelar
+          </button>
+          <button type="button" onclick="createAndDeployToken()" class="px-4 py-2 rounded-xl bg-gradient-to-r from-vampire-driedBlood via-vampire-blood to-vampire-driedBlood hover:from-vampire-crimson text-vampire-parchment font-cinzel font-bold text-xs shadow-blood-glow flex items-center gap-1.5 border border-red-900/60">
+            <span>✠</span>
+            <span>Inserir no Domínio</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Força de Vontade -->
+  <div id="willpowerModal" class="fixed inset-0 z-50 bg-black/95 backdrop-blur-md hidden items-center justify-center p-4">
+    <div class="bg-vampire-obsidian border-2 border-vampire-blood rounded-2xl max-w-sm w-full p-5 shadow-2xl gothic-border">
+      <div class="flex items-center justify-between pb-2 border-b border-vampire-ash mb-3">
+        <h3 class="font-gothic text-base font-bold text-vampire-parchment flex items-center gap-1.5">
+          <i data-lucide="shield" class="w-4 h-4 text-vampire-crimson"></i>
+          Força de Vontade (V5)
+        </h3>
+        <button onclick="closeWillpowerModal()" class="text-gray-500 hover:text-white">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+      <p class="text-xs text-vampire-parchment font-cinzel mb-3 leading-relaxed">
+        Domine a sua carne. Escolha <strong>até 3 dados normais</strong> para re-rolar. Os dados de Fome pertencem à Besta e jamais podem ser tocados.
+      </p>
+      <div id="willpowerDiceList" class="grid grid-cols-5 gap-2 my-3 p-2 bg-vampire-black rounded-xl border border-vampire-ash"></div>
+      <div class="flex items-center justify-between text-xs text-gray-500 pt-2 border-t border-vampire-ash">
+        <span class="font-cinzel">Escolhidos: <strong id="selectedDiceCount" class="text-vampire-gold font-mono">0</strong>/3</span>
+        <button id="btnExecuteWillpower" onclick="executeWillpowerReroll()" class="px-3 py-1.5 rounded-lg bg-vampire-blood hover:bg-vampire-crimson text-vampire-parchment font-cinzel text-xs font-bold transition shadow-blood-glow disabled:opacity-40" disabled>
+          Re-rolar
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- APPLICATION JAVASCRIPT -->
+  <script>
+    // State
+    const state = {
+      role: 'player', // 'player' | 'storyteller'
+      name: '',
+      room: '',
+      password: '',
+      myPeerId: null,
+      pool: 6,
+      hunger: 1,
+      difficulty: 2,
+      isOpposed: false,
+      rolls: [],
+      pendingWillpowerRoll: null,
+      selectedDiceForReroll: new Set(),
+      localStream: null,
+      isCamActive: false,
+      isMicActive: false,
+      sharedImage: null,
+      tokens: [],
+      selectedTokenId: null,
+      selectedTokenImage: null,
+      ambientPlaying: false,
+      activePeers: new Map(), // key: name -> { name, role, peerId, isCamActive, isMicActive, stream }
+      // Audio Tab State
+      currentTab: 'dice',
+      personalVolume: 0.75,
+      isPersonalMuted: false,
+      activeMasterTrack: null,
+      activeMasterTitle: 'Silêncio Sepulcral'
+    };
+
+    // Paleta de materiais realistas para os tokens (couro, minérios, latão, sangue seco)
+    const TOKEN_COLOR_PALETTE = [
+      '#b89758', // Latão / Ouro Antigo
+      '#6b1219', // Sangue Coagulado
+      '#2a6949', // Malaquita / Musgo Fúnebre
+      '#5c3a64', // Tecido Eclesiástico
+      '#305763', // Ardósia Azulada
+      '#995625', // Âmbar Rústico / Couro Curtido
+      '#822b3b', // Veludo Carmesim Antigo
+      '#374d6b', // Lápis-lazúli Medieval
+      '#9e7b36', // Bronze Polido
+      '#43384f', // Púrpura de Cinzas
+      '#385a53', // Cobre Oxidado
+      '#752934'  // Sangue Venoso
+    ];
+
+    function getNextDistinctTokenColor() {
+      const usedColors = new Set(state.tokens.map(t => (t.borderColor || '').toLowerCase()));
+      for (const col of TOKEN_COLOR_PALETTE) {
+        if (!usedColors.has(col.toLowerCase())) {
+          return col;
+        }
+      }
+      return TOKEN_COLOR_PALETTE[state.tokens.length % TOKEN_COLOR_PALETTE.length];
+    }
+
+    // WebRTC PeerJS & Active Calls
+    let myPeer = null;
+    const activeCalls = new Map(); // key: peerId -> MediaConnection
+    const peerStreams = new Map(); // key: peerId -> MediaStream (Armazenamento direto e imutável de streams)
+    let masterAudioGain = null;
+    let localAudioContext = null;
+    let presenceHeartbeatInterval = null;
+
+    // Controladores de Áudio e Sintetizadores Globais
+    let currentToneTrack = null;
+    let ambientDrone = null;
+    let ambientFilter = null;
+    let ambientDroneGain = null;
+    let activeAudioIntervals = [];
+
+    function clearAllAudioIntervals() {
+      activeAudioIntervals.forEach(id => clearInterval(id));
+      activeAudioIntervals = [];
+    }
+
+    function getPersonalGainNode() {
+      if (!masterAudioGain) {
+        masterAudioGain = new Tone.Gain(state.isPersonalMuted ? 0 : state.personalVolume).toDestination();
+      }
+      return masterAudioGain;
+    }
+
+    function playGothicDiceRollSound() {
+      try {
+        const gain = getPersonalGainNode();
+        const now = Tone.now();
+        const diceCount = 4;
+        for (let i = 0; i < diceCount; i++) {
+          const delay = now + (i * 0.045) + (Math.random() * 0.02);
+          const filter = new Tone.Filter({ frequency: 2800 + Math.random() * 1200, type: "bandpass", Q: 3 }).connect(gain);
+          const noise = new Tone.NoiseSynth({
+            noise: { type: 'white' },
+            envelope: { attack: 0.001, decay: 0.04, sustain: 0, release: 0.02 }
+          }).connect(filter);
+          noise.volume.value = -10 + (i * 1.5);
+          noise.triggerAttackRelease('32n', delay);
+          setTimeout(() => { noise.dispose(); filter.dispose(); }, 400);
+        }
+        setTimeout(() => {
+          const woodImpact = new Tone.MembraneSynth({
+            pitchDecay: 0.015,
+            octaves: 1.5,
+            oscillator: { type: 'sine' },
+            envelope: { attack: 0.001, decay: 0.08, sustain: 0 }
+          }).connect(gain);
+          woodImpact.volume.value = -12;
+          woodImpact.triggerAttackRelease('G2', '16n');
+          setTimeout(() => woodImpact.dispose(), 300);
+        }, 160);
+      } catch (e) {}
+    }
+
+    function playGothicCriticalSound() {
+      try {
+        const gain = getPersonalGainNode();
+        const bell = new Tone.MetalSynth({
+          frequency: 146.8, // D3
+          envelope: { attack: 0.001, decay: 2.2, release: 0.4 },
+          harmonicity: 3.2,
+          modulationIndex: 18,
+          resonance: 750,
+          octaves: 2.2
+        }).connect(gain);
+        bell.volume.value = -5;
+        bell.triggerAttackRelease('D3', '1n');
+
+        const choir = new Tone.PolySynth(Tone.Synth, {
+          oscillator: { type: 'triangle' },
+          envelope: { attack: 0.15, decay: 1.6, sustain: 0.2, release: 1.2 }
+        }).connect(gain);
+        choir.volume.value = -16;
+        choir.triggerAttackRelease(['D3', 'A3', 'D4', 'F#4'], '2n', Tone.now() + 0.05);
+
+        setTimeout(() => {
+          bell.dispose();
+          choir.dispose();
+        }, 3000);
+      } catch (e) {}
+    }
+
+    function playBeastFailureSound() {
+      try {
+        const gain = getPersonalGainNode();
+        const sub = new Tone.MembraneSynth({
+          pitchDecay: 0.12,
+          octaves: 4.5,
+          oscillator: { type: 'sawtooth' },
+          envelope: { attack: 0.01, decay: 0.8, sustain: 0.02, release: 0.6 }
+        }).connect(gain);
+        sub.volume.value = 0;
+        sub.triggerAttackRelease('Bb0', '1n');
+
+        const growl = new Tone.NoiseSynth({
+          noise: { type: 'brown' },
+          envelope: { attack: 0.08, decay: 0.6, sustain: 0.1, release: 0.4 }
+        }).connect(gain);
+        growl.volume.value = -8;
+        growl.triggerAttackRelease('2n', Tone.now() + 0.05);
+
+        setTimeout(() => {
+          sub.dispose();
+          growl.dispose();
+        }, 1500);
+      } catch (e) {}
+    }
+
+    // ==========================================
+    // ABA DE ÁUDIO E SOUNDBOARD DO NARRADOR
+    // ==========================================
+    window.switchRightTab = function(tab) {
+      state.currentTab = tab;
+      const btnDice = document.getElementById('tabBtnDice');
+      const btnAudio = document.getElementById('tabBtnAudio');
+      const contentDice = document.getElementById('rightTabDiceContent');
+      const contentAudio = document.getElementById('rightTabAudioContent');
+
+      if (tab === 'dice') {
+        btnDice.className = 'flex-1 py-1.5 px-2 rounded-lg font-gothic text-xs tracking-wider uppercase transition flex items-center justify-center gap-1 border border-red-950 bg-gradient-to-r from-vampire-driedBlood to-vampire-blood text-vampire-parchment shadow-blood-glow';
+        btnAudio.className = 'flex-1 py-1.5 px-2 rounded-lg font-gothic text-xs tracking-wider uppercase transition flex items-center justify-center gap-1 border border-vampire-ash bg-vampire-black text-gray-500 hover:text-vampire-gold hover:border-vampire-gold/30';
+        contentDice.classList.remove('hidden');
+        contentDice.classList.add('flex');
+        contentAudio.classList.add('hidden');
+        contentAudio.classList.remove('flex');
+      } else {
+        btnAudio.className = 'flex-1 py-1.5 px-2 rounded-lg font-gothic text-xs tracking-wider uppercase transition flex items-center justify-center gap-1 border border-red-950 bg-gradient-to-r from-vampire-driedBlood to-vampire-blood text-vampire-parchment shadow-blood-glow';
+        btnDice.className = 'flex-1 py-1.5 px-2 rounded-lg font-gothic text-xs tracking-wider uppercase transition flex items-center justify-center gap-1 border border-vampire-ash bg-vampire-black text-gray-500 hover:text-vampire-gold hover:border-vampire-gold/30';
+        contentAudio.classList.remove('hidden');
+        contentAudio.classList.add('flex');
+        contentDice.classList.add('hidden');
+        contentDice.classList.remove('flex');
+      }
+      if (window.lucide) window.lucide.createIcons();
+    };
+
+    window.handlePersonalVolumeChange = function(val) {
+      state.personalVolume = val / 100;
+      document.getElementById('personalVolumeLabel').innerText = `${val}%`;
+      const gain = getPersonalGainNode();
+      if (!state.isPersonalMuted) {
+        gain.gain.rampTo(state.personalVolume, 0.1);
+      }
+      const externalAudio = document.getElementById('externalAudioPlayer');
+      if (externalAudio) {
+        externalAudio.volume = state.isPersonalMuted ? 0 : state.personalVolume;
+      }
+      remoteAudioElements.forEach(el => {
+        el.volume = state.isPersonalMuted ? 0 : state.personalVolume;
+      });
+    };
+
+    window.togglePersonalMute = function() {
+      state.isPersonalMuted = !state.isPersonalMuted;
+      const icon = document.getElementById('personalMuteIcon');
+      const btn = document.getElementById('btnPersonalMute');
+      const gain = getPersonalGainNode();
+      const externalAudio = document.getElementById('externalAudioPlayer');
+
+      if (state.isPersonalMuted) {
+        gain.gain.rampTo(0, 0.05);
+        if (externalAudio) externalAudio.muted = true;
+        remoteAudioElements.forEach(el => el.muted = true);
+        btn.classList.add('text-red-500', 'border-red-950');
+        icon.setAttribute('data-lucide', 'volume-x');
+      } else {
+        gain.gain.rampTo(state.personalVolume, 0.05);
+        if (externalAudio) externalAudio.muted = false;
+        remoteAudioElements.forEach(el => {
+          el.muted = false;
+          el.volume = state.personalVolume;
+        });
+        btn.classList.remove('text-red-500', 'border-red-950');
+        icon.setAttribute('data-lucide', 'volume-2');
+      }
+      if (window.lucide) window.lucide.createIcons();
+    };
+
+    function stopAllLocalTracks() {
+      clearAllAudioIntervals();
+
+      if (currentToneTrack) {
+        try {
+          if (typeof currentToneTrack.stop === 'function') currentToneTrack.stop();
+          if (typeof currentToneTrack.dispose === 'function') currentToneTrack.dispose();
+        } catch (e) {}
+        currentToneTrack = null;
+      }
+
+      if (ambientDrone) {
+        try {
+          if (ambientDroneGain) ambientDroneGain.gain.rampTo(0, 0.05);
+          ambientDrone.stop();
+          ambientDrone.dispose();
+        } catch (e) {}
+        ambientDrone = null;
+      }
+
+      if (ambientFilter) {
+        try {
+          ambientFilter.stop?.();
+          ambientFilter.dispose();
+        } catch (e) {}
+        ambientFilter = null;
+      }
+
+      if (ambientDroneGain) {
+        try { ambientDroneGain.dispose(); } catch (e) {}
+        ambientDroneGain = null;
+      }
+
+      state.ambientPlaying = false;
+      const ambBtn = document.getElementById('btnAmbientSound');
+      const ambIcon = document.getElementById('ambientIcon');
+      const ambText = document.getElementById('ambientText');
+      if (ambBtn) ambBtn.classList.remove('text-vampire-gold', 'border-vampire-gold');
+      if (ambIcon) ambIcon.setAttribute('data-lucide', 'volume-x');
+      if (ambText) ambText.innerText = 'Silêncio';
+
+      const externalAudio = document.getElementById('externalAudioPlayer');
+      if (externalAudio) {
+        try {
+          externalAudio.pause();
+          externalAudio.src = '';
+        } catch (e) {}
+      }
+
+      document.querySelectorAll('.track-btn').forEach(btn => {
+        btn.classList.remove('border-vampire-crimson', 'bg-red-950/60');
+      });
+      const stopBtn = document.getElementById('btnStopMasterAudio');
+      if (stopBtn) stopBtn.classList.add('hidden');
+      const indicator = document.getElementById('nowPlayingIndicator');
+      if (indicator) {
+        indicator.className = 'w-2.5 h-2.5 rounded-full bg-gray-700 flex-shrink-0';
+      }
+      const title = document.getElementById('nowPlayingTitle');
+      if (title) title.innerText = 'Silêncio Sepulcral';
+      state.activeMasterTrack = null;
+    }
+
+    function playTrackRequiem() {
+      stopAllLocalTracks();
+      const gain = getPersonalGainNode();
+      
+      const reverb = new Tone.Reverb({ decay: 5.5, wet: 0.65 }).connect(gain);
+      const chorus = new Tone.Chorus(1.2, 3.5, 0.4).connect(reverb).start();
+      
+      const organ = new Tone.PolySynth(Tone.Synth, {
+        oscillator: { type: 'fatsawtooth', count: 3, spread: 20 },
+        envelope: { attack: 1.8, decay: 2.2, sustain: 0.85, release: 3.5 }
+      }).connect(chorus);
+      organ.volume.value = -16;
+
+      const choir = new Tone.PolySynth(Tone.FMSynth, {
+        harmonicity: 2.0,
+        modulationIndex: 1.5,
+        oscillator: { type: 'sine' },
+        envelope: { attack: 2.5, decay: 3, sustain: 0.9, release: 4 }
+      }).connect(reverb);
+      choir.volume.value = -20;
+
+      const chords = [
+        { organ: ['D2', 'A2', 'D3', 'F3'], choir: ['A3', 'D4', 'F4'] },
+        { organ: ['Bb1', 'F2', 'Bb2', 'D3'], choir: ['F3', 'Bb3', 'D4'] },
+        { organ: ['G1', 'D2', 'G2', 'Bb2'], choir: ['D3', 'G3', 'Bb3'] },
+        { organ: ['A1', 'E2', 'A2', 'C#3'], choir: ['E3', 'A3', 'C#4'] }
+      ];
+      let step = 0;
+      organ.triggerAttack(chords[0].organ);
+      choir.triggerAttack(chords[0].choir);
+
+      const interval = setInterval(() => {
+        if (!currentToneTrack || currentToneTrack.type !== 'requiem') {
+          clearInterval(interval);
+          return;
+        }
+        step = (step + 1) % chords.length;
+        organ.releaseAll();
+        choir.releaseAll();
+        organ.triggerAttack(chords[step].organ);
+        choir.triggerAttack(chords[step].choir);
+      }, 6200);
+      activeAudioIntervals.push(interval);
+
+      currentToneTrack = {
+        type: 'requiem',
+        stop: () => {
+          clearInterval(interval);
+          try {
+            organ.releaseAll();
+            choir.releaseAll();
+            organ.dispose();
+            choir.dispose();
+            chorus.dispose();
+            reverb.dispose();
+          } catch (e) {}
+        }
+      };
+    }
+
+    function playTrackCrypt() {
+      stopAllLocalTracks();
+      const gain = getPersonalGainNode();
+      
+      const reverb = new Tone.Reverb({ decay: 6, wet: 0.7 }).connect(gain);
+      
+      const windFilter = new Tone.AutoFilter({
+        frequency: 0.05,
+        baseFrequency: 90,
+        octaves: 3.5
+      }).connect(reverb).start();
+      
+      const windNoise = new Tone.NoiseSynth({
+        noise: { type: 'pink' },
+        envelope: { attack: 2, decay: 1, sustain: 1, release: 3 }
+      }).connect(windFilter);
+      windNoise.volume.value = -18;
+      windNoise.triggerAttack();
+
+      const subFilter = new Tone.Filter(120, 'lowpass').connect(gain);
+      const subDrone = new Tone.FatOscillator("D1", "sawtooth", 40).connect(subFilter);
+      subDrone.volume.value = -13;
+      subDrone.start();
+
+      const dripSynth = new Tone.Synth({
+        oscillator: { type: 'sine' },
+        envelope: { attack: 0.001, decay: 0.2, sustain: 0, release: 0.5 }
+      }).connect(reverb);
+      dripSynth.volume.value = -18;
+
+      const dripInterval = setInterval(() => {
+        if (!currentToneTrack || currentToneTrack.type !== 'crypt') {
+          clearInterval(dripInterval);
+          return;
+        }
+        if (Math.random() > 0.4) {
+          const notes = ['E5', 'G5', 'A5', 'D6', 'B5'];
+          const note = notes[Math.floor(Math.random() * notes.length)];
+          dripSynth.triggerAttackRelease(note, '32n');
+        }
+      }, 2600);
+      activeAudioIntervals.push(dripInterval);
+
+      currentToneTrack = {
+        type: 'crypt',
+        stop: () => {
+          clearInterval(dripInterval);
+          try {
+            windNoise.triggerRelease();
+            subDrone.stop();
+            windNoise.dispose();
+            windFilter.dispose();
+            subDrone.dispose();
+            subFilter.dispose();
+            dripSynth.dispose();
+            reverb.dispose();
+          } catch (e) {}
+        }
+      };
+    }
+
+    function playTrackTension() {
+      stopAllLocalTracks();
+      const gain = getPersonalGainNode();
+      
+      const filter = new Tone.Filter(350, "lowpass").connect(gain);
+      
+      const heart = new Tone.MembraneSynth({
+        pitchDecay: 0.06,
+        octaves: 2.2,
+        envelope: { attack: 0.015, decay: 0.35, sustain: 0 }
+      }).connect(filter);
+      heart.volume.value = -6;
+
+      const breathFilter = new Tone.AutoFilter({ frequency: 0.2, baseFrequency: 220, octaves: 2.2 }).connect(gain).start();
+      const breath = new Tone.NoiseSynth({
+        noise: { type: 'brown' },
+        envelope: { attack: 1.2, decay: 0.8, sustain: 0.7, release: 1.8 }
+      }).connect(breathFilter);
+      breath.volume.value = -22;
+      breath.triggerAttack();
+
+      let step = 0;
+      const interval = setInterval(() => {
+        if (!currentToneTrack || currentToneTrack.type !== 'tension') {
+          clearInterval(interval);
+          return;
+        }
+        heart.triggerAttackRelease('A0', '16n');
+        setTimeout(() => {
+          if (currentToneTrack && currentToneTrack.type === 'tension') {
+            heart.triggerAttackRelease('F0', '32n');
+          }
+        }, 220);
+        step++;
+      }, 1000);
+      activeAudioIntervals.push(interval);
+
+      currentToneTrack = {
+        type: 'tension',
+        stop: () => {
+          clearInterval(interval);
+          try {
+            breath.triggerRelease();
+            heart.dispose();
+            filter.dispose();
+            breath.dispose();
+            breathFilter.dispose();
+          } catch (e) {}
+        }
+      };
+    }
+
+    function playTrackElysium() {
+      stopAllLocalTracks();
+      const gain = getPersonalGainNode();
+      
+      const reverb = new Tone.Reverb({ decay: 4.5, wet: 0.5 }).connect(gain);
+      
+      const vinylFilter = new Tone.Filter(1800, 'bandpass').connect(gain);
+      const vinyl = new Tone.NoiseSynth({
+        noise: { type: 'white' },
+        envelope: { attack: 1, decay: 0.5, sustain: 1, release: 2 }
+      }).connect(vinylFilter);
+      vinyl.volume.value = -28;
+      vinyl.triggerAttack();
+
+      const piano = new Tone.PolySynth(Tone.Synth, {
+        oscillator: { type: 'triangle' },
+        envelope: { attack: 0.05, decay: 3.2, sustain: 0.1, release: 2.5 }
+      }).connect(reverb);
+      piano.volume.value = -14;
+
+      const motifs = [
+        ['C4', 'Eb4', 'G4', 'B4'],
+        ['Ab3', 'C4', 'Eb4', 'G4'],
+        ['F3', 'Ab3', 'C4', 'Eb4'],
+        ['G3', 'B3', 'D4', 'F4']
+      ];
+      let step = 0;
+      piano.triggerAttackRelease(motifs[0], '2n');
+
+      const interval = setInterval(() => {
+        if (!currentToneTrack || currentToneTrack.type !== 'elysium') {
+          clearInterval(interval);
+          return;
+        }
+        step = (step + 1) % motifs.length;
+        piano.triggerAttackRelease(motifs[step], '2n');
+      }, 4400);
+      activeAudioIntervals.push(interval);
+
+      currentToneTrack = {
+        type: 'elysium',
+        stop: () => {
+          clearInterval(interval);
+          try {
+            vinyl.triggerRelease();
+            piano.dispose();
+            vinyl.dispose();
+            vinylFilter.dispose();
+            reverb.dispose();
+          } catch (e) {}
+        }
+      };
+    }
+
+    function playTrackClub() {
+      stopAllLocalTracks();
+      const gain = getPersonalGainNode();
+
+      const dist = new Tone.Distortion(0.25).connect(gain);
+      const lowpass = new Tone.Filter(800, 'lowpass').connect(dist);
+
+      const kick = new Tone.MembraneSynth({
+        pitchDecay: 0.05,
+        octaves: 3.5,
+        envelope: { attack: 0.001, decay: 0.4, sustain: 0 }
+      }).connect(gain);
+      kick.volume.value = -4;
+
+      const bass = new Tone.MonoSynth({
+        oscillator: { type: 'sawtooth' },
+        envelope: { attack: 0.01, decay: 0.25, sustain: 0.3, release: 0.2 },
+        filterEnvelope: { attack: 0.01, decay: 0.15, sustain: 0.2, baseFrequency: 100, octaves: 2.8 }
+      }).connect(lowpass);
+      bass.volume.value = -9;
+
+      const hihat = new Tone.NoiseSynth({
+        noise: { type: 'white' },
+        envelope: { attack: 0.001, decay: 0.06, sustain: 0 }
+      }).connect(gain);
+      hihat.volume.value = -20;
+
+      const bassNotes = ['D1', 'D1', 'F1', 'D1', 'G1', 'D1', 'F1', 'A1'];
+      let step = 0;
+
+      const interval = setInterval(() => {
+        if (!currentToneTrack || currentToneTrack.type !== 'club') {
+          clearInterval(interval);
+          return;
+        }
+
+        if (step % 2 === 0) kick.triggerAttackRelease('C1', '8n');
+        if (step % 2 === 1) hihat.triggerAttackRelease('16n');
+
+        const note = bassNotes[step % bassNotes.length];
+        bass.triggerAttackRelease(note, '16n');
+
+        step++;
+      }, 250);
+      activeAudioIntervals.push(interval);
+
+      currentToneTrack = {
+        type: 'club',
+        stop: () => {
+          clearInterval(interval);
+          try {
+            kick.dispose();
+            bass.dispose();
+            hihat.dispose();
+            lowpass.dispose();
+            dist.dispose();
+          } catch (e) {}
+        }
+      };
+    }
+
+    function playCustomAudio(src) {
+      stopAllLocalTracks();
+      const audioEl = document.getElementById('externalAudioPlayer');
+      audioEl.src = src;
+      audioEl.volume = state.isPersonalMuted ? 0 : state.personalVolume;
+      audioEl.loop = true;
+      audioEl.play().catch(e => console.debug("Audio play blocked:", e));
+      currentToneTrack = {
+        type: 'custom',
+        stop: () => {
+          audioEl.pause();
+          audioEl.src = '';
+        }
+      };
+    }
+
+    function applyTrackStateLocally(trackKey, titleText, customSrc = null) {
+      const startAudio = () => {
+        if (!trackKey) {
+          stopAllLocalTracks();
+          return;
+        }
+
+        if (trackKey === 'requiem') playTrackRequiem();
+        else if (trackKey === 'crypt') playTrackCrypt();
+        else if (trackKey === 'tension') playTrackTension();
+        else if (trackKey === 'elysium') playTrackElysium();
+        else if (trackKey === 'club') playTrackClub();
+        else if (trackKey === 'custom' && customSrc) playCustomAudio(customSrc);
+
+        state.activeMasterTrack = trackKey;
+        state.activeMasterTitle = titleText;
+
+        const indicator = document.getElementById('nowPlayingIndicator');
+        if (indicator) indicator.className = 'w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)] flex-shrink-0';
+        const titleEl = document.getElementById('nowPlayingTitle');
+        if (titleEl) titleEl.innerText = titleText;
+
+        const stopBtn = document.getElementById('btnStopMasterAudio');
+        if (stopBtn && state.role === 'storyteller') stopBtn.classList.remove('hidden');
+
+        document.querySelectorAll('.track-btn').forEach(btn => {
+          btn.classList.remove('border-vampire-crimson', 'bg-red-950/60');
+        });
+        const activeBtn = document.getElementById(`trackBtn_${trackKey}`);
+        if (activeBtn) activeBtn.classList.add('border-vampire-crimson', 'bg-red-950/60');
+      };
+
+      if (Tone.context.state !== 'running') {
+        Tone.start().then(startAudio).catch(startAudio);
+      } else {
+        startAudio();
+      }
+    }
+
+    window.triggerMasterTrack = async function(trackKey) {
+      if (state.role !== 'storyteller') return;
+      await Tone.start();
+
+      const trackTitles = {
+        requiem: 'Requiem Gótico da Catedral',
+        elysium: 'Elísio da Alta Sociedade (Noir)',
+        club: 'Boate Gótica / Industrial',
+        crypt: 'Cripta & Mausoléu Esquecido',
+        tension: 'A Caçada dos Condenados'
+      };
+
+      const title = trackTitles[trackKey] || 'Trilha Atmosférica';
+      applyTrackStateLocally(trackKey, title);
+
+      // Sincroniza via MQTT e BroadcastChannel pela Internet
+      broadcastRoomMessage({
+        type: 'SYNC_AUDIO_TRACK',
+        payload: { trackKey, title }
+      });
+    };
+
+    window.triggerStopTrack = function() {
+      if (state.role !== 'storyteller') return;
+      stopAllLocalTracks();
+
+      // Sincroniza via MQTT e BroadcastChannel pela Internet
+      broadcastRoomMessage({
+        type: 'SYNC_AUDIO_STOP'
+      });
+    };
+
+    window.triggerCustomAudioUrl = function() {
+      if (state.role !== 'storyteller') return;
+      const input = document.getElementById('inputCustomAudioUrl');
+      const url = input.value.trim();
+      if (!url) return;
+
+      const title = 'Trilha Externa do Narrador';
+      applyTrackStateLocally('custom', title, url);
+
+      broadcastRoomMessage({
+        type: 'SYNC_AUDIO_TRACK',
+        payload: { trackKey: 'custom', title, customSrc: url }
+      });
+    };
+
+    window.handleAudioFileUpload = function(e) {
+      if (state.role !== 'storyteller') return;
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(evt) {
+        const dataUrl = evt.target.result;
+        const title = file.name.replace(/\.[^/.]+$/, "");
+        applyTrackStateLocally('custom', title, dataUrl);
+
+        broadcastRoomMessage({
+          type: 'SYNC_AUDIO_TRACK',
+          payload: { trackKey: 'custom', title, customSrc: dataUrl }
+        });
+      };
+      reader.readAsDataURL(file);
+    };
+
+    window.toggleAmbientMusic = async function() {
+      await Tone.start();
+      const btn = document.getElementById('btnAmbientSound');
+      const icon = document.getElementById('ambientIcon');
+      const text = document.getElementById('ambientText');
+
+      if (state.ambientPlaying) {
+        stopAllLocalTracks();
+        state.ambientPlaying = false;
+        icon.setAttribute('data-lucide', 'volume-x');
+        text.innerText = 'Silêncio';
+        btn.classList.remove('text-vampire-gold', 'border-vampire-gold');
+      } else {
+        stopAllLocalTracks();
+        
+        const gain = getPersonalGainNode();
+        ambientDroneGain = new Tone.Gain(1).connect(gain);
+
+        ambientFilter = new Tone.AutoFilter({
+          frequency: 0.08,
+          baseFrequency: 45,
+          octaves: 3
+        }).connect(ambientDroneGain).start();
+
+        ambientDrone = new Tone.FatOscillator("D2", "sawtooth", 30).connect(ambientFilter);
+        ambientDrone.volume.value = -18;
+        ambientDrone.start();
+
+        state.ambientPlaying = true;
+        icon.setAttribute('data-lucide', 'volume-2');
+        text.innerText = 'Ativo';
+        btn.classList.add('text-vampire-gold', 'border-vampire-gold');
+      }
+      if (window.lucide) window.lucide.createIcons();
+    };
+
+    window.selectRole = function(role) {
+      state.role = role;
+      const playerBtn = document.getElementById('roleBtnPlayer');
+      const stBtn = document.getElementById('roleBtnStoryteller');
+      const lbl = document.getElementById('lblPlayerName');
+      const input = document.getElementById('inputPlayerName');
+
+      if (role === 'storyteller') {
+        stBtn.className = 'role-btn py-2.5 px-3 rounded-xl border border-vampire-gold/60 bg-vampire-slate text-vampire-gold font-cinzel text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-md';
+        playerBtn.className = 'role-btn py-2.5 px-3 rounded-xl border border-vampire-ash bg-vampire-black text-gray-500 font-cinzel text-xs font-bold transition flex items-center justify-center gap-1.5';
+        lbl.innerText = 'Título do Narrador:';
+        input.placeholder = 'Ex: O Mestre das Sombras';
+      } else {
+        playerBtn.className = 'role-btn py-2.5 px-3 rounded-xl border border-vampire-crimson/80 bg-gradient-to-b from-vampire-crimson/85 to-vampire-blood text-vampire-bone font-cinzel text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-blood-glow';
+        stBtn.className = 'role-btn py-2.5 px-3 rounded-xl border border-vampire-ash bg-vampire-slate/70 text-gray-400 font-cinzel text-xs font-bold transition flex items-center justify-center gap-1.5';
+        lbl.innerText = 'Nome do seu Condenado:';
+        input.placeholder = 'Ex: Julian de Toreador';
+      }
+    };
+
+    window.handleJoinRoom = function(e) {
+      e.preventDefault();
+      const name = document.getElementById('inputPlayerName').value.trim();
+      const room = document.getElementById('inputRoomName').value.trim().toUpperCase();
+      const pass = document.getElementById('inputRoomPass').value.trim();
+
+      if (!name || !room || !pass) return false;
+
+      state.name = name;
+      state.room = room;
+      state.password = pass;
+
+      document.getElementById('topRoomDisplay').innerText = room;
+      document.getElementById('topPlayerDisplay').innerText = name;
+      document.getElementById('tokenCharNameInput').value = name;
+      
+      applyRoleUI();
+
+      document.getElementById('loginScreen').classList.add('hidden');
+      document.getElementById('mainApp').classList.remove('hidden');
+      document.getElementById('mainApp').classList.add('flex');
+
+      initWebRTCPeer();
+      initRoomSync();
+      updateHungerUI();
+      updatePoolUI();
+      renderAllTokens();
+      if (window.lucide) window.lucide.createIcons();
+
+      return false;
+    };
+
+    function applyRoleUI() {
+      const badgeRole = document.getElementById('badgeRole');
+      const narratorBar = document.getElementById('narratorControlsBar');
+      const emptyStageText = document.getElementById('emptyStageText');
+      const narratorAudioSection = document.getElementById('narratorAudioSection');
+      const playerAudioNotice = document.getElementById('playerAudioNotice');
+      const stopBtn = document.getElementById('btnStopMasterAudio');
+
+      if (state.role === 'storyteller') {
+        badgeRole.innerText = 'Narrador';
+        badgeRole.className = 'text-[9px] font-cinzel px-2 py-0.5 rounded font-bold uppercase bg-vampire-slate text-vampire-gold border border-vampire-gold/40';
+        narratorBar.classList.remove('hidden');
+        narratorBar.classList.add('flex');
+        emptyStageText.innerText = 'Como Narrador, projete retratos sombrios, pistas e mapas para a sua coterie.';
+        if (narratorAudioSection) narratorAudioSection.classList.remove('hidden');
+        if (playerAudioNotice) playerAudioNotice.classList.add('hidden');
+        if (stopBtn && state.activeMasterTrack) stopBtn.classList.remove('hidden');
+      } else {
+        badgeRole.innerText = 'Jogador';
+        badgeRole.className = 'text-[9px] font-cinzel px-2 py-0.5 rounded font-bold uppercase bg-vampire-blood/60 text-vampire-parchment border border-red-900/60';
+        narratorBar.classList.add('hidden');
+        narratorBar.classList.remove('flex');
+        emptyStageText.innerText = 'Aguardando o Narrador desvelar o mapa, o retrato de um rival ou o local do massacre.';
+        if (narratorAudioSection) narratorAudioSection.classList.add('hidden');
+        if (playerAudioNotice) playerAudioNotice.classList.remove('hidden');
+        if (stopBtn) stopBtn.classList.add('hidden');
+      }
+      renderAllCameraSlots();
+      if (window.lucide) window.lucide.createIcons();
+    }
+
+    function getCleanRoomPrefix() {
+      const cleanRoom = state.room.toLowerCase().replace(/[^a-z0-9]/g, '');
+      const cleanPass = state.password.toLowerCase().replace(/[^a-z0-9]/g, '');
+      return `${cleanRoom}_${cleanPass}`;
+    }
+
+    let mqttClient = null;
+    let roomChannel = null;
+
+    function getSyncTopic() {
+      return `vtm_v5_coterie/${getCleanRoomPrefix()}`;
+    }
+
+    function removePeerAndFreeSlot(peerName) {
+      if (!peerName) return;
+      const peerData = state.activePeers.get(peerName);
+      if (peerData) {
+        if (peerData.peerId) {
+          if (activeCalls.has(peerData.peerId)) {
+            try { activeCalls.get(peerData.peerId).close(); } catch (e) {}
+            activeCalls.delete(peerData.peerId);
+          }
+          cleanupRemotePeerAudio(peerData.peerId);
+        }
+        state.activePeers.delete(peerName);
+      }
+
+      // Limpa tokens pertencentes a este jogador se não for o Narrador
+      if (state.role === 'storyteller') {
+        const tokensBefore = state.tokens.length;
+        state.tokens = state.tokens.filter(t => t.owner !== peerName);
+        if (state.tokens.length !== tokensBefore) {
+          renderAllTokens();
+          broadcastRoomMessage({ type: 'SYNC_ALL_TOKENS', payload: state.tokens });
+        }
+      }
+
+      renderAllCameraSlots();
+    }
+
+    function initRoomSync() {
+      try {
+        if (roomChannel) roomChannel.close();
+        roomChannel = new BroadcastChannel(`v5_${getCleanRoomPrefix()}`);
+        roomChannel.onmessage = (event) => {
+          handleIncomingMessage(event.data);
+        };
+      } catch (e) {
+        console.debug("BroadcastChannel fallback:", e);
+      }
+
+      const topic = getSyncTopic();
+      try {
+        if (typeof mqtt !== 'undefined' && mqtt.connect) {
+          if (mqttClient) {
+            try { mqttClient.end(true); } catch (e) {}
+          }
+          
+          mqttClient = mqtt.connect('wss://broker.emqx.io:8084/mqtt', {
+            clientId: 'v5_' + Math.random().toString(16).substr(2, 8),
+            clean: true,
+            connectTimeout: 4000,
+            reconnectPeriod: 2500
+          });
+
+          mqttClient.on('connect', () => {
+            try { mqttClient.subscribe(topic, { qos: 1 }); } catch (e) {}
+            sendPresenceHeartbeat();
+          });
+
+          mqttClient.on('message', (receivedTopic, message) => {
+            if (receivedTopic !== topic) return;
+            try {
+              const data = JSON.parse(message.toString());
+              if (data && data._senderId === state.myPeerId) return;
+              handleIncomingMessage(data);
+            } catch (err) {}
+          });
+        }
+      } catch (e) {}
+
+      // Heartbeat periódico a cada 4 segundos para limpar participantes desconectados
+      if (presenceHeartbeatInterval) clearInterval(presenceHeartbeatInterval);
+      presenceHeartbeatInterval = setInterval(() => {
+        sendPresenceHeartbeat();
+        purgeGhostPeers();
+      }, 4000);
+    }
+
+    function sendPresenceHeartbeat() {
+      if (!state.name) return;
+      broadcastRoomMessage({
+        type: 'PEER_HEARTBEAT',
+        payload: {
+          name: state.name,
+          role: state.role,
+          peerId: state.myPeerId,
+          isCamActive: state.isCamActive,
+          isMicActive: state.isMicActive,
+          timestamp: Date.now()
+        }
+      });
+    }
+
+    function purgeGhostPeers() {
+      const now = Date.now();
+      const TIMEOUT_MS = 10000; // 10 segundos sem sinal = desconectado
+      let removedAny = false;
+
+      state.activePeers.forEach((data, name) => {
+        if (data.lastSeen && (now - data.lastSeen > TIMEOUT_MS)) {
+          removePeerAndFreeSlot(name);
+          removedAny = true;
+        }
+      });
+
+      if (removedAny) {
+        renderAllCameraSlots();
+      }
+    }
+
+    function broadcastRoomMessage(msg) {
+      if (!msg) return;
+      msg._senderId = state.myPeerId;
+      msg._sentAt = Date.now();
+
+      if (roomChannel) {
+        try { roomChannel.postMessage(msg); } catch (e) {}
+      }
+
+      if (mqttClient && mqttClient.connected) {
+        try {
+          mqttClient.publish(getSyncTopic(), JSON.stringify(msg), { qos: 1 });
+        } catch (e) {}
+      }
+    }
+
+    function initWebRTCPeer() {
+      const roomPrefix = getCleanRoomPrefix();
+      const randomPart = Math.random().toString(36).substring(2, 8);
+      const peerId = `v5_${roomPrefix}_${encodeURIComponent(state.name.replace(/[^a-zA-Z0-9]/g, ''))}_${randomPart}`;
+      state.myPeerId = peerId;
+
+      try {
+        if (myPeer) {
+          try { myPeer.destroy(); } catch (e) {}
+        }
+      } catch (e) {}
+
+      try {
+        if (typeof Peer === 'undefined') return;
+
+        myPeer = new Peer(peerId, {
+          debug: 0,
+          config: {
+            iceServers: [
+              { urls: 'stun:stun.l.google.com:19302' },
+              { urls: 'stun:global.stun.twilio.com:3478' }
+            ]
+          }
+        });
+
+        myPeer.on('open', (id) => {
+          state.myPeerId = id;
+          sendPresenceHeartbeat();
+        });
+
+        myPeer.on('call', (call) => {
+          try {
+            // Se já tínhamos chamada aberta para este mesmo peer, fechamos com segurança
+            if (activeCalls.has(call.peer)) {
+              try { activeCalls.get(call.peer).close(); } catch(e){}
+            }
+
+            const streamToSend = state.localStream || createDummyStreamWithVideoAndAudio();
+            call.answer(streamToSend);
+
+            call.on('stream', (remoteStream) => {
+              attachRemoteStreamToPeer(call.peer, remoteStream);
+            });
+
+            call.on('close', () => {
+              activeCalls.delete(call.peer);
+              renderAllCameraSlots();
+            });
+
+            call.on('error', () => {
+              activeCalls.delete(call.peer);
+            });
+
+            activeCalls.set(call.peer, call);
+          } catch (callErr) {
+            console.debug("Erro ao atender chamada:", callErr);
+          }
+        });
+
+        myPeer.on('error', (err) => {
+          console.debug("PeerJS notice:", err);
+        });
+      } catch (securityErr) {
+        myPeer = null;
+      }
+    }
+
+    // Cria um stream com faixas de áudio E vídeo reais (para o WebRTC sempre ter transceptores negociados)
+    function createDummyStreamWithVideoAndAudio() {
+      try {
+        const canvas = document.createElement('canvas');
+        canvas.width = 160;
+        canvas.height = 120;
+        const ctx = canvas.getContext('2d');
+        ctx.fillStyle = '#050406';
+        ctx.fillRect(0, 0, 160, 120);
+        const videoTrack = canvas.captureStream(5).getVideoTracks()[0];
+        videoTrack.enabled = false;
+
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const dst = audioCtx.createMediaStreamDestination();
+        const audioTrack = dst.stream.getAudioTracks()[0];
+        audioTrack.enabled = false;
+
+        return new MediaStream([videoTrack, audioTrack]);
+      } catch (e) {
+        return new MediaStream();
+      }
+    }
+
+    function shouldIInitiateCall(remotePeerId) {
+      if (!state.myPeerId || !remotePeerId) return false;
+      // Resolução de colisão de chamadas: apenas o ID alfanumericamente menor inicia a chamada
+      return state.myPeerId < remotePeerId;
+    }
+
+    function callRemotePeer(remotePeerId, force = false) {
+      if (!myPeer || !remotePeerId || remotePeerId === state.myPeerId) return;
+
+      // Se não for forçado e não formos o iniciador designado pela regra de desempate, aguardamos a chamada do outro
+      if (!force && !shouldIInitiateCall(remotePeerId)) {
+        return;
+      }
+
+      const streamToSend = state.localStream || createDummyStreamWithVideoAndAudio();
+      try {
+        if (activeCalls.has(remotePeerId)) {
+          try { activeCalls.get(remotePeerId).close(); } catch(e) {}
+          activeCalls.delete(remotePeerId);
+        }
+
+        const call = myPeer.call(remotePeerId, streamToSend);
+
+        if (call) {
+          call.on('stream', (remoteStream) => {
+            attachRemoteStreamToPeer(remotePeerId, remoteStream);
+          });
+          call.on('close', () => {
+            activeCalls.delete(remotePeerId);
+            renderAllCameraSlots();
+          });
+          call.on('error', () => {
+            activeCalls.delete(remotePeerId);
+          });
+          activeCalls.set(remotePeerId, call);
+        }
+      } catch (err) {
+        console.debug("Falha ao discar para peer:", err);
+      }
+    }
+
+    const remoteAudioElements = new Map();
+
+    function playRemoteAudioTrack(peerId, stream) {
+      if (!stream) return;
+      const audioTracks = stream.getAudioTracks();
+      if (!audioTracks || audioTracks.length === 0) return;
+
+      let audioEl = remoteAudioElements.get(peerId);
+      if (!audioEl) {
+        audioEl = new Audio();
+        audioEl.autoplay = true;
+        audioEl.playsInline = true;
+        remoteAudioElements.set(peerId, audioEl);
+      }
+
+      if (audioEl.srcObject !== stream) {
+        audioEl.srcObject = stream;
+        audioEl.volume = state.isPersonalMuted ? 0 : state.personalVolume;
+        audioEl.play().catch(() => {});
+      }
+    }
+
+    function cleanupRemotePeerAudio(peerId) {
+      const audioEl = remoteAudioElements.get(peerId);
+      if (audioEl) {
+        audioEl.pause();
+        audioEl.srcObject = null;
+        remoteAudioElements.delete(peerId);
+      }
+      peerStreams.delete(peerId);
+    }
+
+    function attachRemoteStreamToPeer(peerId, stream) {
+      if (!peerId || !stream) return;
+      peerStreams.set(peerId, stream);
+      playRemoteAudioTrack(peerId, stream);
+
+      // Associa o stream estritamente ao peer com esse peerId
+      state.activePeers.forEach((peerData) => {
+        if (peerData.peerId === peerId) {
+          peerData.stream = stream;
+        }
+      });
+
+      renderAllCameraSlots();
+    }
+
+    // Atualiza a mídia transmitida sem derrubar as conexões dos outros participantes
+    function broadcastLocalStreamUpdate() {
+      const currentVideoTrack = state.localStream ? state.localStream.getVideoTracks()[0] : null;
+      const currentAudioTrack = state.localStream ? state.localStream.getAudioTracks()[0] : null;
+
+      if (activeCalls.size > 0) {
+        activeCalls.forEach((call) => {
+          try {
+            const peerConnection = call.peerConnection;
+            if (peerConnection) {
+              const senders = peerConnection.getSenders();
+              
+              const videoSender = senders.find(s => s.track && s.track.kind === 'video') ||
+                                  senders.find(s => s.kind === 'video');
+              if (videoSender && currentVideoTrack) {
+                videoSender.replaceTrack(currentVideoTrack);
+              }
+
+              const audioSender = senders.find(s => s.track && s.track.kind === 'audio') ||
+                                  senders.find(s => s.kind === 'audio');
+              if (audioSender && currentAudioTrack) {
+                audioSender.replaceTrack(currentAudioTrack);
+              }
+            }
+          } catch (e) {
+            console.debug("replaceTrack notice:", e);
+          }
+        });
+      }
+
+      renderAllCameraSlots();
+    }
+
+    function handleIncomingMessage(data) {
+      if (!data || !data.type) return;
+      const { type, payload } = data;
+
+      if (type === 'NEW_ROLL') {
+        state.rolls.unshift(payload);
+        renderRollsFeed();
+        if (payload.evaluation?.outcomeType === 'critical' || payload.evaluation?.outcomeType === 'messy') {
+          playGothicCriticalSound();
+        } else if (payload.evaluation?.outcomeType === 'bestial') {
+          playBeastFailureSound();
+        }
+      } else if (type === 'UPDATE_ROLL') {
+        const idx = state.rolls.findIndex(r => r.id === payload.id);
+        if (idx !== -1) {
+          state.rolls[idx] = payload;
+          renderRollsFeed();
+        }
+      } else if (type === 'CLEAR_ROLLS') {
+        state.rolls = [];
+        renderRollsFeed();
+      } else if (type === 'SHARE_IMAGE') {
+        displaySharedImage(payload);
+      } else if (type === 'CLEAR_IMAGE') {
+        clearSharedImageLocal();
+      } else if (type === 'ADD_TOKEN') {
+        if (!state.tokens.find(t => t.id === payload.id)) {
+          state.tokens.push(payload);
+          renderAllTokens();
+        }
+      } else if (type === 'UPDATE_TOKEN') {
+        const tIdx = state.tokens.findIndex(t => t.id === payload.id);
+        if (tIdx !== -1) {
+          state.tokens[tIdx] = payload;
+          updateTokenDOM(payload);
+        }
+      } else if (type === 'DELETE_TOKEN') {
+        state.tokens = state.tokens.filter(t => t.id !== payload.id);
+        const el = document.getElementById(payload.id);
+        if (el) el.remove();
+        if (state.selectedTokenId === payload.id) {
+          selectToken(null);
+        }
+        updateTokensCounter();
+      } else if (type === 'SYNC_ALL_TOKENS') {
+        state.tokens = payload || [];
+        renderAllTokens();
+      } else if (type === 'SYNC_AUDIO_TRACK') {
+        applyTrackStateLocally(payload.trackKey, payload.title, payload.customSrc);
+      } else if (type === 'SYNC_AUDIO_STOP') {
+        stopAllLocalTracks();
+      } else if (type === 'FORCE_RECONNECT') {
+        if (payload && payload.senderId !== state.myPeerId) {
+          if (payload.peerId) {
+            callRemotePeer(payload.peerId, true);
+          }
+        }
+      } else if (type === 'PEER_JOIN' || type === 'PEER_PRESENT' || type === 'PEER_HEARTBEAT') {
+        if (payload.name && payload.name !== state.name) {
+          const existing = state.activePeers.get(payload.name) || {};
+          const updatedPeer = {
+            ...existing,
+            ...payload,
+            lastSeen: Date.now()
+          };
+          state.activePeers.set(payload.name, updatedPeer);
+          renderAllCameraSlots();
+
+          if (payload.peerId && (!activeCalls.has(payload.peerId) || type === 'PEER_JOIN')) {
+            callRemotePeer(payload.peerId);
+          }
+
+          if (type === 'PEER_JOIN') {
+            sendPresenceHeartbeat();
+
+            if (state.role === 'storyteller') {
+              if (state.sharedImage) {
+                broadcastRoomMessage({ type: 'SHARE_IMAGE', payload: state.sharedImage });
+              }
+              if (state.activeMasterTrack) {
+                broadcastRoomMessage({
+                  type: 'SYNC_AUDIO_TRACK',
+                  payload: { trackKey: state.activeMasterTrack, title: state.activeMasterTitle }
+                });
+              }
+              if (state.tokens.length > 0) {
+                broadcastRoomMessage({ type: 'SYNC_ALL_TOKENS', payload: state.tokens });
+              }
+            }
+          }
+        }
+      } else if (type === 'PEER_LEAVE') {
+        if (payload && payload.name) {
+          removePeerAndFreeSlot(payload.name);
+        }
+      } else if (type === 'PEER_MEDIA_UPDATE') {
+        if (state.activePeers.has(payload.name)) {
+          const peer = state.activePeers.get(payload.name);
+          peer.isCamActive = payload.isCamActive;
+          peer.isMicActive = payload.isMicActive;
+          peer.lastSeen = Date.now();
+          if (payload.peerId) peer.peerId = payload.peerId;
+          renderAllCameraSlots();
+        }
+      }
+    }
+
+    // ==========================================
+    // TOKENS & MURAL DO NARRADOR
+    // ==========================================
+    function displaySharedImage(src) {
+      state.sharedImage = src;
+      const img = document.getElementById('sharedImageElement');
+      const placeholder = document.getElementById('emptyImagePlaceholder');
+      const actions = document.getElementById('imageStageActions');
+      if (img && placeholder) {
+        img.src = src;
+        img.classList.remove('hidden');
+        placeholder.classList.add('hidden');
+        if (actions) {
+          actions.classList.remove('hidden');
+          actions.classList.add('flex');
+        }
+      }
+    }
+
+    function clearSharedImageLocal() {
+      state.sharedImage = null;
+      const img = document.getElementById('sharedImageElement');
+      const placeholder = document.getElementById('emptyImagePlaceholder');
+      const actions = document.getElementById('imageStageActions');
+      if (img && placeholder) {
+        img.src = '';
+        img.classList.add('hidden');
+        placeholder.classList.remove('hidden');
+        if (actions) actions.classList.add('hidden');
+      }
+    }
+
+    window.promptImageUrl = function() {
+      if (state.role !== 'storyteller') return;
+      const url = prompt("Insira a URL pública da imagem/mapa:");
+      if (url && url.trim()) {
+        const clean = url.trim();
+        displaySharedImage(clean);
+        broadcastRoomMessage({ type: 'SHARE_IMAGE', payload: clean });
+      }
+    };
+
+    window.handleImageFileUpload = function(e) {
+      if (state.role !== 'storyteller') return;
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(evt) {
+        const dataUrl = evt.target.result;
+        displaySharedImage(dataUrl);
+        broadcastRoomMessage({ type: 'SHARE_IMAGE', payload: dataUrl });
+      };
+      reader.readAsDataURL(file);
+    };
+
+    window.clearSharedImage = function() {
+      if (state.role !== 'storyteller') return;
+      clearSharedImageLocal();
+      broadcastRoomMessage({ type: 'CLEAR_IMAGE' });
+    };
+
+    window.toggleImageFullscreen = function() {
+      const container = document.getElementById('imageStageContainer');
+      if (!document.fullscreenElement) {
+        container.requestFullscreen?.().catch(() => {});
+      } else {
+        document.exitFullscreen?.().catch(() => {});
+      }
+    };
+
+    window.openTokenModal = function() {
+      if (state.role === 'player') {
+        const myToken = state.tokens.find(t => t.owner === state.name);
+        if (myToken) {
+          selectToken(myToken.id);
+          return;
+        }
+      }
+      document.getElementById('tokenModal').classList.remove('hidden');
+      document.getElementById('tokenModal').classList.add('flex');
+    };
+
+    window.closeTokenModal = function() {
+      document.getElementById('tokenModal').classList.add('hidden');
+      document.getElementById('tokenModal').classList.remove('flex');
+    };
+
+    window.promptTokenUrl = function() {
+      const url = prompt("Insira o link da imagem do seu brasão:");
+      if (url && url.trim()) {
+        state.selectedTokenImage = url.trim();
+        updateTokenPreview(state.selectedTokenImage);
+      }
+    };
+
+    window.handleTokenFileUpload = function(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(evt) {
+        state.selectedTokenImage = evt.target.result;
+        updateTokenPreview(state.selectedTokenImage);
+      };
+      reader.readAsDataURL(file);
+    };
+
+    function updateTokenPreview(src) {
+      const img = document.getElementById('tokenPreviewImg');
+      const placeholder = document.getElementById('tokenPreviewPlaceholder');
+      if (img && placeholder) {
+        img.src = src;
+        img.classList.remove('hidden');
+        placeholder.classList.add('hidden');
+      }
+    }
+
+    function updateTokensCounter() {
+      const countEl = document.getElementById('activeTokensCount');
+      if (countEl) countEl.innerText = `Tokens: ${state.tokens.length}`;
+
+      const btn = document.getElementById('btnOpenTokenModal');
+      if (btn) {
+        if (state.role === 'player') {
+          const hasToken = state.tokens.some(t => t.owner === state.name);
+          btn.disabled = hasToken;
+          btn.title = hasToken ? "Jogadores podem ter apenas 1 token ativo por vez (apague o atual para criar outro)" : "Invocar Token";
+          btn.classList.toggle('opacity-50', hasToken);
+        } else {
+          btn.disabled = false;
+          btn.title = "Narrador pode invocar múltiplos tokens";
+          btn.classList.remove('opacity-50');
+        }
+      }
+    }
+
+    function canControlToken(token) {
+      if (!token) return false;
+      return state.role === 'storyteller' || token.owner === state.name;
+    }
+
+    window.selectToken = function(tokenId) {
+      state.selectedTokenId = tokenId;
+      const topControls = document.getElementById('topTokenControls');
+      const label = document.getElementById('selectedTokenLabel');
+      const colorPicker = document.getElementById('selectedTokenColorPicker');
+
+      document.querySelectorAll('.token-container').forEach(el => {
+        el.classList.remove('token-selected', 'ring-4', 'ring-vampire-brightBlood', 'ring-white/80', 'shadow-blood-glow');
+        el.style.outline = 'none';
+        el.style.boxShadow = 'none';
+      });
+
+      if (!tokenId) {
+        if (topControls) {
+          topControls.classList.add('opacity-40', 'pointer-events-none');
+          topControls.classList.remove('opacity-100', 'border-vampire-crimson', 'shadow-blood-glow');
+        }
+        if (label) {
+          label.innerText = 'Nenhum';
+          label.className = 'text-[10px] font-cinzel text-gray-500 mr-1 max-w-[90px] sm:max-w-[120px] truncate';
+        }
+        return;
+      }
+
+      const tok = state.tokens.find(t => t.id === tokenId);
+      if (!tok || !canControlToken(tok)) {
+        window.selectToken(null);
+        return;
+      }
+
+      const tokEl = document.getElementById(tokenId);
+      if (tokEl) {
+        tokEl.classList.add('token-selected');
+        tokEl.style.boxShadow = 'none';
+      }
+
+      if (topControls) {
+        topControls.classList.remove('opacity-40', 'pointer-events-none');
+        topControls.classList.add('opacity-100', 'border-vampire-crimson', 'shadow-blood-glow');
+      }
+      if (label) {
+        label.innerText = tok.name;
+        label.className = 'text-[10px] font-cinzel text-vampire-gold font-bold mr-1 max-w-[90px] sm:max-w-[120px] truncate';
+      }
+      if (colorPicker) {
+        colorPicker.value = tok.borderColor || '#9a7738';
+      }
+    };
+
+    window.modifySelectedTokenSize = function(delta) {
+      if (!state.selectedTokenId) return;
+      const tok = state.tokens.find(t => t.id === state.selectedTokenId);
+      if (!tok || !canControlToken(tok)) return;
+
+      tok.size = Math.max(24, Math.min(160, tok.size + delta));
+      updateTokenDOM(tok);
+      broadcastRoomMessage({ type: 'UPDATE_TOKEN', payload: tok });
+    };
+
+    window.changeSelectedTokenColor = function(newColor) {
+      if (!state.selectedTokenId) return;
+      const tok = state.tokens.find(t => t.id === state.selectedTokenId);
+      if (!tok || !canControlToken(tok)) return;
+
+      tok.borderColor = newColor;
+      updateTokenDOM(tok);
+      broadcastRoomMessage({ type: 'UPDATE_TOKEN', payload: tok });
+    };
+
+    window.toggleSelectedTokenMark = function() {
+      if (!state.selectedTokenId) return;
+      const tok = state.tokens.find(t => t.id === state.selectedTokenId);
+      if (!tok || !canControlToken(tok)) return;
+
+      tok.isMarked = !tok.isMarked;
+      updateTokenDOM(tok);
+      broadcastRoomMessage({ type: 'UPDATE_TOKEN', payload: tok });
+    };
+
+    window.deleteSelectedToken = function() {
+      if (!state.selectedTokenId) return;
+      const tok = state.tokens.find(t => t.id === state.selectedTokenId);
+      if (!tok || !canControlToken(tok)) return;
+
+      const id = tok.id;
+      state.tokens = state.tokens.filter(t => t.id !== id);
+      const el = document.getElementById(id);
+      if (el) el.remove();
+      window.selectToken(null);
+      updateTokensCounter();
+      broadcastRoomMessage({ type: 'DELETE_TOKEN', payload: { id } });
+    };
+
+    window.createAndDeployToken = function() {
+      if (state.role === 'player') {
+        const existing = state.tokens.find(t => t.owner === state.name);
+        if (existing) {
+          window.selectToken(existing.id);
+          closeTokenModal();
+          return;
+        }
+      }
+
+      const charName = document.getElementById('tokenCharNameInput').value.trim() || state.name;
+      const distinctColor = getNextDistinctTokenColor();
+
+      // Posição inicial normalizada em percentual (entre 30% e 70%)
+      const randPercentX = 35 + Math.random() * 30;
+      const randPercentY = 35 + Math.random() * 30;
+
+      const token = {
+        id: 'tok_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5),
+        name: charName,
+        owner: state.name,
+        image: state.selectedTokenImage || null,
+        borderColor: distinctColor,
+        size: 54,
+        percentX: randPercentX,
+        percentY: randPercentY,
+        isMarked: false
+      };
+
+      state.tokens.push(token);
+      renderAllTokens();
+      window.selectToken(token.id);
+      broadcastRoomMessage({ type: 'ADD_TOKEN', payload: token });
+      closeTokenModal();
+    };
+
+    function updateTokenDOM(token) {
+      const el = document.getElementById(token.id);
+      if (!el) {
+        renderAllTokens();
+        return;
+      }
+      
+      const layer = document.getElementById('tokensLayer');
+      const layerWidth = layer ? (layer.clientWidth || 1) : 1;
+      const layerHeight = layer ? (layer.clientHeight || 1) : 1;
+
+      // Suporte para tokens legados em px ou novos em percentual
+      const posX = token.percentX !== undefined ? token.percentX : ((token.x || 0) / layerWidth * 100);
+      const posY = token.percentY !== undefined ? token.percentY : ((token.y || 0) / layerHeight * 100);
+
+      el.style.left = `${posX}%`;
+      el.style.top = `${posY}%`;
+      el.style.width = `${token.size}px`;
+      el.style.height = `${token.size}px`;
+      el.style.borderColor = token.borderColor || '#9a7738';
+
+      const mark = el.querySelector('.token-mark');
+      if (mark) {
+        if (token.isMarked) mark.classList.remove('hidden');
+        else mark.classList.add('hidden');
+      }
+
+      if (state.selectedTokenId === token.id) {
+        el.classList.add('token-selected');
+      } else {
+        el.classList.remove('token-selected');
+      }
+
+      updateTokensCounter();
+    }
+
+    function renderAllTokens() {
+      const layer = document.getElementById('tokensLayer');
+      if (!layer) return;
+      layer.innerHTML = '';
+      state.tokens.forEach(tok => {
+        layer.appendChild(createTokenElement(tok));
+      });
+      if (state.selectedTokenId) {
+        window.selectToken(state.selectedTokenId);
+      }
+      updateTokensCounter();
+    }
+
+    function createTokenElement(token) {
+      const layer = document.getElementById('tokensLayer');
+      const layerWidth = layer ? (layer.clientWidth || 1) : 1;
+      const layerHeight = layer ? (layer.clientHeight || 1) : 1;
+
+      const posX = token.percentX !== undefined ? token.percentX : ((token.x || 0) / layerWidth * 100);
+      const posY = token.percentY !== undefined ? token.percentY : ((token.y || 0) / layerHeight * 100);
+
+      const el = document.createElement('div');
+      el.id = token.id;
+      el.className = 'absolute rounded-full border-2 flex items-center justify-center cursor-grab active:cursor-grabbing select-none token-container group -translate-x-1/2 -translate-y-1/2';
+      el.style.boxShadow = 'none';
+      el.style.left = `${posX}%`;
+      el.style.top = `${posY}%`;
+      el.style.width = `${token.size}px`;
+      el.style.height = `${token.size}px`;
+      el.style.borderColor = token.borderColor || '#9a7738';
+      el.style.zIndex = '25';
+
+      if (token.image) {
+        el.innerHTML = `
+          <img src="${token.image}" class="w-full h-full object-cover rounded-full pointer-events-none">
+          <div class="token-mark absolute inset-0 flex items-center justify-center text-red-600 font-gothic text-3xl font-black drop-shadow-[0_2px_4px_rgba(0,0,0,1)] ${token.isMarked ? '' : 'hidden'} pointer-events-none">✕</div>
+          <div class="absolute -bottom-4 left-1/2 -translate-x-1/2 bg-black/95 px-1.5 py-0.2 rounded border border-vampire-gold/30 text-[9px] font-cinzel text-vampire-parchment whitespace-nowrap pointer-events-none">${token.name}</div>
+        `;
+      } else {
+        const initials = token.name.substring(0, 2).toUpperCase();
+        el.innerHTML = `
+          <div class="w-full h-full rounded-full bg-gradient-to-b from-vampire-driedBlood to-black flex items-center justify-center font-gothic text-base text-vampire-gold pointer-events-none">
+            ${initials}
+          </div>
+          <div class="token-mark absolute inset-0 flex items-center justify-center text-red-600 font-gothic text-3xl font-black drop-shadow-[0_2px_4px_rgba(0,0,0,1)] ${token.isMarked ? '' : 'hidden'} pointer-events-none">✕</div>
+          <div class="absolute -bottom-4 left-1/2 -translate-x-1/2 bg-black/95 px-1.5 py-0.2 rounded border border-vampire-gold/30 text-[9px] font-cinzel text-vampire-parchment whitespace-nowrap pointer-events-none">${token.name}</div>
+        `;
+      }
+
+      if (canControlToken(token)) {
+        el.addEventListener('click', (e) => {
+          e.stopPropagation();
+          window.selectToken(token.id);
+        });
+
+        let isDragging = false;
+        let hasMoved = false;
+
+        const onPointerDown = (evt) => {
+          window.selectToken(token.id);
+          isDragging = true;
+          hasMoved = false;
+          el.setPointerCapture?.(evt.pointerId);
+          document.addEventListener('pointermove', onPointerMove);
+          document.addEventListener('pointerup', onPointerUp);
+        };
+
+        const onPointerMove = (evt) => {
+          if (!isDragging) return;
+          hasMoved = true;
+          
+          const currentLayer = document.getElementById('tokensLayer');
+          if (!currentLayer) return;
+          const rect = currentLayer.getBoundingClientRect();
+          if (rect.width === 0 || rect.height === 0) return;
+
+          const clientX = evt.clientX || (evt.touches && evt.touches[0].clientX);
+          const clientY = evt.clientY || (evt.touches && evt.touches[0].clientY);
+
+          // Converte o ponteiro diretamente para percentual proporcional do mural
+          let pctX = ((clientX - rect.left) / rect.width) * 100;
+          let pctY = ((clientY - rect.top) / rect.height) * 100;
+
+          pctX = Math.max(0, Math.min(100, pctX));
+          pctY = Math.max(0, Math.min(100, pctY));
+
+          token.percentX = pctX;
+          token.percentY = pctY;
+
+          el.style.left = `${pctX}%`;
+          el.style.top = `${pctY}%`;
+        };
+
+        const onPointerUp = (evt) => {
+          if (!isDragging) return;
+          isDragging = false;
+          el.releasePointerCapture?.(evt.pointerId);
+          document.removeEventListener('pointermove', onPointerMove);
+          document.removeEventListener('pointerup', onPointerUp);
+          if (hasMoved) {
+            broadcastRoomMessage({ type: 'UPDATE_TOKEN', payload: token });
+          }
+        };
+
+        el.addEventListener('pointerdown', onPointerDown);
+      }
+
+      return el;
+    }
+
+    window.adjustPool = function(delta) {
+      state.pool = Math.max(1, Math.min(20, state.pool + delta));
+      updatePoolUI();
+    };
+
+    window.adjustHunger = function(val) {
+      state.hunger = val;
+      updateHungerUI();
+    };
+
+    window.setDifficulty = function(val) {
+      state.difficulty = val;
+      document.querySelectorAll('.diff-btn').forEach((btn, idx) => {
+        if (idx + 1 === val) {
+          btn.className = 'diff-btn py-0.5 rounded bg-vampire-blood border border-red-900 text-white text-[10px] font-mono font-bold shadow-blood-glow';
+        } else {
+          btn.className = 'diff-btn py-0.5 rounded bg-vampire-black border border-vampire-ash text-[10px] font-mono font-bold text-gray-400';
+        }
+      });
+    };
+
+    window.toggleOpposedMode = function() {
+      state.isOpposed = !state.isOpposed;
+      const text = document.getElementById('opposedModeText');
+      const diffRow = document.getElementById('difficultyRow');
+      const notice = document.getElementById('opposedNotice');
+      if (state.isOpposed) {
+        text.innerText = 'Disputa';
+        diffRow.classList.add('opacity-30', 'pointer-events-none');
+        notice.classList.remove('hidden');
+      } else {
+        text.innerText = 'Fixa';
+        diffRow.classList.remove('opacity-30', 'pointer-events-none');
+        notice.classList.add('hidden');
+      }
+    };
+
+    window.handleLeaveRoom = function() {
+      if (confirm("Deseja abandonar este santuário e voltar à escuridão?")) {
+        broadcastRoomMessage({ type: 'PEER_LEAVE', payload: { name: state.name } });
+        if (state.localStream) {
+          state.localStream.getTracks().forEach(t => t.stop());
+        }
+        location.reload();
+      }
+    };
+
+    // Notifica a sala caso o usuário feche a aba ou recarregue a página
+    window.addEventListener('beforeunload', () => {
+      if (state.name && state.room) {
+        broadcastRoomMessage({ type: 'PEER_LEAVE', payload: { name: state.name } });
+      }
+    });
+
+    function renderAllCameraSlots() {
+      let narratorData = null;
+      const playersList = [];
+
+      // 1. Configura dados do usuário LOCAL
+      if (state.role === 'storyteller') {
+        narratorData = {
+          name: state.name + " (Você)",
+          isLocal: true,
+          role: 'storyteller',
+          peerId: state.myPeerId,
+          isCamActive: state.isCamActive,
+          isMicActive: state.isMicActive,
+          stream: state.localStream
+        };
+      } else {
+        playersList.push({
+          name: state.name + " (Você)",
+          isLocal: true,
+          role: 'player',
+          peerId: state.myPeerId,
+          isCamActive: state.isCamActive,
+          isMicActive: state.isMicActive,
+          stream: state.localStream
+        });
+      }
+
+      // 2. Distribui os participantes REMOTOS garantindo separação rígida por ofício
+      state.activePeers.forEach((peer, peerKeyName) => {
+        const assignedStream = peer.stream || (peer.peerId ? peerStreams.get(peer.peerId) : null);
+        const resolvedPeer = { ...peer, stream: assignedStream, isLocal: false };
+
+        if (peer.role === 'storyteller') {
+          // O slot do Narrador só aceita quem é estritamente storyteller
+          // e o narrador local tem prioridade sobre sua própria tela
+          if (!narratorData || !narratorData.isLocal) {
+            narratorData = resolvedPeer;
+          }
+        } else {
+          // Jogador remoto: só entra na lista de jogadores
+          if (peer.name !== state.name && peerKeyName !== state.name) {
+            playersList.push(resolvedPeer);
+          }
+        }
+      });
+
+      const totalParticipants = (narratorData ? 1 : 0) + playersList.length;
+      const countBadge = document.getElementById('coterieCountBadge');
+      if (countBadge) countBadge.innerText = `${Math.min(6, totalParticipants)}/6`;
+
+      // ==========================================
+      // SLOT 1: ESTRITAMENTE O NARRADOR
+      // ==========================================
+      const slotNarrator = document.getElementById('coterieSlotNarrator');
+      const videoNarrator = document.getElementById('videoSlotNarrator');
+      const fallbackNarrator = document.getElementById('fallbackSlotNarrator');
+      const nameNarrator = document.getElementById('nameSlotNarrator');
+      const statusNarrator = document.getElementById('statusSlotNarrator');
+      const micNarrator = document.getElementById('micSlotNarrator');
+
+      if (videoNarrator) {
+        videoNarrator.muted = true;
+      }
+
+      if (narratorData) {
+        nameNarrator.innerText = narratorData.name;
+        nameNarrator.className = 'font-cinzel text-[10px] font-bold text-vampire-gold truncate block leading-tight';
+        slotNarrator.classList.add('border-vampire-gold/60', 'shadow-blood-glow');
+        slotNarrator.classList.remove('opacity-50');
+
+        if (narratorData.isMicActive) {
+          micNarrator.className = 'w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_6px_rgba(16,185,129,0.8)]';
+        } else {
+          micNarrator.className = 'w-2 h-2 rounded-full bg-gray-600';
+        }
+
+        const effectiveNarratorStream = narratorData.isLocal 
+          ? state.localStream 
+          : (narratorData.stream || (narratorData.peerId ? peerStreams.get(narratorData.peerId) : null));
+
+        const hasVideoTrack = effectiveNarratorStream && 
+          effectiveNarratorStream.getVideoTracks && 
+          effectiveNarratorStream.getVideoTracks().some(t => t.readyState === 'live' && t.enabled !== false);
+
+        if (narratorData.isCamActive && hasVideoTrack) {
+          if (videoNarrator.srcObject !== effectiveNarratorStream) {
+            videoNarrator.srcObject = effectiveNarratorStream;
+          }
+          videoNarrator.classList.remove('hidden');
+          videoNarrator.play().catch(() => {});
+          if (narratorData.isLocal) videoNarrator.classList.add('video-mirror');
+          else videoNarrator.classList.remove('video-mirror');
+          fallbackNarrator.classList.add('hidden');
+        } else {
+          if (!narratorData.isLocal && videoNarrator.srcObject && !narratorData.isCamActive) {
+            videoNarrator.srcObject = null;
+          }
+          videoNarrator.classList.add('hidden');
+          fallbackNarrator.classList.remove('hidden');
+          statusNarrator.innerText = narratorData.isMicActive ? 'Voz Ativa' : 'Sem Câmera';
+        }
+      } else {
+        nameNarrator.innerText = 'Mestre Ausente';
+        nameNarrator.className = 'font-cinzel text-[10px] font-bold text-gray-500 truncate block leading-tight';
+        slotNarrator.classList.remove('border-vampire-gold/60', 'shadow-blood-glow');
+        slotNarrator.classList.add('opacity-50');
+        if (videoNarrator.srcObject) {
+          videoNarrator.pause();
+          videoNarrator.srcObject = null;
+        }
+        videoNarrator.classList.add('hidden');
+        fallbackNarrator.classList.remove('hidden');
+        statusNarrator.innerText = 'Aguardando Narrador';
+        micNarrator.className = 'w-2 h-2 rounded-full bg-gray-700';
+      }
+
+      // ==========================================
+      // SLOTS 1 A 5 (JOGADORES)
+      // ==========================================
+      for (let i = 0; i < 5; i++) {
+        const slotEl = document.getElementById(`coterieSlot${i + 1}`);
+        const videoEl = document.getElementById(`videoSlot${i + 1}`);
+        if (!slotEl || !videoEl) continue;
+
+        videoEl.muted = true;
+
+        const player = playersList[i];
+        const nameEl = slotEl.querySelector('.slot-name');
+        const roleEl = slotEl.querySelector('.slot-role');
+        const statusEl = slotEl.querySelector('.slot-status');
+        const micEl = slotEl.querySelector('.slot-mic');
+        const fallbackEl = slotEl.querySelector('.fallback-slot');
+
+        if (player) {
+          slotEl.classList.remove('opacity-50');
+          slotEl.classList.add('opacity-100', 'active-peer');
+
+          if (nameEl) {
+            nameEl.innerText = player.name;
+            nameEl.className = 'slot-name font-cinzel text-[10px] font-bold text-vampire-parchment truncate block leading-tight';
+          }
+          if (roleEl) {
+            roleEl.innerText = player.isLocal ? 'Você' : 'Jogador';
+            roleEl.className = 'slot-role text-[7px] font-mono font-bold px-1 py-0.2 rounded bg-black/95 border border-red-900/60 text-red-300';
+          }
+          if (micEl) {
+            micEl.className = player.isMicActive
+              ? 'slot-mic w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_6px_rgba(16,185,129,0.8)]'
+              : 'slot-mic w-2 h-2 rounded-full bg-gray-600';
+          }
+
+          const effectivePlayerStream = player.isLocal 
+            ? state.localStream 
+            : (player.stream || (player.peerId ? peerStreams.get(player.peerId) : null));
+
+          const hasPlayerVideoTrack = effectivePlayerStream && 
+            effectivePlayerStream.getVideoTracks && 
+            effectivePlayerStream.getVideoTracks().some(t => t.readyState === 'live' && t.enabled !== false);
+
+          if (player.isCamActive && hasPlayerVideoTrack) {
+            if (videoEl.srcObject !== effectivePlayerStream) {
+              videoEl.srcObject = effectivePlayerStream;
+            }
+            videoEl.classList.remove('hidden');
+            videoEl.play().catch(() => {});
+            if (player.isLocal) videoEl.classList.add('video-mirror');
+            else videoEl.classList.remove('video-mirror');
+            if (fallbackEl) fallbackEl.classList.add('hidden');
+          } else {
+            if (!player.isLocal && videoEl.srcObject && !player.isCamActive) {
+              videoEl.srcObject = null;
+            }
+            videoEl.classList.add('hidden');
+            if (fallbackEl) fallbackEl.classList.remove('hidden');
+            if (statusEl) statusEl.innerText = player.isMicActive ? 'Voz Ativa' : 'Sem Câmera';
+          }
+        } else {
+          // VAGA VAZIA / LIBERADA
+          slotEl.classList.add('opacity-50');
+          slotEl.classList.remove('opacity-100', 'active-peer');
+          if (videoEl.srcObject) {
+            videoEl.pause();
+            videoEl.srcObject = null;
+          }
+          videoEl.classList.add('hidden');
+          if (fallbackEl) fallbackEl.classList.remove('hidden');
+
+          if (nameEl) {
+            nameEl.innerText = `Vaga ${i + 1}`;
+            nameEl.className = 'slot-name font-cinzel text-[10px] font-bold text-gray-500 truncate block leading-tight';
+          }
+          if (roleEl) {
+            roleEl.innerText = 'Livre';
+            roleEl.className = 'slot-role text-[7px] font-mono font-bold px-1 py-0.2 rounded bg-black/95 border border-white/10 text-gray-500';
+          }
+          if (statusEl) statusEl.innerText = 'Vazio';
+          if (micEl) micEl.className = 'slot-mic w-2 h-2 rounded-full bg-gray-700';
+        }
+      }
+
+      if (window.lucide) window.lucide.createIcons();
+    }
+
+    window.toggleLocalCamera = async function() {
+      const camIcon = document.getElementById('camIcon');
+      const camText = document.getElementById('camText');
+
+      if (state.isCamActive) {
+        if (state.localStream) {
+          state.localStream.getVideoTracks().forEach(t => {
+            try { t.stop(); } catch(e) {}
+            state.localStream.removeTrack(t);
+          });
+        }
+        state.isCamActive = false;
+        if (camIcon) camIcon.className = 'w-3 h-3 text-gray-500';
+        if (camText) camText.innerText = 'Câmera';
+      } else {
+        try {
+          const videoStream = await navigator.mediaDevices.getUserMedia({
+            video: {
+              width: { ideal: 640 },
+              height: { ideal: 480 },
+              facingMode: 'user'
+            }
+          });
+          const newVideoTrack = videoStream.getVideoTracks()[0];
+          newVideoTrack.enabled = true;
+
+          if (state.localStream) {
+            state.localStream.getVideoTracks().forEach(t => {
+              try { t.stop(); } catch(e) {}
+              state.localStream.removeTrack(t);
+            });
+            state.localStream.addTrack(newVideoTrack);
+          } else {
+            state.localStream = new MediaStream([newVideoTrack]);
+          }
+
+          state.isCamActive = true;
+          if (camIcon) camIcon.className = 'w-3 h-3 text-emerald-400';
+          if (camText) camText.innerText = 'Desligar';
+        } catch (err) {
+          console.error("Erro ao acessar câmera:", err);
+          state.isCamActive = false;
+          if (camIcon) camIcon.className = 'w-3 h-3 text-red-500';
+          if (camText) camText.innerText = 'Erro Câm';
+          return;
+        }
+      }
+
+      renderAllCameraSlots();
+      broadcastLocalStreamUpdate();
+
+      broadcastRoomMessage({
+        type: 'PEER_MEDIA_UPDATE',
+        payload: {
+          name: state.name,
+          peerId: state.myPeerId,
+          isCamActive: state.isCamActive,
+          isMicActive: state.isMicActive
+        }
+      });
+
+      if (window.lucide) window.lucide.createIcons();
+    };
+
+    async function getEnhancedAudioStream() {
+      const audioConstraints = {
+        echoCancellation: { ideal: true },
+        noiseSuppression: { ideal: true },
+        autoGainControl: { ideal: true },
+        sampleRate: { ideal: 48000 },
+        channelCount: { ideal: 1 }
+      };
+
+      let rawStream;
+      try {
+        rawStream = await navigator.mediaDevices.getUserMedia({ audio: audioConstraints });
+      } catch (err) {
+        rawStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      }
+
+      try {
+        if (localAudioContext && localAudioContext.state !== 'closed') {
+          localAudioContext.close();
+        }
+        localAudioContext = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 48000 });
+        const source = localAudioContext.createMediaStreamSource(rawStream);
+
+        const highpass = localAudioContext.createBiquadFilter();
+        highpass.type = 'highpass';
+        highpass.frequency.value = 90;
+
+        const lowpass = localAudioContext.createBiquadFilter();
+        lowpass.type = 'lowpass';
+        lowpass.frequency.value = 8000;
+
+        const compressor = localAudioContext.createDynamicsCompressor();
+        compressor.threshold.setValueAtTime(-26, localAudioContext.currentTime);
+        compressor.knee.setValueAtTime(24, localAudioContext.currentTime);
+        compressor.ratio.setValueAtTime(4, localAudioContext.currentTime);
+        compressor.attack.setValueAtTime(0.003, localAudioContext.currentTime);
+        compressor.release.setValueAtTime(0.2, localAudioContext.currentTime);
+
+        const destination = localAudioContext.createMediaStreamDestination();
+        source.connect(highpass);
+        highpass.connect(lowpass);
+        lowpass.connect(compressor);
+        compressor.connect(destination);
+
+        const processedAudioTrack = destination.stream.getAudioTracks()[0];
+        
+        rawStream.getAudioTracks()[0].onended = () => {
+          try { 
+            if (localAudioContext && localAudioContext.state !== 'closed') {
+              localAudioContext.close();
+            }
+          } catch(e) {}
+        };
+
+        return new MediaStream([processedAudioTrack]);
+      } catch (err) {
+        return rawStream;
+      }
+    }
+
+    window.toggleLocalMic = async function() {
+      const micIcon = document.getElementById('micIcon');
+      const micText = document.getElementById('micText');
+
+      if (state.isMicActive) {
+        if (state.localStream) {
+          state.localStream.getAudioTracks().forEach(t => {
+            t.stop();
+            state.localStream.removeTrack(t);
+          });
+        }
+        if (localAudioContext && localAudioContext.state !== 'closed') {
+          try { localAudioContext.close(); } catch (e) {}
+          localAudioContext = null;
+        }
+        state.isMicActive = false;
+        micIcon.className = 'w-3 h-3 text-gray-500';
+        micText.innerText = 'Voz';
+      } else {
+        try {
+          const micStream = await getEnhancedAudioStream();
+          const newAudioTrack = micStream.getAudioTracks()[0];
+
+          if (state.localStream) {
+            state.localStream.getAudioTracks().forEach(t => {
+              t.stop();
+              state.localStream.removeTrack(t);
+            });
+            state.localStream.addTrack(newAudioTrack);
+          } else {
+            state.localStream = new MediaStream([newAudioTrack]);
+          }
+          state.isMicActive = true;
+          micIcon.className = 'w-3 h-3 text-emerald-400';
+          micText.innerText = 'Silenciar';
+        } catch (err) {
+          console.debug("Erro ao acessar microfone:", err);
+        }
+      }
+
+      broadcastLocalStreamUpdate();
+
+      broadcastRoomMessage({
+        type: 'PEER_MEDIA_UPDATE',
+        payload: {
+          name: state.name,
+          peerId: state.myPeerId,
+          isCamActive: state.isCamActive,
+          isMicActive: state.isMicActive
+        }
+      });
+
+      if (window.lucide) window.lucide.createIcons();
+    };
+
+    window.reconnectAllCameras = function() {
+      const icon = document.getElementById('reconnectIcon');
+      if (icon) icon.classList.add('animate-spin');
+
+      try {
+        // Envia ordem de sincronização forçada para todos na sala
+        broadcastRoomMessage({
+          type: 'FORCE_RECONNECT',
+          payload: {
+            senderId: state.myPeerId,
+            peerId: state.myPeerId,
+            name: state.name,
+            role: state.role,
+            isCamActive: state.isCamActive,
+            isMicActive: state.isMicActive
+          }
+        });
+
+        // Recria as conexões com os outros membros
+        state.activePeers.forEach((peer) => {
+          if (peer.peerId && peer.peerId !== state.myPeerId) {
+            callRemotePeer(peer.peerId);
+          }
+        });
+
+        // Força a reinserção de streams e .play() nos vídeos existentes
+        renderAllCameraSlots();
+      } catch (err) {
+        console.debug("Erro ao reconectar câmeras:", err);
+      }
+
+      setTimeout(() => {
+        renderAllCameraSlots();
+        if (icon) icon.classList.remove('animate-spin');
+      }, 1000);
+    };
+
+    function updatePoolUI() {
+      document.getElementById('inputPool').value = state.pool;
+      document.getElementById('poolValueBadge').innerText = state.pool;
+    }
+
+    function updateHungerUI() {
+      const container = document.getElementById('hungerDotsContainer');
+      container.innerHTML = '';
+      for (let i = 0; i <= 5; i++) {
+        const isSelected = i === state.hunger;
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.onclick = () => window.adjustHunger(i);
+        btn.className = `py-1 rounded font-mono font-bold text-xs transition border ${
+          isSelected 
+            ? 'bg-vampire-crimson border-red-500 text-white shadow-blood-glow' 
+            : 'bg-vampire-black border-vampire-ash text-gray-500 hover:text-white'
+        }`;
+        btn.innerText = i;
+        container.appendChild(btn);
+      }
+      document.getElementById('hungerValueBadge').innerText = state.hunger;
+    }
+
+    function evaluateV5Roll(regularResults, hungerResults, difficulty, isOpposed = false) {
+      let regularSuccesses = 0, regularTens = 0;
+      regularResults.forEach(d => {
+        if (d >= 6) regularSuccesses++;
+        if (d === 10) regularTens++;
+      });
+
+      let hungerSuccesses = 0, hungerTens = 0, hungerOnes = 0;
+      hungerResults.forEach(d => {
+        if (d >= 6) hungerSuccesses++;
+        if (d === 10) hungerTens++;
+        if (d === 1) hungerOnes++;
+      });
+
+      const totalRawSuccesses = regularSuccesses + hungerSuccesses;
+      const totalTens = regularTens + hungerTens;
+      const criticalPairs = Math.floor(totalTens / 2);
+      const criticalBonus = criticalPairs * 2;
+      const finalTotalSuccesses = totalRawSuccesses + criticalBonus;
+
+      let outcomeType = 'failure', outcomeTitle = 'Falha', outcomeDescription = '';
+
+      if (isOpposed) {
+        if (criticalPairs > 0) {
+          if (hungerTens > 0) {
+            outcomeType = 'messy';
+            outcomeTitle = 'Crítico Bagunçado em Disputa!';
+            outcomeDescription = `${finalTotalSuccesses} sucessos totais. A Besta impõe a sua vontade!`;
+          } else {
+            outcomeType = 'critical';
+            outcomeTitle = 'Sucesso Crítico em Disputa!';
+            outcomeDescription = `${finalTotalSuccesses} sucessos totais (par crítico glorioso).`;
+          }
+        } else if (finalTotalSuccesses === 0 && hungerOnes > 0) {
+          outcomeType = 'bestial';
+          outcomeTitle = 'Falha Bestial em Disputa!';
+          outcomeDescription = '0 sucessos com "1" na Fome. A Besta rompe o controle.';
+        } else if (finalTotalSuccesses === 0) {
+          outcomeType = 'total_failure';
+          outcomeTitle = 'Falha Total em Disputa';
+          outcomeDescription = 'Zero sucessos obtidos no confronto.';
+        } else if (hungerOnes > 0) {
+          outcomeType = 'success';
+          outcomeTitle = 'Confronto Perigoso';
+          outcomeDescription = `${finalTotalSuccesses} sucesso(s). Atenção: '1' no Dado de Fome.`;
+        } else {
+          outcomeType = 'success';
+          outcomeTitle = 'Resultado de Disputa';
+          outcomeDescription = `${finalTotalSuccesses} sucesso(s). Compare com o rival.`;
+        }
+      } else {
+        const passed = finalTotalSuccesses >= difficulty;
+        if (passed) {
+          if (criticalPairs > 0) {
+            if (hungerTens > 0) {
+              outcomeType = 'messy';
+              outcomeTitle = 'Crítico Bagunçado (Messy Critical)!';
+              outcomeDescription = 'Sucesso alcançado, mas a Besta quebrou a Máscara ou exigiu sangue!';
+            } else {
+              outcomeType = 'critical';
+              outcomeTitle = 'Sucesso Crítico!';
+              outcomeDescription = `Triunfo sobrenatural com ${finalTotalSuccesses} sucessos (Margem: +${finalTotalSuccesses - difficulty}).`;
+            }
+          } else {
+            outcomeType = 'success';
+            outcomeTitle = 'Sucesso';
+            outcomeDescription = `Superado com ${finalTotalSuccesses} sucessos contra Dificuldade ${difficulty}.`;
+          }
+        } else {
+          if (hungerOnes > 0) {
+            outcomeType = 'bestial';
+            outcomeTitle = 'Falha Bestial (Bestial Failure)!';
+            outcomeDescription = 'Falha com 1 na Fome: A Besta reclama o controle e engatilha Compulsão.';
+          } else if (finalTotalSuccesses === 0) {
+            outcomeType = 'total_failure';
+            outcomeTitle = 'Falha Total';
+            outcomeDescription = 'Zero sucessos. Humilhação e derrota completa.';
+          } else {
+            outcomeType = 'failure';
+            outcomeTitle = 'Falha Simples';
+            outcomeDescription = `${finalTotalSuccesses} sucessos obtidos contra Dificuldade ${difficulty}.`;
+          }
+        }
+      }
+
+      return {
+        regularResults, hungerResults,
+        regularSuccesses, hungerSuccesses,
+        criticalPairs, finalTotalSuccesses,
+        outcomeType, outcomeTitle, outcomeDescription
+      };
+    }
+
+    window.performRoll = function() {
+      playGothicDiceRollSound();
+
+      const totalPool = state.pool;
+      const hungerCount = Math.min(totalPool, state.hunger);
+      const regularCount = Math.max(0, totalPool - hungerCount);
+
+      const regularResults = [];
+      for (let i = 0; i < regularCount; i++) regularResults.push(Math.floor(Math.random() * 10) + 1);
+
+      const hungerResults = [];
+      for (let i = 0; i < hungerCount; i++) hungerResults.push(Math.floor(Math.random() * 10) + 1);
+
+      const evaluation = evaluateV5Roll(regularResults, hungerResults, state.difficulty, state.isOpposed);
+
+      if (evaluation.outcomeType === 'critical' || evaluation.outcomeType === 'messy') {
+        playGothicCriticalSound();
+      } else if (evaluation.outcomeType === 'bestial') {
+        playBeastFailureSound();
+      }
+
+      const rollData = {
+        id: 'roll_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5),
+        type: 'standard',
+        timestamp: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+        playerName: state.name,
+        role: state.role,
+        totalPool,
+        difficulty: state.difficulty,
+        isOpposed: state.isOpposed,
+        regularResults,
+        hungerResults,
+        evaluation,
+        hasWillpowerRerolled: false
+      };
+
+      state.rolls.unshift(rollData);
+      renderRollsFeed();
+
+      broadcastRoomMessage({ type: 'NEW_ROLL', payload: rollData });
+    };
+
+    window.performRouseCheck = function() {
+      playGothicDiceRollSound();
+      const d10 = Math.floor(Math.random() * 10) + 1;
+      const passed = d10 >= 6;
+
+      if (!passed) {
+        playBeastFailureSound();
+      }
+
+      const rouseData = {
+        id: 'rouse_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5),
+        type: 'rouse',
+        timestamp: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+        playerName: state.name,
+        role: state.role,
+        dieResult: d10,
+        passed,
+        outcomeTitle: passed ? 'Sangue Apaziguado' : 'A Fome Reclama!',
+        outcomeDescription: passed ? `Resultado ${d10}. O Sangue saciou o chamado.` : `Resultado ${d10}. Suba +1 de Fome na sua ficha!`
+      };
+
+      state.rolls.unshift(rouseData);
+      renderRollsFeed();
+
+      broadcastRoomMessage({ type: 'NEW_ROLL', payload: rouseData });
+    };
+
+    window.clearRoomRolls = function() {
+      state.rolls = [];
+      renderRollsFeed();
+      broadcastRoomMessage({ type: 'CLEAR_ROLLS' });
+    };
+
+    window.openWillpowerModal = function(rollId) {
+      const roll = state.rolls.find(r => r.id === rollId);
+      if (!roll || roll.hasWillpowerRerolled) return;
+
+      state.pendingWillpowerRoll = roll;
+      state.selectedDiceForReroll.clear();
+
+      const container = document.getElementById('willpowerDiceList');
+      container.innerHTML = '';
+
+      roll.regularResults.forEach((val, idx) => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.onclick = () => {
+          if (state.selectedDiceForReroll.has(idx)) {
+            state.selectedDiceForReroll.delete(idx);
+            btn.classList.remove('border-vampire-brightBlood', 'bg-vampire-blood/50');
+          } else {
+            if (state.selectedDiceForReroll.size >= 3) return;
+            state.selectedDiceForReroll.add(idx);
+            btn.classList.add('border-vampire-brightBlood', 'bg-vampire-blood/50');
+          }
+          const cnt = state.selectedDiceForReroll.size;
+          document.getElementById('selectedDiceCount').innerText = cnt;
+          document.getElementById('btnExecuteWillpower').disabled = cnt === 0;
+        };
+
+        btn.className = 'p-2 rounded-lg border border-vampire-ash bg-vampire-slate text-xs font-mono font-bold flex flex-col items-center transition cursor-pointer hover:border-vampire-gold/50';
+        btn.innerHTML = `<span class="text-sm">${val}</span><span class="text-[9px] font-cinzel opacity-80">${val >= 6 ? 'Sucesso' : 'Falha'}</span>`;
+        container.appendChild(btn);
+      });
+
+      document.getElementById('selectedDiceCount').innerText = '0';
+      document.getElementById('btnExecuteWillpower').disabled = true;
+
+      const modal = document.getElementById('willpowerModal');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    };
+
+    window.closeWillpowerModal = function() {
+      const modal = document.getElementById('willpowerModal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+      state.pendingWillpowerRoll = null;
+      state.selectedDiceForReroll.clear();
+    };
+
+    window.executeWillpowerReroll = function() {
+      if (!state.pendingWillpowerRoll || state.selectedDiceForReroll.size === 0) return;
+      playGothicDiceRollSound();
+
+      const roll = state.pendingWillpowerRoll;
+      state.selectedDiceForReroll.forEach(idx => {
+        roll.regularResults[idx] = Math.floor(Math.random() * 10) + 1;
+      });
+
+      roll.hasWillpowerRerolled = true;
+      roll.evaluation = evaluateV5Roll(roll.regularResults, roll.hungerResults, roll.difficulty, roll.isOpposed);
+
+      renderRollsFeed();
+      broadcastRoomMessage({ type: 'UPDATE_ROLL', payload: roll });
+      closeWillpowerModal();
+    };
+
+    function renderRollsFeed() {
+      const feed = document.getElementById('rollsFeedContainer');
+      const badge = document.getElementById('rollsCountBadge');
+      if (badge) badge.innerText = `(${state.rolls.length})`;
+      if (!feed) return;
+
+      if (state.rolls.length === 0) {
+        feed.innerHTML = `
+          <div id="emptyFeedState" class="border border-dashed border-vampire-ash/60 rounded-xl p-4 text-center text-[11px] text-gray-600 flex flex-col items-center justify-center gap-1.5">
+            <span class="font-gothic text-xl text-vampire-goldMuted">☥</span>
+            <span class="font-cinzel">Nenhum dado rolou na escuridão.</span>
+          </div>
+        `;
+        return;
+      }
+
+      feed.innerHTML = '';
+      state.rolls.forEach(roll => {
+        const card = document.createElement('div');
+        card.className = 'p-2.5 rounded-xl bg-vampire-black/95 border border-vampire-ash shadow-md space-y-1.5 relative overflow-hidden transition';
+
+        if (roll.type === 'rouse') {
+          card.classList.add(roll.passed ? 'border-emerald-950/60' : 'border-red-950');
+          card.innerHTML = `
+            <div class="flex items-center justify-between text-[10px]">
+              <span class="font-cinzel font-bold ${roll.role === 'storyteller' ? 'text-vampire-gold' : 'text-vampire-parchment'}">${roll.playerName}</span>
+              <span class="font-mono text-gray-500 text-[9px]">${roll.timestamp}</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <div class="w-8 h-8 rounded-lg flex items-center justify-center font-mono font-bold text-base ${roll.passed ? 'bg-emerald-950 text-emerald-300 border border-emerald-800' : 'bg-red-950 text-red-300 border border-red-800 animate-pulse'}">
+                ${roll.dieResult}
+              </div>
+              <div>
+                <p class="font-cinzel text-xs font-bold ${roll.passed ? 'text-emerald-400' : 'text-red-400'} leading-tight">${roll.outcomeTitle}</p>
+                <p class="text-[9px] text-gray-400 font-cinzel leading-tight">${roll.outcomeDescription}</p>
+              </div>
+            </div>
+          `;
+        } else {
+          // Standard V5 Roll
+          const evalRes = roll.evaluation;
+          let bannerClass = 'text-gray-400 bg-vampire-slate/50 border-vampire-ash';
+
+          if (evalRes.outcomeType === 'critical') {
+            bannerClass = 'text-vampire-gold bg-vampire-gold/10 border-vampire-gold/50 shadow-sm';
+            card.classList.add('border-vampire-gold/40');
+          } else if (evalRes.outcomeType === 'messy') {
+            bannerClass = 'text-red-400 bg-red-950/40 border-red-800/60 shadow-blood-glow';
+            card.classList.add('border-red-900/60');
+          } else if (evalRes.outcomeType === 'bestial') {
+            bannerClass = 'text-red-500 bg-black border-red-950 shadow-beast-fury';
+            card.classList.add('border-red-950');
+          } else if (evalRes.outcomeType === 'success') {
+            bannerClass = 'text-emerald-400 bg-emerald-950/30 border-emerald-900/50';
+          }
+
+          // Monta dados normais
+          const regularDiceHtml = roll.regularResults.map(val => {
+            const isSucc = val >= 6;
+            const isTen = val === 10;
+            return `<div class="w-5 h-5 rounded flex items-center justify-center font-mono text-[11px] font-bold die-normal ${isTen ? 'text-vampire-gold font-black border-vampire-gold/60' : isSucc ? 'text-vampire-bone' : 'text-gray-500'}">${val}</div>`;
+          }).join('');
+
+          // Monta dados de fome
+          const hungerDiceHtml = roll.hungerResults.map(val => {
+            const isSucc = val >= 6;
+            const isTen = val === 10;
+            const isOne = val === 1;
+            return `<div class="w-5 h-5 rounded flex items-center justify-center font-mono text-[11px] font-bold die-hunger ${isTen ? 'text-amber-300 font-black ring-1 ring-amber-400' : isOne ? 'text-red-200 ring-1 ring-red-500 font-black' : isSucc ? 'text-red-100' : 'text-red-400/60'}">${val}</div>`;
+          }).join('');
+
+          const canReroll = !roll.hasWillpowerRerolled && roll.playerName === state.name && roll.regularResults.length > 0;
+
+          card.innerHTML = `
+            <div class="flex items-center justify-between text-[10px]">
+              <span class="font-cinzel font-bold ${roll.role === 'storyteller' ? 'text-vampire-gold' : 'text-vampire-parchment'}">${roll.playerName}</span>
+              <div class="flex items-center gap-1.5 font-mono text-gray-500 text-[9px]">
+                <span>${roll.isOpposed ? 'Disputa' : 'Dif ' + roll.difficulty}</span>
+                <span>•</span>
+                <span>${roll.timestamp}</span>
+              </div>
+            </div>
+
+            <div class="p-1 rounded-lg border text-[10px] font-cinzel font-bold flex items-center justify-between ${bannerClass}">
+              <span>${evalRes.outcomeTitle}</span>
+              <span class="font-mono text-xs">${evalRes.finalTotalSuccesses} ✦</span>
+            </div>
+
+            <p class="text-[9px] text-gray-400 font-cinzel leading-tight">${evalRes.outcomeDescription}</p>
+
+            <div class="flex items-center gap-1 flex-wrap pt-0.5">
+              ${regularDiceHtml}
+              ${hungerDiceHtml}
+            </div>
+
+            ${canReroll ? `
+              <div class="pt-1 flex justify-end">
+                <button type="button" onclick="openWillpowerModal('${roll.id}')" class="px-2 py-0.5 rounded bg-vampire-slate hover:bg-vampire-blood text-vampire-parchment text-[9px] font-cinzel flex items-center gap-1 border border-vampire-ash hover:border-vampire-gold/40 transition">
+                  <i data-lucide="shield" class="w-2.5 h-2.5 text-vampire-gold"></i>
+                  <span>Força de Vontade (Re-rolar)</span>
+                </button>
+              </div>
+            ` : roll.hasWillpowerRerolled ? `
+              <div class="text-[8px] font-cinzel text-gray-500 text-right italic">Força de Vontade invocada</div>
+            ` : ''}
+          `;
+        }
+
+        feed.appendChild(card);
+      });
+
+      if (window.lucide) window.lucide.createIcons();
+    }
+
+    // Window Init
+    window.addEventListener('DOMContentLoaded', () => {
+      const slider = document.getElementById('inputPool');
+      slider.addEventListener('input', (e) => {
+        state.pool = parseInt(e.target.value, 10);
+        document.getElementById('poolValueBadge').innerText = state.pool;
+      });
+
+      // Desbloqueio universal de áudio nos navegadores (Autoplay Policy Unlock)
+      const unlockAudio = () => {
+        if (Tone.context.state !== 'running') {
+          Tone.start().catch(() => {});
+        }
+        const ext = document.getElementById('externalAudioPlayer');
+        if (ext && state.activeMasterTrack && ext.paused) {
+          ext.play().catch(() => {});
+        }
+      };
+      window.addEventListener('click', unlockAudio, { once: false });
+      window.addEventListener('touchstart', unlockAudio, { once: false });
+
+      // Atualiza o posicionamento relativo dos tokens ao redimensionar a tela
+      window.addEventListener('resize', () => {
+        renderAllTokens();
+      });
+
+      if (window.lucide) window.lucide.createIcons();
+    });
+  </script>
+</body>
+</html>
