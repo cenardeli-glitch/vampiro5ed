@@ -267,6 +267,9 @@
               <span>Narrador (Mestre)</span>
             </button>
           </div>
+          <div id="narratorOccupiedWarning" class="hidden mt-2 p-2 rounded-lg bg-red-950/80 border border-red-800 text-[10px] text-red-200 font-cinzel text-center">
+            ⚠️ O Trono do Narrador nesta sala já se encontra ocupado por outro Mestre da Noite.
+          </div>
         </div>
 
         <!-- Nome do Personagem / Narrador -->
@@ -850,6 +853,27 @@
   <!-- Audio Element invisível para streaming de URLs/Arquivos externos -->
   <audio id="externalAudioPlayer" preload="auto" class="hidden"></audio>
 
+  <!-- Modal Aviso de Narrador Já Ocupado -->
+  <div id="storytellerOccupiedModal" class="fixed inset-0 z-50 bg-black/95 backdrop-blur-md hidden items-center justify-center p-4">
+    <div class="bg-vampire-obsidian border-2 border-red-900 rounded-2xl max-w-sm w-full p-5 shadow-2xl gothic-border text-center">
+      <div class="w-12 h-12 rounded-full bg-vampire-driedBlood border border-red-700 mx-auto flex items-center justify-center mb-3">
+        <i data-lucide="crown" class="w-6 h-6 text-vampire-gold"></i>
+      </div>
+      <h3 class="font-gothic text-lg text-vampire-parchment tracking-wider uppercase mb-1">Trono Ocupado</h3>
+      <p id="occupiedStorytellerMsg" class="text-xs font-cinzel text-gray-300 leading-relaxed mb-4">
+        O Elísio já possui um Mestre da Noite reinando sobre as sombras. Não pode haver dois regentes simultâneos no mesmo domínio.
+      </p>
+      <div class="flex flex-col gap-2">
+        <button type="button" onclick="joinAsPlayerInstead()" class="w-full py-2.5 rounded-xl bg-gradient-to-b from-vampire-blood to-vampire-driedBlood hover:from-vampire-crimson text-vampire-bone font-cinzel text-xs font-bold transition shadow-blood-glow border border-red-900">
+          Entrar como Vampiro (Jogador)
+        </button>
+        <button type="button" onclick="closeStorytellerOccupiedModal()" class="w-full py-2 rounded-xl bg-vampire-slate hover:bg-vampire-ash text-gray-400 font-cinzel text-xs transition">
+          Permanecer na Entrada
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- Modal Criação de Token -->
   <div id="tokenModal" class="fixed inset-0 z-50 bg-black/95 backdrop-blur-md hidden items-center justify-center p-4">
     <div class="bg-vampire-obsidian border-2 border-vampire-gold/30 rounded-2xl max-w-md w-full p-6 shadow-2xl gothic-border">
@@ -966,6 +990,10 @@
       activeMasterTrack: null,
       activeMasterTitle: 'Silêncio Sepulcral'
     };
+
+    // Rastreador global da ocupação da vaga de Narrador
+    let currentStorytellerPresence = null; // { name, peerId, lastSeen }
+    let preflightMqttClient = null;
 
     // Paleta de materiais realistas para os tokens (couro, minérios, latão, sangue seco)
     const TOKEN_COLOR_PALETTE = [
@@ -1708,6 +1736,7 @@
       const stBtn = document.getElementById('roleBtnStoryteller');
       const lbl = document.getElementById('lblPlayerName');
       const input = document.getElementById('inputPlayerName');
+      const warning = document.getElementById('narratorOccupiedWarning');
 
       if (role === 'storyteller') {
         stBtn.className = 'role-btn py-2.5 px-3 rounded-xl border border-vampire-gold/60 bg-vampire-slate text-vampire-gold font-cinzel text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-md';
@@ -1719,16 +1748,50 @@
         stBtn.className = 'role-btn py-2.5 px-3 rounded-xl border border-vampire-ash bg-vampire-slate/70 text-gray-400 font-cinzel text-xs font-bold transition flex items-center justify-center gap-1.5';
         lbl.innerText = 'Nome do seu Condenado:';
         input.placeholder = 'Ex: Julian de Toreador';
+        if (warning) warning.classList.add('hidden');
       }
     };
 
-    window.handleJoinRoom = function(e) {
+    window.closeStorytellerOccupiedModal = function() {
+      const modal = document.getElementById('storytellerOccupiedModal');
+      if (modal) {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+      }
+    };
+
+    window.joinAsPlayerInstead = function() {
+      closeStorytellerOccupiedModal();
+      selectRole('player');
+      const submitBtn = document.querySelector('#entryForm button[type="submit"]');
+      if (submitBtn) submitBtn.click();
+    };
+
+    window.handleJoinRoom = async function(e) {
       e.preventDefault();
       const name = document.getElementById('inputPlayerName').value.trim();
       const room = document.getElementById('inputRoomName').value.trim().toUpperCase();
       const pass = document.getElementById('inputRoomPass').value.trim();
 
       if (!name || !room || !pass) return false;
+
+      // Validação de vaga exclusiva do Narrador
+      if (state.role === 'storyteller') {
+        const isOccupied = await checkIsStorytellerOccupiedPreflight(room, pass, name);
+        if (isOccupied) {
+          const modal = document.getElementById('storytellerOccupiedModal');
+          const msg = document.getElementById('occupiedStorytellerMsg');
+          if (msg) {
+            msg.innerHTML = `O Elísio <strong class="text-vampire-gold">${room}</strong> já possui um Mestre da Noite ativo (<span class="text-red-400 font-bold">${isOccupied.name || 'Outro Narrador'}</span>).<br><br>Não é permitido mais de um Narrador na mesma sala. Deseja entrar como Vampiro (Jogador)?`;
+          }
+          if (modal) {
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+          }
+          if (window.lucide) window.lucide.createIcons();
+          return false;
+        }
+      }
 
       state.name = name;
       state.room = room;
@@ -1753,6 +1816,79 @@
 
       return false;
     };
+
+    // Verificação de ocupação do trono do Narrador antes de confirmar a entrada
+    function checkIsStorytellerOccupiedPreflight(room, pass, myName) {
+      return new Promise((resolve) => {
+        const cleanRoom = room.toLowerCase().replace(/[^a-z0-9]/g, '');
+        const cleanPass = pass.toLowerCase().replace(/[^a-z0-9]/g, '');
+        const topic = `vtm_v5_coterie/${cleanRoom}_${cleanPass}`;
+        const queryChannelName = `v5_${cleanRoom}_${cleanPass}`;
+        let occupied = false;
+        let occupantData = null;
+
+        let bc = null;
+        try {
+          bc = new BroadcastChannel(queryChannelName);
+          bc.onmessage = (evt) => {
+            const data = evt.data;
+            if (data && (data.type === 'PEER_PRESENT' || data.type === 'PEER_HEARTBEAT' || data.type === 'PEER_JOIN')) {
+              const p = data.payload;
+              if (p && p.role === 'storyteller' && p.name !== myName) {
+                occupied = true;
+                occupantData = p;
+              }
+            }
+          };
+          bc.postMessage({ type: 'QUERY_STORYTELLER', payload: { queryingName: myName } });
+        } catch (e) {}
+
+        let tempMqtt = null;
+        try {
+          if (typeof mqtt !== 'undefined' && mqtt.connect) {
+            tempMqtt = mqtt.connect('wss://broker.emqx.io:8084/mqtt', {
+              clientId: 'v5_chk_' + Math.random().toString(16).substr(2, 8),
+              clean: true,
+              connectTimeout: 2000
+            });
+
+            tempMqtt.on('connect', () => {
+              try {
+                tempMqtt.subscribe(topic, { qos: 0 });
+                tempMqtt.publish(topic, JSON.stringify({
+                  type: 'QUERY_STORYTELLER',
+                  payload: { queryingName: myName }
+                }));
+              } catch (e) {}
+            });
+
+            tempMqtt.on('message', (t, msg) => {
+              if (t !== topic) return;
+              try {
+                const data = JSON.parse(msg.toString());
+                if (data && (data.type === 'PEER_PRESENT' || data.type === 'PEER_HEARTBEAT' || data.type === 'PEER_JOIN')) {
+                  const p = data.payload;
+                  if (p && p.role === 'storyteller' && p.name !== myName) {
+                    occupied = true;
+                    occupantData = p;
+                  }
+                }
+              } catch (e) {}
+            });
+          }
+        } catch (e) {}
+
+        setTimeout(() => {
+          if (bc) {
+            try { bc.close(); } catch(e){}
+          }
+          if (tempMqtt) {
+            try { tempMqtt.end(true); } catch(e){}
+          }
+          resolve(occupied ? occupantData : false);
+        }, 1100);
+      });
+    }
 
     function applyRoleUI() {
       const badgeRole = document.getElementById('badgeRole');
@@ -1810,6 +1946,11 @@
           cleanupRemotePeerAudio(peerData.peerId);
         }
         state.activePeers.delete(peerName);
+      }
+
+      // Se o participante que saiu era o Narrador, libera o status de Narrador ocupado
+      if (currentStorytellerPresence && currentStorytellerPresence.name === peerName) {
+        currentStorytellerPresence = null;
       }
 
       // Limpa tokens pertencentes a este jogador se não for o Narrador
@@ -2145,6 +2286,11 @@
         } else if (payload.evaluation?.outcomeType === 'bestial') {
           playBeastFailureSound();
         }
+      } else if (type === 'QUERY_STORYTELLER') {
+        // Se alguém na tela de login perguntar se há um Narrador, e nós formos o Narrador ativo, respondemos de prontidão
+        if (state.role === 'storyteller') {
+          sendPresenceHeartbeat();
+        }
       } else if (type === 'UPDATE_ROLL') {
         const idx = state.rolls.findIndex(r => r.id === payload.id);
         if (idx !== -1) {
@@ -2192,6 +2338,23 @@
         }
       } else if (type === 'PEER_JOIN' || type === 'PEER_PRESENT' || type === 'PEER_HEARTBEAT') {
         if (payload.name && payload.name !== state.name) {
+          // Monitoramento estrito do Storyteller
+          if (payload.role === 'storyteller') {
+            currentStorytellerPresence = {
+              name: payload.name,
+              peerId: payload.peerId,
+              lastSeen: Date.now()
+            };
+
+            // Se nós também tínhamos entrado como Narrador mas outro Narrador legítimo já estava ativo,
+            // somos demovidos automaticamente para Jogador com aviso
+            if (state.role === 'storyteller') {
+              state.role = 'player';
+              applyRoleUI();
+              alert(`O Narrador original (${payload.name}) está no comando desta sessão. Seu papel foi ajustado para Jogador.`);
+            }
+          }
+
           const existing = state.activePeers.get(payload.name) || {};
           const updatedPeer = {
             ...existing,
