@@ -94,7 +94,6 @@
       background: #4a0d13;
     }
 
-    /* Iluminação física natural de mesa de mogno escurecido e cera de vela */
     body {
       background-color: #070607;
       background-image: 
@@ -104,12 +103,10 @@
         linear-gradient(180deg, #070607 0%, #0d0c0e 50%, #070607 100%);
     }
 
-    /* Vinheta de cantos escuros naturais de iluminação de câmara */
     .abyssal-vignette {
       box-shadow: inset 0 0 140px 35px rgba(0, 0, 0, 0.96);
     }
 
-    /* Altar de Pedra e Madeira Nobre com Profundidade Física Realista */
     .altar-stone-bg {
       background-color: #0b0a0c;
       background-image: 
@@ -120,7 +117,6 @@
       box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.8), inset 0 -1px 1px rgba(173, 140, 79, 0.08);
     }
 
-    /* Moldura Lapidar em Latão Escurecido com Chanfro Mecânico Realista */
     .gothic-border {
       border: 1px solid rgba(173, 140, 79, 0.28);
       position: relative;
@@ -137,7 +133,6 @@
     .gothic-border::before { top: -5px; left: 5px; }
     .gothic-border::after { bottom: -5px; right: 5px; }
 
-    /* The Beast Vignette - Pulsação arterial orgânica sutil */
     @keyframes beastHeartbeatPulse {
       0%, 100% { box-shadow: inset 0 0 60px 10px rgba(0,0,0,0.92); }
       50% { box-shadow: inset 0 0 95px 22px rgba(66, 11, 17, 0.28); }
@@ -146,7 +141,6 @@
       animation: beastHeartbeatPulse 6.5s ease-in-out infinite;
     }
 
-    /* DADOS REALISTAS: Textura de Ardósia Grafite e Resina Mineral de Sangue Coagulado */
     .die-normal {
       background: linear-gradient(145deg, #28242b 0%, #171519 55%, #0f0e11 100%);
       box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.12), inset 0 -2px 3px rgba(0, 0, 0, 0.85), 0 3px 6px rgba(0, 0, 0, 0.85);
@@ -187,13 +181,11 @@
       -webkit-tap-highlight-color: transparent;
     }
 
-    /* Token Selection: Sem halos brancos ou artificiais */
     .token-selected {
       outline: none !important;
       box-shadow: none !important;
     }
 
-    /* 6-Camera Left Vertical Grid Styling - Molduras Físicas de Madeira Nobre e Bronze */
     .coterie-left-strip {
       display: grid;
       grid-template-rows: repeat(6, minmax(0, 1fr));
@@ -216,7 +208,6 @@
       box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04), 0 3px 8px rgba(0, 0, 0, 0.85);
     }
 
-    /* Painéis com Textura de Ardósia e Linho Envelhecido */
     .crypt-panel {
       background-color: #0e0d10;
       background-image: 
@@ -229,15 +220,12 @@
 </head>
 <body class="bg-vampire-void text-gray-300 min-h-screen font-sans selection:bg-vampire-driedBlood selection:text-vampire-bone flex flex-col overflow-x-hidden beast-aura abyssal-vignette">
 
-  <!-- ========================================== -->
   <!-- 1. TELA INICIAL (LOGIN / ENTRADA NA SALA) -->
-  <!-- ========================================== -->
   <div id="loginScreen" class="fixed inset-0 z-50 bg-black/98 flex items-center justify-center p-4 backdrop-blur-md">
     <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-vampire-driedBlood/40 via-vampire-void/90 to-black pointer-events-none"></div>
 
     <div class="relative w-full max-w-md bg-vampire-obsidian/95 border-2 border-vampire-gold/30 rounded-2xl p-6 sm:p-8 shadow-2xl shadow-black gothic-border">
       
-      <!-- Gothic Header -->
       <div class="text-center mb-6">
         <div class="relative inline-block mb-3">
           <div class="w-16 h-16 mx-auto rounded-full bg-gradient-to-b from-vampire-crimson/80 via-vampire-blood to-vampire-void flex items-center justify-center border border-vampire-gold/50 shadow-gothic-relic">
@@ -251,8 +239,6 @@
       </div>
 
       <form id="entryForm" onsubmit="return handleJoinRoom(event);" class="space-y-4">
-        
-        <!-- Seleção de Papel -->
         <div>
           <label class="block text-xs font-cinzel text-vampire-parchment font-bold mb-1.5 flex items-center gap-1.5">
             <span class="text-vampire-gold">✠</span> Escolha o seu Ofício:
@@ -269,13 +255,11 @@
           </div>
         </div>
 
-        <!-- Nome do Personagem / Narrador -->
         <div>
           <label id="lblPlayerName" class="block text-xs font-cinzel text-vampire-parchment font-bold mb-1">Nome do seu Condenado:</label>
           <input type="text" id="inputPlayerName" required placeholder="Ex: Julian de Toreador" maxlength="28" class="w-full bg-vampire-black/95 border border-vampire-ash focus:border-vampire-gold rounded-xl px-3.5 py-2.5 text-sm text-vampire-parchment focus:outline-none font-cinzel placeholder:text-gray-600 transition shadow-[inset_0_1px_3px_rgba(0,0,0,0.8)]">
         </div>
 
-        <!-- Nome da Sala -->
         <div>
           <label class="block text-xs font-cinzel text-vampire-parchment font-bold mb-1">Nome do Elísio (Sala):</label>
           <div class="relative">
@@ -283,7 +267,6 @@
           </div>
         </div>
 
-        <!-- Senha da Sala -->
         <div>
           <label class="block text-xs font-cinzel text-vampire-parchment font-bold mb-1">Palavra de Sangue (Senha):</label>
           <input type="password" id="inputRoomPass" required placeholder="Segredo da noite" maxlength="32" class="w-full bg-vampire-black/95 border border-vampire-ash focus:border-vampire-gold rounded-xl px-3.5 py-2.5 text-sm text-vampire-parchment focus:outline-none font-mono transition shadow-[inset_0_1px_3px_rgba(0,0,0,0.8)]">
@@ -298,12 +281,9 @@
     </div>
   </div>
 
-  <!-- ========================================== -->
-  <!-- 2. APLICAÇÃO PRINCIPAL (EM 3 PARTES)       -->
-  <!-- ========================================== -->
+  <!-- 2. APLICAÇÃO PRINCIPAL -->
   <div id="mainApp" class="hidden flex-col h-screen overflow-hidden">
     
-    <!-- Top Header Bar - Moldura de Ébano e Bronze -->
     <header class="border-b border-vampire-ash bg-vampire-void/98 px-4 py-2 flex items-center justify-between flex-shrink-0 z-30 shadow-[0_4px_15px_rgba(0,0,0,0.9)] backdrop-blur-md">
       <div class="flex items-center gap-3">
         <div class="w-9 h-9 rounded-full bg-gradient-to-b from-vampire-blood to-vampire-black flex items-center justify-center border border-vampire-gold/45 shadow-[inset_0_1px_0_rgba(255,255,255,0.1),0_2px_6px_rgba(0,0,0,0.8)]">
@@ -318,7 +298,6 @@
       </div>
 
       <div class="flex items-center gap-2 text-xs">
-        <!-- Quick Camera & Mic Bar in Header -->
         <div class="flex items-center gap-1 bg-vampire-black/90 px-2 py-1 rounded-lg border border-vampire-ash">
           <button id="btnToggleCam" onclick="toggleLocalCamera()" class="px-2 py-0.5 rounded bg-vampire-slate hover:bg-vampire-ash text-[10px] font-cinzel text-gray-300 transition flex items-center gap-1">
             <i id="camIcon" data-lucide="video" class="w-3 h-3 text-emerald-400"></i>
@@ -328,13 +307,8 @@
             <i id="micIcon" data-lucide="mic" class="w-3 h-3 text-emerald-400"></i>
             <span id="micText" class="hidden sm:inline">Voz</span>
           </button>
-          <button id="btnReconnectCams" onclick="reconnectAllCameras()" title="Atualizar e reconectar todas as câmeras" class="px-2 py-0.5 rounded bg-vampire-slate hover:bg-vampire-ash text-[10px] font-cinzel text-gray-400 hover:text-vampire-gold transition flex items-center gap-1 border border-transparent hover:border-vampire-gold/30">
-            <i id="reconnectIcon" data-lucide="refresh-cw" class="w-3 h-3 text-vampire-gold"></i>
-            <span class="hidden md:inline">Reconectar</span>
-          </button>
         </div>
 
-        <!-- Ambient Drone Audio Toggle -->
         <button id="btnAmbientSound" onclick="toggleAmbientMusic()" class="px-2.5 py-1 rounded-lg bg-vampire-slate/70 border border-vampire-ash text-gray-400 hover:text-vampire-gold transition flex items-center gap-1.5" title="Música Ambiente Sombria">
           <i id="ambientIcon" data-lucide="volume-x" class="w-3.5 h-3.5"></i>
           <span id="ambientText" class="font-cinzel text-[11px] hidden sm:inline">Silêncio</span>
@@ -354,12 +328,9 @@
       </div>
     </header>
 
-    <!-- Main Workspace: Stage with Left Cameras + Right Sidebar for Dice/Audio -->
     <div class="flex-grow flex flex-col lg:flex-row overflow-hidden relative">
       
-      <!-- ======================================================== -->
-      <!-- PARTE 1: COLUNA LATERAL ESQUERDA (6 CÂMERAS DA COTERIE)  -->
-      <!-- ======================================================== -->
+      <!-- PARTE 1: COLUNA LATERAL ESQUERDA (6 CÂMERAS DA COTERIE) -->
       <aside class="w-full lg:w-48 xl:w-52 flex-shrink-0 bg-vampire-void/95 border-b lg:border-b-0 lg:border-r border-vampire-ash p-2 flex flex-col h-auto lg:h-full overflow-hidden shadow-2xl z-20">
         <div class="flex items-center justify-between mb-1.5 px-1 flex-shrink-0">
           <span class="font-cinzel text-[10px] font-bold text-vampire-parchment flex items-center gap-1.5">
@@ -369,10 +340,9 @@
           <span id="coterieCountBadge" class="text-[9px] font-mono text-vampire-gold bg-black/90 px-1.5 py-0.5 rounded border border-vampire-gold/25">1/6</span>
         </div>
 
-        <!-- Grade Vertical de 6 Câmeras -->
         <div id="videoGrid" class="coterie-left-strip flex-grow">
           
-          <!-- Slot 1: Reservado estritamente para o NARRADOR -->
+          <!-- Slot 1: Narrador -->
           <div id="coterieSlotNarrator" class="coterie-cameo rounded-lg overflow-hidden flex flex-col justify-between border-vampire-gold/60 p-1 shadow-blood-glow min-h-[64px]">
             <div class="relative flex-grow w-full bg-black rounded flex items-center justify-center overflow-hidden">
               <video id="videoSlotNarrator" autoplay playsinline muted class="w-full h-full object-cover hidden"></video>
@@ -392,7 +362,7 @@
             </div>
           </div>
 
-          <!-- Slot 2 (Jogador 1) -->
+          <!-- Slots 2 a 6 (Jogadores 1 a 5) -->
           <div id="coterieSlot1" class="coterie-slot coterie-cameo rounded-lg overflow-hidden flex flex-col justify-between p-1 opacity-50 transition-all min-h-[64px]">
             <div class="relative flex-grow w-full bg-black rounded flex items-center justify-center overflow-hidden">
               <video id="videoSlot1" autoplay playsinline class="w-full h-full object-cover hidden"></video>
@@ -412,7 +382,6 @@
             </div>
           </div>
 
-          <!-- Slot 3 (Jogador 2) -->
           <div id="coterieSlot2" class="coterie-slot coterie-cameo rounded-lg overflow-hidden flex flex-col justify-between p-1 opacity-50 transition-all min-h-[64px]">
             <div class="relative flex-grow w-full bg-black rounded flex items-center justify-center overflow-hidden">
               <video id="videoSlot2" autoplay playsinline class="w-full h-full object-cover hidden"></video>
@@ -432,7 +401,6 @@
             </div>
           </div>
 
-          <!-- Slot 4 (Jogador 3) -->
           <div id="coterieSlot3" class="coterie-slot coterie-cameo rounded-lg overflow-hidden flex flex-col justify-between p-1 opacity-50 transition-all min-h-[64px]">
             <div class="relative flex-grow w-full bg-black rounded flex items-center justify-center overflow-hidden">
               <video id="videoSlot3" autoplay playsinline class="w-full h-full object-cover hidden"></video>
@@ -452,7 +420,6 @@
             </div>
           </div>
 
-          <!-- Slot 5 (Jogador 4) -->
           <div id="coterieSlot4" class="coterie-slot coterie-cameo rounded-lg overflow-hidden flex flex-col justify-between p-1 opacity-50 transition-all min-h-[64px]">
             <div class="relative flex-grow w-full bg-black rounded flex items-center justify-center overflow-hidden">
               <video id="videoSlot4" autoplay playsinline class="w-full h-full object-cover hidden"></video>
@@ -472,7 +439,6 @@
             </div>
           </div>
 
-          <!-- Slot 6 (Jogador 5) -->
           <div id="coterieSlot5" class="coterie-slot coterie-cameo rounded-lg overflow-hidden flex flex-col justify-between p-1 opacity-50 transition-all min-h-[64px]">
             <div class="relative flex-grow w-full bg-black rounded flex items-center justify-center overflow-hidden">
               <video id="videoSlot5" autoplay playsinline class="w-full h-full object-cover hidden"></video>
@@ -495,12 +461,10 @@
         </div>
       </aside>
 
-      <!-- ======================================================== -->
-      <!-- PARTE 2: ÁREA CENTRAL (ALTAR DAS SOMBRAS & TOKENS)       -->
-      <!-- ======================================================== -->
+      <!-- PARTE 2: ÁREA CENTRAL (ALTAR DAS SOMBRAS & TOKENS) -->
       <section class="flex-grow flex flex-col h-full overflow-hidden bg-vampire-void p-2 sm:p-3 relative min-w-0">
         
-        <!-- Narrator Controls Bar (VISÍVEL SOMENTE PARA O NARRADOR) -->
+        <!-- Narrator Controls Bar -->
         <div id="narratorControlsBar" class="hidden flex-wrap items-center justify-between gap-1.5 bg-vampire-obsidian/95 border border-vampire-gold/30 rounded-xl px-2.5 py-1.5 mb-2 shadow-2xl z-20">
           <div class="flex items-center gap-1.5">
             <span class="font-gothic text-sm sm:text-base text-vampire-gold flex items-center gap-1">
@@ -510,20 +474,33 @@
           </div>
 
           <div class="flex items-center gap-1.5 flex-wrap">
-            <!-- Upload de Arquivo -->
+            <button id="btnToggleFog" onclick="toggleFog()" class="px-2 py-1 rounded-lg bg-vampire-black hover:bg-vampire-slate border border-vampire-ash text-[11px] font-cinzel text-vampire-parchment transition flex items-center gap-1">
+              <i data-lucide="cloud-fog" class="w-3 h-3 text-vampire-gold"></i>
+              <span>Névoa</span>
+            </button>
+            <button id="btnToggleBrush" onclick="toggleBrush()" class="hidden px-2 py-1 rounded-lg bg-vampire-black hover:bg-vampire-slate border border-vampire-ash text-[11px] font-cinzel text-gray-500 hover:text-emerald-400 transition flex items-center gap-1">
+              <i id="brushIcon" data-lucide="brush" class="w-3 h-3 text-gray-500"></i>
+              <span id="brushText">Pincel</span>
+            </button>
+
+            <div id="brushSizeControl" class="hidden items-center gap-1.5 ml-1 bg-vampire-black/50 px-2 py-1 rounded-lg border border-vampire-ash">
+              <span class="text-[9px] font-cinzel text-gray-500">Tamanho:</span>
+              <input type="range" id="inputBrushSize" min="20" max="250" value="80" oninput="changeBrushSize(this.value)" class="w-16 h-1 bg-vampire-slate rounded appearance-none cursor-pointer accent-emerald-400">
+            </div>
+
+            <div class="w-[1px] h-4 bg-vampire-ash mx-1"></div>
+
             <label class="px-2 py-1 rounded-lg bg-vampire-black hover:bg-vampire-slate border border-vampire-gold/30 text-[11px] font-cinzel text-vampire-parchment cursor-pointer transition flex items-center gap-1 shadow-sm">
               <i data-lucide="upload" class="w-3 h-3 text-vampire-gold"></i>
               <span>Imagem</span>
               <input type="file" id="imageFileInput" accept="image/*" class="hidden" onchange="handleImageFileUpload(event)">
             </label>
 
-            <!-- Link URL -->
             <button onclick="promptImageUrl()" class="px-2 py-1 rounded-lg bg-vampire-black hover:bg-vampire-slate border border-vampire-ash text-[11px] font-cinzel text-vampire-parchment transition flex items-center gap-1">
               <i data-lucide="link" class="w-3 h-3 text-vampire-gold"></i>
               <span>URL</span>
             </button>
 
-            <!-- Limpar Imagem -->
             <button onclick="clearSharedImage()" class="px-2 py-1 rounded-lg bg-vampire-driedBlood/50 hover:bg-vampire-driedBlood text-red-200 border border-red-950 text-[11px] font-cinzel transition flex items-center gap-1">
               <i data-lucide="x" class="w-3 h-3"></i>
               <span>Limpar</span>
@@ -531,7 +508,7 @@
           </div>
         </div>
 
-        <!-- Tokens Action Bar (Access for both Storyteller and Players) -->
+        <!-- Tokens Action Bar -->
         <div class="flex items-center justify-between gap-2 mb-2 z-20 flex-shrink-0">
           <div class="flex items-center gap-2 flex-wrap">
             <button id="btnOpenTokenModal" onclick="openTokenModal()" class="px-2.5 py-1 rounded-lg bg-gradient-to-r from-vampire-driedBlood via-vampire-blood to-vampire-driedBlood hover:from-vampire-crimson text-vampire-parchment text-[11px] font-cinzel font-bold border border-red-900/60 shadow-blood-glow flex items-center gap-1.5 transition disabled:opacity-40 disabled:cursor-not-allowed">
@@ -539,13 +516,11 @@
               <span>Invocar Token</span>
             </button>
 
-            <!-- Barra Superior de Configuração do Token Selecionado -->
             <div id="topTokenControls" class="flex items-center gap-1 bg-vampire-black/95 px-2 py-0.5 rounded-lg border border-vampire-gold/25 opacity-40 pointer-events-none transition-all">
               <span id="selectedTokenLabel" class="text-[10px] font-cinzel text-gray-500 mr-1 max-w-[90px] sm:max-w-[120px] truncate">Nenhum</span>
               <button type="button" onclick="modifySelectedTokenSize(-10)" title="Diminuir Diâmetro" class="w-5 h-5 rounded bg-vampire-slate hover:bg-vampire-ash text-gray-400 hover:text-white text-xs font-bold flex items-center justify-center border border-vampire-ash">-</button>
               <button type="button" onclick="modifySelectedTokenSize(10)" title="Aumentar Diâmetro" class="w-5 h-5 rounded bg-vampire-slate hover:bg-vampire-ash text-gray-400 hover:text-white text-xs font-bold flex items-center justify-center border border-vampire-ash">+</button>
               
-              <!-- Seletor de Cor da Borda do Token -->
               <div class="relative flex items-center" title="Cor da Borda">
                 <input type="color" id="selectedTokenColorPicker" oninput="changeSelectedTokenColor(this.value)" class="w-5 h-5 rounded cursor-pointer border border-vampire-ash bg-transparent p-0 overflow-hidden appearance-none">
               </div>
@@ -561,16 +536,14 @@
           </div>
         </div>
 
-        <!-- Stage Display Area (Gothic Atmosphere - Altar das Sombras) -->
+        <!-- Stage Display Area -->
         <div id="imageStageContainer" class="flex-grow rounded-2xl altar-stone-bg border border-vampire-ash flex items-center justify-center relative overflow-hidden shadow-crypt-well group w-full">
           
-          <!-- Ornate Filigree Corner Accents - Cruzes Lapidares Antigas -->
           <div class="absolute top-2 left-2 text-vampire-gold/30 text-xs select-none pointer-events-none font-gothic z-0">✠ ╔</div>
           <div class="absolute top-2 right-2 text-vampire-gold/30 text-xs select-none pointer-events-none font-gothic z-0">╗ ✠</div>
           <div class="absolute bottom-2 left-2 text-vampire-gold/30 text-xs select-none pointer-events-none font-gothic z-0">✠ ╚</div>
           <div class="absolute bottom-2 right-2 text-vampire-gold/30 text-xs select-none pointer-events-none font-gothic z-0">╝ ✠</div>
 
-          <!-- Default Placeholder when no image is shared -->
           <div id="emptyImagePlaceholder" class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none select-none z-0">
             <div class="w-16 h-16 rounded-full bg-vampire-crypt/80 border border-vampire-gold/30 flex items-center justify-center text-vampire-goldMuted mb-3 shadow-inner backdrop-blur-sm">
               <span class="font-gothic text-3xl text-vampire-gold/80">☥</span>
@@ -580,16 +553,13 @@
             <p id="emptyStageText" class="text-xs font-cinzel text-gray-400 max-w-sm mt-1 leading-relaxed drop-shadow-[0_1px_4px_rgba(0,0,0,0.9)] text-center">Aguardando o Narrador desvelar o mapa ou retrato.</p>
           </div>
 
-          <!-- Wrapper for Image and Tokens (z-10) -->
           <div id="mapWrapper" class="w-full h-full relative flex items-center justify-center z-10 pointer-events-none">
-            <!-- Displayed Shared Image -->
             <img id="sharedImageElement" src="" alt="Cena do Narrador" class="hidden max-h-full max-w-full object-contain transition-transform duration-300 select-none pointer-events-none z-0">
-
-            <!-- Tokens Layer Container (Over Battlemap/Stage) -->
-            <div id="tokensLayer" class="absolute z-10 overflow-hidden pointer-events-auto hidden"></div>
+            <canvas id="fowCanvas" class="absolute z-10 hidden pointer-events-none cursor-crosshair touch-none"></canvas>
+            <div id="brushCursor" class="fixed rounded-full border-2 border-emerald-400/80 bg-emerald-400/10 pointer-events-none hidden z-[100] transition-transform duration-75" style="transform: translate(-50%, -50%);"></div>
+            <div id="tokensLayer" class="absolute inset-0 z-20 overflow-hidden pointer-events-none"></div>
           </div>
 
-          <!-- Fullscreen / Zoom Overlay Button -->
           <div id="imageStageActions" class="absolute bottom-2 right-2 hidden gap-2 z-20">
             <button onclick="toggleImageFullscreen()" class="p-1.5 rounded-lg bg-black/90 text-vampire-parchment hover:text-vampire-gold border border-vampire-gold/25 transition backdrop-blur shadow-2xl" title="Ver em Tela Cheia">
               <i data-lucide="maximize-2" class="w-3.5 h-3.5"></i>
@@ -598,27 +568,27 @@
         </div>
       </section>
 
-      <!-- ======================================================== -->
-      <!-- PARTE 3: LADO DIREITO (ROLADOR DE DADOS COMPACTO E FEED) -->
-      <!-- ======================================================== -->
+      <!-- PARTE 3: LADO DIREITO (ROLADOR DE DADOS, AUDIO & CHAT) -->
       <aside class="w-full lg:w-72 xl:w-80 flex-shrink-0 bg-vampire-void/95 border-t lg:border-t-0 lg:border-l border-vampire-ash flex flex-col h-auto lg:h-full overflow-hidden shadow-2xl">
         
-        <!-- Abas do Painel Direito: Dados vs Áudio & Atmosfera -->
         <div class="px-2 pt-2 pb-1 border-b border-vampire-ash flex items-center gap-1 bg-vampire-crypt flex-shrink-0">
-          <button type="button" id="tabBtnDice" onclick="switchRightTab('dice')" class="flex-1 py-1.5 px-2 rounded-lg font-gothic text-xs tracking-wider uppercase transition flex items-center justify-center gap-1 border border-red-950 bg-gradient-to-r from-vampire-driedBlood to-vampire-blood text-vampire-parchment shadow-blood-glow">
+          <button type="button" id="tabBtnDice" onclick="switchRightTab('dice')" class="relative flex-1 py-1.5 px-1 sm:px-2 rounded-lg font-gothic text-xs tracking-wider uppercase transition flex items-center justify-center gap-1 border border-red-950 bg-gradient-to-r from-vampire-driedBlood to-vampire-blood text-vampire-parchment shadow-blood-glow">
             <span class="text-vampire-gold">☥</span>
-            <span>Julgamento</span>
+            <span class="hidden sm:inline">Julgamento</span>
           </button>
-          <button type="button" id="tabBtnAudio" onclick="switchRightTab('audio')" class="flex-1 py-1.5 px-2 rounded-lg font-gothic text-xs tracking-wider uppercase transition flex items-center justify-center gap-1 border border-vampire-ash bg-vampire-black text-gray-500 hover:text-vampire-gold hover:border-vampire-gold/30">
+          <button type="button" id="tabBtnAudio" onclick="switchRightTab('audio')" class="relative flex-1 py-1.5 px-1 sm:px-2 rounded-lg font-gothic text-xs tracking-wider uppercase transition flex items-center justify-center gap-1 border border-vampire-ash bg-vampire-black text-gray-500 hover:text-vampire-gold hover:border-vampire-gold/30">
             <i data-lucide="music" class="w-3.5 h-3.5"></i>
-            <span>Áudio & Sombras</span>
+            <span class="hidden sm:inline">Áudio</span>
+          </button>
+          <button type="button" id="tabBtnChat" onclick="switchRightTab('chat')" class="relative flex-1 py-1.5 px-1 sm:px-2 rounded-lg font-gothic text-xs tracking-wider uppercase transition flex items-center justify-center gap-1 border border-vampire-ash bg-vampire-black text-gray-500 hover:text-vampire-gold hover:border-vampire-gold/30">
+            <i data-lucide="message-square" class="w-3.5 h-3.5"></i>
+            <span class="hidden sm:inline">Chat</span>
+            <span id="chatUnreadBadge" class="hidden absolute -top-1.5 -right-1.5 min-w-[16px] h-4 px-1 rounded-full bg-vampire-blood border border-red-900 text-[9px] font-mono font-bold text-vampire-bone flex items-center justify-center shadow-blood-glow z-10 pointer-events-none"></span>
           </button>
         </div>
 
-        <!-- CONTEÚDO DA ABA 1: ROLADOR DE DADOS (JULGAMENTO) -->
+        <!-- ABA 1: ROLADOR DE DADOS -->
         <div id="rightTabDiceContent" class="flex-grow flex flex-col overflow-hidden">
-          
-          <!-- Header do Rolador -->
           <div class="px-3 py-1.5 border-b border-vampire-ash flex items-center justify-between bg-vampire-slate/40 flex-shrink-0">
             <span class="font-cinzel text-[10px] text-gray-500 uppercase tracking-wider">Parada de Sangue</span>
             <button type="button" id="btnRouseCheck" onclick="performRouseCheck()" class="px-2 py-0.5 rounded-lg bg-gradient-to-r from-vampire-driedBlood to-vampire-blood hover:from-vampire-crimson text-vampire-parchment font-cinzel text-[10px] font-bold transition shadow-blood-glow flex items-center gap-1 border border-red-900/60">
@@ -627,10 +597,7 @@
             </button>
           </div>
 
-          <!-- Parada, Fome e Dificuldade (Compacto e Direto) -->
           <div class="p-2.5 bg-vampire-crypt border-b border-vampire-ash space-y-2 flex-shrink-0">
-            
-            <!-- Pool -->
             <div>
               <div class="flex items-center justify-between text-[11px] mb-0.5">
                 <span class="font-cinzel text-vampire-parchment font-semibold">Parada de Dados:</span>
@@ -643,7 +610,6 @@
               <input type="range" id="inputPool" min="1" max="20" value="6" class="w-full h-1 bg-vampire-black rounded appearance-none cursor-pointer accent-vampire-crimson">
             </div>
 
-            <!-- Fome -->
             <div>
               <div class="flex items-center justify-between text-[11px] mb-0.5">
                 <span class="font-cinzel text-red-400 font-bold flex items-center gap-1">
@@ -655,7 +621,6 @@
               <div class="grid grid-cols-6 gap-1" id="hungerDotsContainer"></div>
             </div>
 
-            <!-- Dificuldade vs Disputa -->
             <div>
               <div class="flex items-center justify-between text-[11px] mb-0.5">
                 <span class="font-cinzel text-vampire-parchment font-semibold">Dificuldade:</span>
@@ -677,14 +642,12 @@
               </div>
             </div>
 
-            <!-- Botão Rolar -->
             <button type="button" onclick="performRoll()" class="w-full py-2 rounded-xl bg-gradient-to-r from-vampire-driedBlood via-vampire-blood to-vampire-driedBlood hover:from-vampire-crimson hover:to-vampire-blood text-vampire-parchment font-gothic text-sm tracking-widest uppercase transition shadow-blood-glow flex items-center justify-center gap-1.5 border border-red-900/60">
               <span class="text-vampire-gold">☥</span>
               <span>Rolar Dados</span>
             </button>
           </div>
 
-          <!-- Feed Histórico de Rolagens -->
           <div class="px-2.5 py-1.5 border-b border-vampire-ash flex items-center justify-between text-xs bg-vampire-black flex-shrink-0">
             <span class="font-cinzel text-vampire-parchment font-bold text-[11px] flex items-center gap-1">
               <span class="w-1.5 h-1.5 rounded-full bg-vampire-crimson inline-block shadow-blood-glow"></span>
@@ -702,13 +665,10 @@
               <span class="font-cinzel">Nenhum dado rolou na escuridão.</span>
             </div>
           </div>
-
         </div>
 
-        <!-- CONTEÚDO DA ABA 2: ÁUDIO & SOMBRAS (SOUNDBOARD & AMBIÊNCIA) -->
+        <!-- ABA 2: AUDIO & SOMBRAS -->
         <div id="rightTabAudioContent" class="hidden flex-grow flex-col overflow-y-auto p-2.5 space-y-3">
-          
-          <!-- Controle de Volume Pessoal (Disponível para TODOS) -->
           <div class="bg-vampire-black p-2.5 rounded-xl border border-vampire-gold/25 shadow-md">
             <div class="flex items-center justify-between text-xs mb-1.5">
               <span class="font-cinzel text-vampire-parchment font-bold flex items-center gap-1.5">
@@ -726,7 +686,6 @@
             <p class="text-[9px] font-cinzel text-gray-500 mt-1">Este controle ajusta apenas o som no seu navegador individual.</p>
           </div>
 
-          <!-- Status do Áudio Atual (Sincronizado na Sala) -->
           <div class="bg-vampire-crypt p-2 rounded-xl border border-vampire-ash flex items-center justify-between">
             <div class="flex items-center gap-2 truncate">
               <div id="nowPlayingIndicator" class="w-2.5 h-2.5 rounded-full bg-gray-700 flex-shrink-0"></div>
@@ -740,7 +699,6 @@
             </button>
           </div>
 
-          <!-- ÁREA EXCLUSIVA DO NARRADOR: PAINEL MESTRE DE ÁUDIO -->
           <div id="narratorAudioSection" class="space-y-3">
             <div class="flex items-center justify-between pt-1 border-t border-vampire-ash">
               <span class="font-gothic text-sm text-vampire-gold flex items-center gap-1">
@@ -749,7 +707,6 @@
               <span class="text-[9px] font-mono text-vampire-goldMuted px-1.5 py-0.2 rounded bg-black border border-vampire-gold/25">Narrador</span>
             </div>
 
-            <!-- Seleção de Músicas da Noite (Biblioteca Gótica do Narrador) -->
             <div>
               <div class="flex items-center justify-between mb-1.5">
                 <label class="text-[11px] font-cinzel text-vampire-parchment font-bold flex items-center gap-1">
@@ -759,7 +716,6 @@
                 <button type="button" onclick="triggerStopTrack()" class="text-[9px] font-cinzel text-gray-500 hover:text-red-400 underline">Silenciar Tudo</button>
               </div>
 
-              <!-- Lista de Músicas Temáticas de Vampiro -->
               <div class="space-y-1.5" id="soundtrackListContainer">
                 <button type="button" onclick="triggerMasterTrack('requiem')" id="trackBtn_requiem" class="track-btn w-full p-2 rounded-lg bg-vampire-slate/60 hover:bg-vampire-slate border border-vampire-ash text-left transition flex items-center justify-between group">
                   <div class="flex items-center gap-2">
@@ -818,7 +774,6 @@
               </div>
             </div>
 
-            <!-- Transmitir Música Própria (Link MP3/Stream ou Arquivo do Narrador) -->
             <div class="pt-2 border-t border-vampire-ash">
               <label class="block text-[11px] font-cinzel text-vampire-parchment font-bold mb-1">Transmitir Música Externa ou Própria:</label>
               <div class="flex gap-1 mb-1.5">
@@ -831,10 +786,8 @@
                 <input type="file" id="inputCustomAudioFile" accept="audio/*" class="hidden" onchange="handleAudioFileUpload(event)">
               </label>
             </div>
-
           </div>
 
-          <!-- Aviso para Jogadores (Apenas o Narrador escolhe o som) -->
           <div id="playerAudioNotice" class="hidden p-3 rounded-xl bg-vampire-black/80 border border-vampire-ash text-center space-y-1">
             <span class="font-gothic text-base text-vampire-goldMuted">☥</span>
             <p class="font-cinzel text-xs text-vampire-parchment font-bold">Ouvidos da Máscara</p>
@@ -842,7 +795,27 @@
               O Narrador rege a ambientação da noite. Quando nenhum ambiente for invocado, reinará o silêncio sepulcral. Regule seus decibéis no <strong class="text-vampire-gold">Volume Pessoal</strong>.
             </p>
           </div>
+        </div>
 
+        <!-- ABA 3: CHAT DA COTERIE -->
+        <div id="rightTabChatContent" class="hidden flex-grow flex-col overflow-hidden bg-vampire-black">
+          <div id="chatFeedContainer" class="flex-grow overflow-y-auto p-2 space-y-2 flex flex-col">
+            <div class="text-center text-[10px] font-cinzel text-gray-600 mt-2 mb-2">
+              <span class="font-gothic text-lg text-vampire-goldMuted block mb-1">☥</span>
+              O silêncio do Elísio aguarda suas palavras...
+            </div>
+          </div>
+          <div class="p-2 border-t border-vampire-ash bg-vampire-crypt flex-shrink-0 flex flex-col gap-1.5">
+            <select id="chatTargetSelect" class="bg-vampire-black border border-vampire-ash focus:border-vampire-gold rounded-lg text-[10px] font-cinzel text-vampire-parchment px-2 py-1 outline-none transition cursor-pointer">
+              <option value="global">Para: Todos (Global)</option>
+            </select>
+            <form onsubmit="return handleSendChatMessage(event);" class="flex items-center gap-1.5">
+              <input type="text" id="inputChatMessage" placeholder="Sussurrar nas sombras..." autocomplete="off" class="flex-grow bg-vampire-black border border-vampire-ash focus:border-vampire-gold rounded-lg px-2.5 py-1.5 text-xs text-vampire-parchment focus:outline-none transition font-sans">
+              <button type="submit" class="p-1.5 rounded-lg bg-vampire-blood hover:bg-vampire-crimson text-vampire-bone border border-red-900 transition flex items-center justify-center shadow-blood-glow">
+                <i data-lucide="send" class="w-4 h-4"></i>
+              </button>
+            </form>
+          </div>
         </div>
 
       </aside>
@@ -850,7 +823,6 @@
     </div>
   </div>
 
-  <!-- Audio Element invisível para streaming de URLs/Arquivos externos -->
   <audio id="externalAudioPlayer" preload="auto" class="hidden"></audio>
 
   <!-- Modal Criação de Token -->
@@ -887,7 +859,6 @@
           </div>
         </div>
 
-        <!-- Token Preview -->
         <div class="flex items-center gap-4 bg-vampire-black p-3 rounded-xl border border-vampire-ash">
           <div id="tokenPreviewCircle" class="w-16 h-16 rounded-full border-2 border-vampire-gold/60 overflow-hidden bg-vampire-slate flex items-center justify-center flex-shrink-0 relative">
             <img id="tokenPreviewImg" src="" alt="Preview" class="w-full h-full object-cover hidden">
@@ -937,11 +908,9 @@
     </div>
   </div>
 
-  <!-- APPLICATION JAVASCRIPT -->
   <script>
-    // State
     const state = {
-      role: 'player', // 'player' | 'storyteller'
+      role: 'player',
       name: '',
       room: '',
       password: '',
@@ -961,29 +930,23 @@
       selectedTokenId: null,
       selectedTokenImage: null,
       ambientPlaying: false,
-      activePeers: new Map(), // key: name -> { name, role, peerId, isCamActive, isMicActive, stream }
-      // Audio Tab State
+      activePeers: new Map(),
       currentTab: 'dice',
       personalVolume: 0.75,
       isPersonalMuted: false,
       activeMasterTrack: null,
-      activeMasterTitle: 'Silêncio Sepulcral'
+      activeMasterTitle: 'Silêncio Sepulcral',
+      chatMessages: [],
+      unreadChat: 0,
+      fow: { enabled: false, maskDataUrl: null },
+      fowBrushSize: 80
     };
 
-    // Paleta de materiais realistas para os tokens (couro, minérios, latão, sangue seco)
+    let isFowBrushActive = false;
+
     const TOKEN_COLOR_PALETTE = [
-      '#b89758', // Latão / Ouro Antigo
-      '#6b1219', // Sangue Coagulado
-      '#2a6949', // Malaquita / Musgo Fúnebre
-      '#5c3a64', // Tecido Eclesiástico
-      '#305763', // Ardósia Azulada
-      '#995625', // Âmbar Rústico / Couro Curtido
-      '#822b3b', // Veludo Carmesim Antigo
-      '#374d6b', // Lápis-lazúli Medieval
-      '#9e7b36', // Bronze Polido
-      '#43384f', // Púrpura de Cinzas
-      '#385a53', // Cobre Oxidado
-      '#752934'  // Sangue Venoso
+      '#b89758', '#6b1219', '#2a6949', '#5c3a64', '#305763', '#995625',
+      '#822b3b', '#374d6b', '#9e7b36', '#43384f', '#385a53', '#752934'
     ];
 
     function getNextDistinctTokenColor() {
@@ -996,15 +959,13 @@
       return TOKEN_COLOR_PALETTE[state.tokens.length % TOKEN_COLOR_PALETTE.length];
     }
 
-    // WebRTC PeerJS & Active Calls
     let myPeer = null;
-    const activeCalls = new Map(); // key: peerId -> MediaConnection
-    const peerStreams = new Map(); // key: peerId -> MediaStream (Armazenamento direto e imutável de streams)
+    const activeCalls = new Map(); 
+    const peerStreams = new Map(); 
     let masterAudioGain = null;
     let localAudioContext = null;
     let presenceHeartbeatInterval = null;
 
-    // Controladores de Áudio e Sintetizadores Globais
     let currentToneTrack = null;
     let ambientDrone = null;
     let ambientFilter = null;
@@ -1057,7 +1018,7 @@
       try {
         const gain = getPersonalGainNode();
         const bell = new Tone.MetalSynth({
-          frequency: 146.8, // D3
+          frequency: 146.8,
           envelope: { attack: 0.001, decay: 2.2, release: 0.4 },
           harmonicity: 3.2,
           modulationIndex: 18,
@@ -1107,31 +1068,56 @@
       } catch (e) {}
     }
 
-    // ==========================================
-    // ABA DE ÁUDIO E SOUNDBOARD DO NARRADOR
-    // ==========================================
+    function playChatNotification() {
+      try {
+        const gain = getPersonalGainNode();
+        const bell = new Tone.MetalSynth({
+          frequency: 800,
+          envelope: { attack: 0.005, decay: 0.8, release: 0.8 },
+          harmonicity: 4.5,
+          modulationIndex: 12,
+          resonance: 4000,
+          octaves: 1.5
+        }).connect(gain);
+        bell.volume.value = -28;
+        bell.triggerAttackRelease('E5', '8n');
+        setTimeout(() => bell.dispose(), 1500);
+      } catch(e) {}
+    }
+
     window.switchRightTab = function(tab) {
       state.currentTab = tab;
       const btnDice = document.getElementById('tabBtnDice');
       const btnAudio = document.getElementById('tabBtnAudio');
+      const btnChat = document.getElementById('tabBtnChat');
+      
       const contentDice = document.getElementById('rightTabDiceContent');
       const contentAudio = document.getElementById('rightTabAudioContent');
+      const contentChat = document.getElementById('rightTabChatContent');
 
-      if (tab === 'dice') {
-        btnDice.className = 'flex-1 py-1.5 px-2 rounded-lg font-gothic text-xs tracking-wider uppercase transition flex items-center justify-center gap-1 border border-red-950 bg-gradient-to-r from-vampire-driedBlood to-vampire-blood text-vampire-parchment shadow-blood-glow';
-        btnAudio.className = 'flex-1 py-1.5 px-2 rounded-lg font-gothic text-xs tracking-wider uppercase transition flex items-center justify-center gap-1 border border-vampire-ash bg-vampire-black text-gray-500 hover:text-vampire-gold hover:border-vampire-gold/30';
-        contentDice.classList.remove('hidden');
-        contentDice.classList.add('flex');
-        contentAudio.classList.add('hidden');
-        contentAudio.classList.remove('flex');
-      } else {
-        btnAudio.className = 'flex-1 py-1.5 px-2 rounded-lg font-gothic text-xs tracking-wider uppercase transition flex items-center justify-center gap-1 border border-red-950 bg-gradient-to-r from-vampire-driedBlood to-vampire-blood text-vampire-parchment shadow-blood-glow';
-        btnDice.className = 'flex-1 py-1.5 px-2 rounded-lg font-gothic text-xs tracking-wider uppercase transition flex items-center justify-center gap-1 border border-vampire-ash bg-vampire-black text-gray-500 hover:text-vampire-gold hover:border-vampire-gold/30';
-        contentAudio.classList.remove('hidden');
-        contentAudio.classList.add('flex');
-        contentDice.classList.add('hidden');
-        contentDice.classList.remove('flex');
+      const activeBtnClass = 'relative flex-1 py-1.5 px-1 sm:px-2 rounded-lg font-gothic text-xs tracking-wider uppercase transition flex items-center justify-center gap-1 border border-red-950 bg-gradient-to-r from-vampire-driedBlood to-vampire-blood text-vampire-parchment shadow-blood-glow';
+      const inactiveBtnClass = 'relative flex-1 py-1.5 px-1 sm:px-2 rounded-lg font-gothic text-xs tracking-wider uppercase transition flex items-center justify-center gap-1 border border-vampire-ash bg-vampire-black text-gray-500 hover:text-vampire-gold hover:border-vampire-gold/30';
+
+      btnDice.className = tab === 'dice' ? activeBtnClass : inactiveBtnClass;
+      btnAudio.className = tab === 'audio' ? activeBtnClass : inactiveBtnClass;
+      btnChat.className = tab === 'chat' ? activeBtnClass : inactiveBtnClass;
+
+      contentDice.classList.toggle('hidden', tab !== 'dice');
+      contentDice.classList.toggle('flex', tab === 'dice');
+      
+      contentAudio.classList.toggle('hidden', tab !== 'audio');
+      contentAudio.classList.toggle('flex', tab === 'audio');
+
+      contentChat.classList.toggle('hidden', tab !== 'chat');
+      contentChat.classList.toggle('flex', tab === 'chat');
+
+      if (tab === 'chat') {
+        state.unreadChat = 0;
+        updateChatBadge();
+        const feed = document.getElementById('chatFeedContainer');
+        if (feed) feed.scrollTop = feed.scrollHeight;
       }
+
       if (window.lucide) window.lucide.createIcons();
     };
 
@@ -1243,44 +1229,46 @@
     function playTrackRequiem() {
       stopAllLocalTracks();
       const gain = getPersonalGainNode();
-      
-      const reverb = new Tone.Reverb({ decay: 5.5, wet: 0.65 }).connect(gain);
-      const chorus = new Tone.Chorus(1.2, 3.5, 0.4).connect(reverb).start();
+      const reverb = new Tone.Reverb({ decay: 5.0, wet: 0.6 }).connect(gain);
       
       const organ = new Tone.PolySynth(Tone.Synth, {
-        oscillator: { type: 'fatsawtooth', count: 3, spread: 20 },
-        envelope: { attack: 1.8, decay: 2.2, sustain: 0.85, release: 3.5 }
-      }).connect(chorus);
-      organ.volume.value = -16;
-
-      const choir = new Tone.PolySynth(Tone.FMSynth, {
-        harmonicity: 2.0,
-        modulationIndex: 1.5,
-        oscillator: { type: 'sine' },
-        envelope: { attack: 2.5, decay: 3, sustain: 0.9, release: 4 }
+        maxPolyphony: 6,
+        oscillator: { type: 'triangle' },
+        envelope: { attack: 1.5, decay: 2.0, sustain: 0.8, release: 3.0 }
       }).connect(reverb);
-      choir.volume.value = -20;
+      organ.volume.value = -12;
+
+      const choir = new Tone.PolySynth(Tone.Synth, {
+        maxPolyphony: 6,
+        oscillator: { type: 'sine' },
+        envelope: { attack: 2.0, decay: 2.5, sustain: 0.85, release: 3.5 }
+      }).connect(reverb);
+      choir.volume.value = -14;
 
       const chords = [
-        { organ: ['D2', 'A2', 'D3', 'F3'], choir: ['A3', 'D4', 'F4'] },
-        { organ: ['Bb1', 'F2', 'Bb2', 'D3'], choir: ['F3', 'Bb3', 'D4'] },
-        { organ: ['G1', 'D2', 'G2', 'Bb2'], choir: ['D3', 'G3', 'Bb3'] },
-        { organ: ['A1', 'E2', 'A2', 'C#3'], choir: ['E3', 'A3', 'C#4'] }
+        { organ: ['D2', 'A2', 'D3'], choir: ['A3', 'D4', 'F4'] },
+        { organ: ['Bb1', 'F2', 'Bb2'], choir: ['F3', 'Bb3', 'D4'] },
+        { organ: ['G1', 'D2', 'G2'], choir: ['D3', 'G3', 'Bb3'] },
+        { organ: ['A1', 'E2', 'A2'], choir: ['E3', 'A3', 'C#4'] }
       ];
+      
       let step = 0;
-      organ.triggerAttack(chords[0].organ);
-      choir.triggerAttack(chords[0].choir);
+      const now = Tone.now();
+      organ.triggerAttack(chords[0].organ, now);
+      choir.triggerAttack(chords[0].choir, now);
 
       const interval = setInterval(() => {
         if (!currentToneTrack || currentToneTrack.type !== 'requiem') {
           clearInterval(interval);
           return;
         }
+        const time = Tone.now();
+        organ.releaseAll(time);
+        choir.releaseAll(time);
+        
         step = (step + 1) % chords.length;
-        organ.releaseAll();
-        choir.releaseAll();
-        organ.triggerAttack(chords[step].organ);
-        choir.triggerAttack(chords[step].choir);
+        organ.triggerAttack(chords[step].organ, time + 0.2);
+        choir.triggerAttack(chords[step].choir, time + 0.2);
       }, 6200);
       activeAudioIntervals.push(interval);
 
@@ -1289,12 +1277,14 @@
         stop: () => {
           clearInterval(interval);
           try {
-            organ.releaseAll();
-            choir.releaseAll();
-            organ.dispose();
-            choir.dispose();
-            chorus.dispose();
-            reverb.dispose();
+            const time = Tone.now();
+            organ.releaseAll(time);
+            choir.releaseAll(time);
+            setTimeout(() => {
+              organ.dispose();
+              choir.dispose();
+              reverb.dispose();
+            }, 4000);
           } catch (e) {}
         }
       };
@@ -1303,7 +1293,6 @@
     function playTrackCrypt() {
       stopAllLocalTracks();
       const gain = getPersonalGainNode();
-      
       const reverb = new Tone.Reverb({ decay: 6, wet: 0.7 }).connect(gain);
       
       const windFilter = new Tone.AutoFilter({
@@ -1364,7 +1353,6 @@
     function playTrackTension() {
       stopAllLocalTracks();
       const gain = getPersonalGainNode();
-      
       const filter = new Tone.Filter(350, "lowpass").connect(gain);
       
       const heart = new Tone.MembraneSynth({
@@ -1416,7 +1404,6 @@
     function playTrackElysium() {
       stopAllLocalTracks();
       const gain = getPersonalGainNode();
-      
       const reverb = new Tone.Reverb({ decay: 4.5, wet: 0.5 }).connect(gain);
       
       const vinylFilter = new Tone.Filter(1800, 'bandpass').connect(gain);
@@ -1470,7 +1457,6 @@
     function playTrackClub() {
       stopAllLocalTracks();
       const gain = getPersonalGainNode();
-
       const dist = new Tone.Distortion(0.25).connect(gain);
       const lowpass = new Tone.Filter(800, 'lowpass').connect(dist);
 
@@ -1502,13 +1488,10 @@
           clearInterval(interval);
           return;
         }
-
         if (step % 2 === 0) kick.triggerAttackRelease('C1', '8n');
         if (step % 2 === 1) hihat.triggerAttackRelease('16n');
-
         const note = bassNotes[step % bassNotes.length];
         bass.triggerAttackRelease(note, '16n');
-
         step++;
       }, 250);
       activeAudioIntervals.push(interval);
@@ -1550,8 +1533,6 @@
           stopAllLocalTracks();
           return;
         }
-
-        // PREVENÇÃO DE ENGASGOS: Se a trilha já estiver tocando, não reinicia do zero
         if (state.activeMasterTrack === trackKey && trackKey !== 'custom') {
           return;
         }
@@ -1603,7 +1584,6 @@
       const title = trackTitles[trackKey] || 'Trilha Atmosférica';
       applyTrackStateLocally(trackKey, title);
 
-      // Sincroniza via MQTT e BroadcastChannel pela Internet
       broadcastRoomMessage({
         type: 'SYNC_AUDIO_TRACK',
         payload: { trackKey, title }
@@ -1613,11 +1593,7 @@
     window.triggerStopTrack = function() {
       if (state.role !== 'storyteller') return;
       stopAllLocalTracks();
-
-      // Sincroniza via MQTT e BroadcastChannel pela Internet
-      broadcastRoomMessage({
-        type: 'SYNC_AUDIO_STOP'
-      });
+      broadcastRoomMessage({ type: 'SYNC_AUDIO_STOP' });
     };
 
     window.triggerCustomAudioUrl = function() {
@@ -1668,7 +1644,6 @@
         btn.classList.remove('text-vampire-gold', 'border-vampire-gold');
       } else {
         stopAllLocalTracks();
-        
         const gain = getPersonalGainNode();
         ambientDroneGain = new Tone.Gain(1).connect(gain);
 
@@ -1718,6 +1693,10 @@
 
       if (!name || !room || !pass) return false;
 
+      localStorage.setItem('vtm_saved_name', name);
+      localStorage.setItem('vtm_saved_room', room);
+      localStorage.setItem('vtm_saved_role', state.role);
+
       state.name = name;
       state.room = room;
       state.password = pass;
@@ -1737,6 +1716,7 @@
       updateHungerUI();
       updatePoolUI();
       renderAllTokens();
+      setupFowEvents(); 
       if (window.lucide) window.lucide.createIcons();
 
       return false;
@@ -1786,6 +1766,31 @@
       return `vtm_v5_coterie/${getCleanRoomPrefix()}`;
     }
 
+    function compressImageForNetwork(dataUrl, maxResolution, quality, callback) {
+      const img = new Image();
+      img.onload = () => {
+        let width = img.width;
+        let height = img.height;
+        if (width > maxResolution || height > maxResolution) {
+          if (width > height) {
+            height = Math.round((height * maxResolution) / width);
+            width = maxResolution;
+          } else {
+            width = Math.round((width * maxResolution) / height);
+            height = maxResolution;
+          }
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+        callback(canvas.toDataURL('image/jpeg', quality));
+      };
+      img.onerror = () => callback(dataUrl);
+      img.src = dataUrl;
+    }
+
     function removePeerAndFreeSlot(peerName) {
       if (!peerName) return;
       const peerData = state.activePeers.get(peerName);
@@ -1800,7 +1805,6 @@
         state.activePeers.delete(peerName);
       }
 
-      // Limpa tokens pertencentes a este jogador se não for o Narrador
       if (state.role === 'storyteller') {
         const tokensBefore = state.tokens.length;
         state.tokens = state.tokens.filter(t => t.owner !== peerName);
@@ -1840,6 +1844,19 @@
 
           mqttClient.on('connect', () => {
             try { mqttClient.subscribe(topic, { qos: 1 }); } catch (e) {}
+            
+            broadcastRoomMessage({
+              type: 'PEER_JOIN',
+              payload: {
+                name: state.name,
+                role: state.role,
+                peerId: state.myPeerId,
+                isCamActive: state.isCamActive,
+                isMicActive: state.isMicActive,
+                timestamp: Date.now()
+              }
+            });
+            
             sendPresenceHeartbeat();
           });
 
@@ -1854,7 +1871,6 @@
         }
       } catch (e) {}
 
-      // Heartbeat periódico a cada 4 segundos para limpar participantes desconectados
       if (presenceHeartbeatInterval) clearInterval(presenceHeartbeatInterval);
       presenceHeartbeatInterval = setInterval(() => {
         sendPresenceHeartbeat();
@@ -1879,7 +1895,7 @@
 
     function purgeGhostPeers() {
       const now = Date.now();
-      const TIMEOUT_MS = 10000; // 10 segundos sem sinal = desconectado
+      const TIMEOUT_MS = 600000; 
       let removedAny = false;
 
       state.activePeers.forEach((data, name) => {
@@ -1940,9 +1956,14 @@
           sendPresenceHeartbeat();
         });
 
+        myPeer.on('disconnected', () => {
+          if (myPeer && !myPeer.destroyed) {
+            myPeer.reconnect();
+          }
+        });
+
         myPeer.on('call', (call) => {
           try {
-            // Se já tínhamos chamada aberta para este mesmo peer, fechamos com segurança
             if (activeCalls.has(call.peer)) {
               try { activeCalls.get(call.peer).close(); } catch(e){}
             }
@@ -1977,7 +1998,6 @@
       }
     }
 
-    // Cria um stream com faixas de áudio E vídeo reais (para o WebRTC sempre ter transceptores negociados)
     function createDummyStreamWithVideoAndAudio() {
       try {
         const canvas = document.createElement('canvas');
@@ -2002,14 +2022,11 @@
 
     function shouldIInitiateCall(remotePeerId) {
       if (!state.myPeerId || !remotePeerId) return false;
-      // Resolução de colisão de chamadas: apenas o ID alfanumericamente menor inicia a chamada
       return state.myPeerId < remotePeerId;
     }
 
     function callRemotePeer(remotePeerId, force = false) {
       if (!myPeer || !remotePeerId || remotePeerId === state.myPeerId) return;
-
-      // Se não for forçado e não formos o iniciador designado pela regra de desempate, aguardamos a chamada do outro
       if (!force && !shouldIInitiateCall(remotePeerId)) {
         return;
       }
@@ -2078,7 +2095,6 @@
       peerStreams.set(peerId, stream);
       playRemoteAudioTrack(peerId, stream);
 
-      // Associa o stream estritamente ao peer com esse peerId
       state.activePeers.forEach((peerData) => {
         if (peerData.peerId === peerId) {
           peerData.stream = stream;
@@ -2088,7 +2104,6 @@
       renderAllCameraSlots();
     }
 
-    // Atualiza a mídia transmitida sem derrubar as conexões dos outros participantes
     function broadcastLocalStreamUpdate() {
       const currentVideoTrack = state.localStream ? state.localStream.getVideoTracks()[0] : null;
       const currentAudioTrack = state.localStream ? state.localStream.getAudioTracks()[0] : null;
@@ -2102,14 +2117,25 @@
               
               const videoSender = senders.find(s => s.track && s.track.kind === 'video') ||
                                   senders.find(s => s.kind === 'video');
-              if (videoSender && currentVideoTrack) {
-                videoSender.replaceTrack(currentVideoTrack);
+              if (videoSender) {
+                if (currentVideoTrack) {
+                  videoSender.replaceTrack(currentVideoTrack);
+                } else {
+                  // Caso tenha desligado a câmera, substitui por um frame mudo sem fechar a conexão
+                  const dummy = createDummyStreamWithVideoAndAudio();
+                  videoSender.replaceTrack(dummy.getVideoTracks()[0]);
+                }
               }
 
               const audioSender = senders.find(s => s.track && s.track.kind === 'audio') ||
                                   senders.find(s => s.kind === 'audio');
-              if (audioSender && currentAudioTrack) {
-                audioSender.replaceTrack(currentAudioTrack);
+              if (audioSender) {
+                if (currentAudioTrack) {
+                  audioSender.replaceTrack(currentAudioTrack);
+                } else {
+                  const dummy = createDummyStreamWithVideoAndAudio();
+                  audioSender.replaceTrack(dummy.getAudioTracks()[0]);
+                }
               }
             }
           } catch (e) {
@@ -2117,9 +2143,185 @@
           }
         });
       }
-
       renderAllCameraSlots();
     }
+
+    // TOGGLE CAMERA COM FALLBACK E ATRIBUIÇÃO FORÇADA
+    window.toggleLocalCamera = async function() {
+      const camIcon = document.getElementById('camIcon');
+      const camText = document.getElementById('camText');
+
+      if (state.isCamActive) {
+        if (state.localStream) {
+          state.localStream.getVideoTracks().forEach(t => {
+            try { t.stop(); } catch(e) {}
+          });
+          const remainingAudioTracks = state.localStream.getAudioTracks();
+          state.localStream = remainingAudioTracks.length > 0 ? new MediaStream(remainingAudioTracks) : null;
+        }
+        state.isCamActive = false;
+        if (camIcon) camIcon.className = 'w-3 h-3 text-gray-500';
+        if (camText) camText.innerText = 'Câmera';
+      } else {
+        try {
+          let videoStream;
+          try {
+            videoStream = await navigator.mediaDevices.getUserMedia({
+              video: {
+                width: { ideal: 640 },
+                height: { ideal: 480 },
+                facingMode: 'user'
+              }
+            });
+          } catch (strictErr) {
+            // Fallback genérico caso a câmera recuse configurações específicas
+            videoStream = await navigator.mediaDevices.getUserMedia({ video: true });
+          }
+
+          const newVideoTrack = videoStream.getVideoTracks()[0];
+          newVideoTrack.enabled = true;
+
+          const existingAudioTracks = state.localStream ? state.localStream.getAudioTracks() : [];
+          state.localStream = new MediaStream([newVideoTrack, ...existingAudioTracks]);
+
+          state.isCamActive = true;
+          if (camIcon) camIcon.className = 'w-3 h-3 text-emerald-400';
+          if (camText) camText.innerText = 'Desligar';
+        } catch (err) {
+          console.error("Erro ao acessar câmera:", err);
+          state.isCamActive = false;
+          if (camIcon) camIcon.className = 'w-3 h-3 text-red-500';
+          if (camText) camText.innerText = 'Erro Câm';
+          return;
+        }
+      }
+
+      renderAllCameraSlots();
+      broadcastLocalStreamUpdate();
+
+      broadcastRoomMessage({
+        type: 'PEER_MEDIA_UPDATE',
+        payload: {
+          name: state.name,
+          peerId: state.myPeerId,
+          isCamActive: state.isCamActive,
+          isMicActive: state.isMicActive
+        }
+      });
+
+      if (window.lucide) window.lucide.createIcons();
+    };
+
+    async function getEnhancedAudioStream() {
+      const audioConstraints = {
+        echoCancellation: { ideal: true },
+        noiseSuppression: { ideal: true },
+        autoGainControl: { ideal: true },
+        sampleRate: { ideal: 48000 },
+        channelCount: { ideal: 1 }
+      };
+
+      let rawStream;
+      try {
+        rawStream = await navigator.mediaDevices.getUserMedia({ audio: audioConstraints });
+      } catch (err) {
+        rawStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      }
+
+      try {
+        if (localAudioContext && localAudioContext.state !== 'closed') {
+          localAudioContext.close();
+        }
+        localAudioContext = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 48000 });
+        const source = localAudioContext.createMediaStreamSource(rawStream);
+
+        const highpass = localAudioContext.createBiquadFilter();
+        highpass.type = 'highpass';
+        highpass.frequency.value = 90;
+
+        const lowpass = localAudioContext.createBiquadFilter();
+        lowpass.type = 'lowpass';
+        lowpass.frequency.value = 8000;
+
+        const compressor = localAudioContext.createDynamicsCompressor();
+        compressor.threshold.setValueAtTime(-26, localAudioContext.currentTime);
+        compressor.knee.setValueAtTime(24, localAudioContext.currentTime);
+        compressor.ratio.setValueAtTime(4, localAudioContext.currentTime);
+        compressor.attack.setValueAtTime(0.003, localAudioContext.currentTime);
+        compressor.release.setValueAtTime(0.2, localAudioContext.currentTime);
+
+        const destination = localAudioContext.createMediaStreamDestination();
+        source.connect(highpass);
+        highpass.connect(lowpass);
+        lowpass.connect(compressor);
+        compressor.connect(destination);
+
+        const processedAudioTrack = destination.stream.getAudioTracks()[0];
+        
+        rawStream.getAudioTracks()[0].onended = () => {
+          try { 
+            if (localAudioContext && localAudioContext.state !== 'closed') {
+              localAudioContext.close();
+            }
+          } catch(e) {}
+        };
+
+        return new MediaStream([processedAudioTrack]);
+      } catch (err) {
+        return rawStream;
+      }
+    }
+
+    window.toggleLocalMic = async function() {
+      const micIcon = document.getElementById('micIcon');
+      const micText = document.getElementById('micText');
+
+      if (state.isMicActive) {
+        if (state.localStream) {
+          state.localStream.getAudioTracks().forEach(t => {
+            try { t.stop(); } catch(e) {}
+          });
+          const remainingVideoTracks = state.localStream.getVideoTracks();
+          state.localStream = remainingVideoTracks.length > 0 ? new MediaStream(remainingVideoTracks) : null;
+        }
+        if (localAudioContext && localAudioContext.state !== 'closed') {
+          try { localAudioContext.close(); } catch (e) {}
+          localAudioContext = null;
+        }
+        state.isMicActive = false;
+        micIcon.className = 'w-3 h-3 text-gray-500';
+        micText.innerText = 'Voz';
+      } else {
+        try {
+          const micStream = await getEnhancedAudioStream();
+          const newAudioTrack = micStream.getAudioTracks()[0];
+
+          const existingVideoTracks = state.localStream ? state.localStream.getVideoTracks() : [];
+          state.localStream = new MediaStream([newAudioTrack, ...existingVideoTracks]);
+
+          state.isMicActive = true;
+          micIcon.className = 'w-3 h-3 text-emerald-400';
+          micText.innerText = 'Silenciar';
+        } catch (err) {
+          console.debug("Erro ao acessar microfone:", err);
+        }
+      }
+
+      renderAllCameraSlots();
+      broadcastLocalStreamUpdate();
+
+      broadcastRoomMessage({
+        type: 'PEER_MEDIA_UPDATE',
+        payload: {
+          name: state.name,
+          peerId: state.myPeerId,
+          isCamActive: state.isCamActive,
+          isMicActive: state.isMicActive
+        }
+      });
+
+      if (window.lucide) window.lucide.createIcons();
+    };
 
     function handleIncomingMessage(data) {
       if (!data || !data.type) return;
@@ -2172,6 +2374,27 @@
         applyTrackStateLocally(payload.trackKey, payload.title, payload.customSrc);
       } else if (type === 'SYNC_AUDIO_STOP') {
         stopAllLocalTracks();
+      } else if (type === 'CHAT_MESSAGE') {
+        const isTargetedAtMe = 
+          payload.target === 'global' || 
+          payload.target === state.name || 
+          (payload.target === 'storyteller' && state.role === 'storyteller');
+
+        if (isTargetedAtMe) {
+          state.chatMessages.push(payload);
+          renderChatFeed();
+          
+          if (state.currentTab !== 'chat') {
+            state.unreadChat++;
+            updateChatBadge();
+            if (payload.playerName !== state.name) {
+              playChatNotification();
+            }
+          }
+        }
+      } else if (type === 'FOW_SYNC') {
+        state.fow = payload;
+        renderFowState();
       } else if (type === 'FORCE_RECONNECT') {
         if (payload && payload.senderId !== state.myPeerId) {
           if (payload.peerId) {
@@ -2209,6 +2432,7 @@
               if (state.tokens.length > 0) {
                 broadcastRoomMessage({ type: 'SYNC_ALL_TOKENS', payload: state.tokens });
               }
+              broadcastRoomMessage({ type: 'FOW_SYNC', payload: state.fow });
             }
           }
         }
@@ -2228,25 +2452,54 @@
       }
     }
 
-    // ==========================================
-    // TOKENS & MURAL DO NARRADOR
-    // ==========================================
     function syncTokenLayer() {
       const img = document.getElementById('sharedImageElement');
       const layer = document.getElementById('tokensLayer');
       const wrapper = document.getElementById('mapWrapper');
+      const fowCanvas = document.getElementById('fowCanvas');
       
-      if (!img || !layer || !wrapper || img.classList.contains('hidden')) return;
+      if (!img || !layer || !wrapper) return;
+
+      if (img.classList.contains('hidden')) {
+        layer.style.width = '100%';
+        layer.style.height = '100%';
+        layer.style.left = '0';
+        layer.style.top = '0';
+        if (fowCanvas) fowCanvas.classList.add('hidden');
+        return;
+      }
 
       const rect = img.getBoundingClientRect();
       const wrapRect = wrapper.getBoundingClientRect();
       
       if (rect.width === 0 || rect.height === 0) return;
 
-      layer.style.width = `${rect.width}px`;
-      layer.style.height = `${rect.height}px`;
-      layer.style.left = `${rect.left - wrapRect.left}px`;
-      layer.style.top = `${rect.top - wrapRect.top}px`;
+      const left = `${rect.left - wrapRect.left}px`;
+      const top = `${rect.top - wrapRect.top}px`;
+      const w = `${rect.width}px`;
+      const h = `${rect.height}px`;
+
+      layer.style.width = w;
+      layer.style.height = h;
+      layer.style.left = left;
+      layer.style.top = top;
+
+      if (fowCanvas) {
+        if (fowCanvas.width !== Math.round(rect.width) || fowCanvas.height !== Math.round(rect.height)) {
+          fowCanvas.width = rect.width;
+          fowCanvas.height = rect.height;
+          fowCanvas.style.width = w;
+          fowCanvas.style.height = h;
+          fowCanvas.style.left = left;
+          fowCanvas.style.top = top;
+          renderFowState();
+        } else {
+          fowCanvas.style.width = w;
+          fowCanvas.style.height = h;
+          fowCanvas.style.left = left;
+          fowCanvas.style.top = top;
+        }
+      }
     }
 
     function displaySharedImage(src) {
@@ -2254,11 +2507,9 @@
       const img = document.getElementById('sharedImageElement');
       const placeholder = document.getElementById('emptyImagePlaceholder');
       const actions = document.getElementById('imageStageActions');
-      const layer = document.getElementById('tokensLayer');
       if (img && placeholder) {
         img.src = src;
         img.classList.remove('hidden');
-        if (layer) layer.classList.remove('hidden');
         placeholder.classList.add('hidden');
         if (actions) {
           actions.classList.remove('hidden');
@@ -2267,6 +2518,7 @@
         img.onload = () => {
           syncTokenLayer();
           renderAllTokens();
+          renderFowState();
         };
       }
     }
@@ -2277,19 +2529,213 @@
       const placeholder = document.getElementById('emptyImagePlaceholder');
       const actions = document.getElementById('imageStageActions');
       const layer = document.getElementById('tokensLayer');
+      const fowCanvas = document.getElementById('fowCanvas');
       if (img && placeholder) {
         img.src = '';
         img.classList.add('hidden');
         if (layer) {
-          layer.classList.add('hidden');
           layer.style.width = '100%';
           layer.style.height = '100%';
           layer.style.left = '0';
           layer.style.top = '0';
         }
+        if (fowCanvas) fowCanvas.classList.add('hidden');
         placeholder.classList.remove('hidden');
         if (actions) actions.classList.add('hidden');
       }
+    }
+
+    window.toggleFog = function() {
+      if (state.role !== 'storyteller') return;
+      state.fow.enabled = !state.fow.enabled;
+      if (state.fow.enabled) {
+        state.fow.maskDataUrl = null; 
+        document.getElementById('btnToggleBrush').classList.remove('hidden');
+      } else {
+        document.getElementById('btnToggleBrush').classList.add('hidden');
+        isFowBrushActive = false;
+        updateBrushUI();
+      }
+      renderFowState();
+      broadcastRoomMessage({ type: 'FOW_SYNC', payload: state.fow });
+    };
+
+    window.toggleBrush = function() {
+      if (state.role !== 'storyteller') return;
+      isFowBrushActive = !isFowBrushActive;
+      updateBrushUI();
+    };
+
+    window.changeBrushSize = function(val) {
+      state.fowBrushSize = parseInt(val, 10);
+      const cursor = document.getElementById('brushCursor');
+      if (cursor && isFowBrushActive) {
+        cursor.style.width = `${state.fowBrushSize}px`;
+        cursor.style.height = `${state.fowBrushSize}px`;
+      }
+    };
+
+    function updateBrushUI() {
+      const icon = document.getElementById('brushIcon');
+      const text = document.getElementById('brushText');
+      const fowCanvas = document.getElementById('fowCanvas');
+      const sizeControl = document.getElementById('brushSizeControl');
+      const cursor = document.getElementById('brushCursor');
+
+      if (isFowBrushActive) {
+        icon.classList.replace('text-gray-500', 'text-emerald-400');
+        text.classList.add('text-emerald-400');
+        if (fowCanvas) {
+          fowCanvas.classList.remove('pointer-events-none');
+          fowCanvas.classList.add('pointer-events-auto');
+        }
+        if (sizeControl) {
+          sizeControl.classList.remove('hidden');
+          sizeControl.classList.add('flex');
+        }
+        if (cursor) {
+          cursor.style.width = `${state.fowBrushSize}px`;
+          cursor.style.height = `${state.fowBrushSize}px`;
+        }
+      } else {
+        icon.classList.replace('text-emerald-400', 'text-gray-500');
+        text.classList.remove('text-emerald-400');
+        if (fowCanvas) {
+          fowCanvas.classList.add('pointer-events-none');
+          fowCanvas.classList.remove('pointer-events-auto');
+        }
+        if (sizeControl) {
+          sizeControl.classList.add('hidden');
+          sizeControl.classList.remove('flex');
+        }
+        if (cursor) cursor.classList.add('hidden');
+      }
+    }
+
+    function renderFowState() {
+      const fowCanvas = document.getElementById('fowCanvas');
+      if (!fowCanvas) return;
+      
+      if (!state.fow.enabled || !state.sharedImage) {
+        fowCanvas.classList.add('hidden');
+        return;
+      }
+      
+      fowCanvas.classList.remove('hidden');
+      fowCanvas.style.opacity = state.role === 'storyteller' ? '0.7' : '1';
+
+      const ctx = fowCanvas.getContext('2d');
+      ctx.globalCompositeOperation = 'source-over';
+      ctx.fillStyle = '#050406'; 
+      ctx.fillRect(0, 0, fowCanvas.width, fowCanvas.height);
+      
+      if (state.fow.maskDataUrl) {
+        const img = new Image();
+        img.onload = () => {
+          ctx.globalCompositeOperation = 'copy';
+          ctx.drawImage(img, 0, 0, fowCanvas.width, fowCanvas.height);
+        };
+        img.src = state.fow.maskDataUrl;
+      }
+    }
+
+    function compressFowMask(sourceCanvas, callback) {
+      const scale = 0.25; 
+      const w = Math.floor(sourceCanvas.width * scale);
+      const h = Math.floor(sourceCanvas.height * scale);
+      
+      const tempCanvas = document.createElement('canvas');
+      tempCanvas.width = w;
+      tempCanvas.height = h;
+      const ctx = tempCanvas.getContext('2d');
+      ctx.drawImage(sourceCanvas, 0, 0, w, h);
+      
+      callback(tempCanvas.toDataURL('image/png')); 
+    }
+
+    let isDrawingFow = false;
+    let fowCtx = null;
+
+    function setupFowEvents() {
+      const canvas = document.getElementById('fowCanvas');
+      if (!canvas) return;
+      fowCtx = canvas.getContext('2d');
+
+      const getPos = (e) => {
+        const rect = canvas.getBoundingClientRect();
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+        const scaleX = canvas.width / rect.width;
+        const scaleY = canvas.height / rect.height;
+        return {
+          x: (clientX - rect.left) * scaleX,
+          y: (clientY - rect.top) * scaleY
+        };
+      };
+
+      const startDraw = (e) => {
+        if (!isFowBrushActive || state.role !== 'storyteller') return;
+        isDrawingFow = true;
+        const pos = getPos(e);
+        fowCtx.globalCompositeOperation = 'destination-out';
+        fowCtx.lineCap = 'round';
+        fowCtx.lineJoin = 'round';
+        fowCtx.lineWidth = state.fowBrushSize;
+        fowCtx.beginPath();
+        fowCtx.moveTo(pos.x, pos.y);
+      };
+
+      const draw = (e) => {
+        if (!isDrawingFow || !isFowBrushActive || state.role !== 'storyteller') return;
+        const pos = getPos(e);
+        fowCtx.lineTo(pos.x, pos.y);
+        fowCtx.stroke();
+      };
+
+      const endDraw = () => {
+        if (!isDrawingFow || !isFowBrushActive || state.role !== 'storyteller') return;
+        isDrawingFow = false;
+        
+        compressFowMask(canvas, (dataUrl) => {
+          state.fow.maskDataUrl = dataUrl;
+          broadcastRoomMessage({ type: 'FOW_SYNC', payload: state.fow });
+        });
+      };
+
+      canvas.addEventListener('mousedown', startDraw);
+      
+      canvas.addEventListener('mousemove', (e) => {
+        if (isFowBrushActive && state.role === 'storyteller') {
+          const cursor = document.getElementById('brushCursor');
+          if (cursor) {
+            cursor.classList.remove('hidden');
+            cursor.style.left = `${e.clientX}px`;
+            cursor.style.top = `${e.clientY}px`;
+          }
+        }
+        draw(e);
+      });
+      
+      canvas.addEventListener('mouseleave', () => {
+        const cursor = document.getElementById('brushCursor');
+        if (cursor) cursor.classList.add('hidden');
+      });
+
+      window.addEventListener('mouseup', endDraw);
+
+      canvas.addEventListener('touchstart', (e) => { 
+        if(isFowBrushActive && state.role === 'storyteller') {
+          e.preventDefault(); 
+          startDraw(e); 
+        }
+      }, {passive: false});
+      canvas.addEventListener('touchmove', (e) => { 
+        if(isDrawingFow) {
+          e.preventDefault(); 
+          draw(e); 
+        }
+      }, {passive: false});
+      window.addEventListener('touchend', endDraw);
     }
 
     window.promptImageUrl = function() {
@@ -2309,9 +2755,10 @@
 
       const reader = new FileReader();
       reader.onload = function(evt) {
-        const dataUrl = evt.target.result;
-        displaySharedImage(dataUrl);
-        broadcastRoomMessage({ type: 'SHARE_IMAGE', payload: dataUrl });
+        compressImageForNetwork(evt.target.result, 1280, 0.7, (compressedUrl) => {
+          displaySharedImage(compressedUrl);
+          broadcastRoomMessage({ type: 'SHARE_IMAGE', payload: compressedUrl });
+        });
       };
       reader.readAsDataURL(file);
     };
@@ -2361,8 +2808,10 @@
       if (!file) return;
       const reader = new FileReader();
       reader.onload = function(evt) {
-        state.selectedTokenImage = evt.target.result;
-        updateTokenPreview(state.selectedTokenImage);
+        compressImageForNetwork(evt.target.result, 256, 0.8, (compressedUrl) => {
+          state.selectedTokenImage = compressedUrl;
+          updateTokenPreview(state.selectedTokenImage);
+        });
       };
       reader.readAsDataURL(file);
     };
@@ -2507,7 +2956,6 @@
       const charName = document.getElementById('tokenCharNameInput').value.trim() || state.name;
       const distinctColor = getNextDistinctTokenColor();
 
-      // Posição inicial normalizada em percentual (entre 30% e 70%)
       const randPercentX = 35 + Math.random() * 30;
       const randPercentY = 35 + Math.random() * 30;
 
@@ -2541,7 +2989,6 @@
       const layerWidth = layer ? (layer.clientWidth || 1) : 1;
       const layerHeight = layer ? (layer.clientHeight || 1) : 1;
 
-      // Suporte para tokens legados em px ou novos em percentual
       const posX = token.percentX !== undefined ? token.percentX : ((token.x || 0) / layerWidth * 100);
       const posY = token.percentY !== undefined ? token.percentY : ((token.y || 0) / layerHeight * 100);
 
@@ -2589,7 +3036,7 @@
 
       const el = document.createElement('div');
       el.id = token.id;
-      el.className = 'absolute rounded-full border-2 flex items-center justify-center cursor-grab active:cursor-grabbing select-none token-container group -translate-x-1/2 -translate-y-1/2';
+      el.className = 'absolute rounded-full border-2 flex items-center justify-center cursor-grab active:cursor-grabbing select-none token-container group -translate-x-1/2 -translate-y-1/2 pointer-events-auto';
       el.style.boxShadow = 'none';
       el.style.left = `${posX}%`;
       el.style.top = `${posY}%`;
@@ -2645,7 +3092,6 @@
           const clientX = evt.clientX || (evt.touches && evt.touches[0].clientX);
           const clientY = evt.clientY || (evt.touches && evt.touches[0].clientY);
 
-          // Converte o ponteiro diretamente para percentual proporcional do mural
           let pctX = ((clientX - rect.left) / rect.width) * 100;
           let pctY = ((clientY - rect.top) / rect.height) * 100;
 
@@ -2723,18 +3169,44 @@
       }
     };
 
-    // Notifica a sala caso o usuário feche a aba ou recarregue a página
     window.addEventListener('beforeunload', () => {
       if (state.name && state.room) {
         broadcastRoomMessage({ type: 'PEER_LEAVE', payload: { name: state.name } });
       }
     });
 
+    function updateChatTargetOptions() {
+      const select = document.getElementById('chatTargetSelect');
+      if (!select) return;
+      const currentTarget = select.value;
+      
+      select.innerHTML = '<option value="global">Para: Todos (Global)</option>';
+
+      if (state.role === 'player') {
+        select.innerHTML += '<option value="storyteller">Sussurro: Narrador</option>';
+      } else if (state.role === 'storyteller') {
+        state.activePeers.forEach((peer, peerName) => {
+          if (peer.role === 'player') {
+            const opt = document.createElement('option');
+            opt.value = peerName;
+            opt.innerText = `Sussurro: ${peerName}`;
+            select.appendChild(opt);
+          }
+        });
+      }
+      
+      if (Array.from(select.options).some(o => o.value === currentTarget)) {
+        select.value = currentTarget;
+      } else {
+        select.value = 'global';
+      }
+    }
+
     function renderAllCameraSlots() {
+      updateChatTargetOptions();
       let narratorData = null;
       const playersList = [];
 
-      // 1. Configura dados do usuário LOCAL
       if (state.role === 'storyteller') {
         narratorData = {
           name: state.name + " (Você)",
@@ -2757,19 +3229,15 @@
         });
       }
 
-      // 2. Distribui os participantes REMOTOS garantindo separação rígida por ofício
       state.activePeers.forEach((peer, peerKeyName) => {
         const assignedStream = peer.stream || (peer.peerId ? peerStreams.get(peer.peerId) : null);
         const resolvedPeer = { ...peer, stream: assignedStream, isLocal: false };
 
         if (peer.role === 'storyteller') {
-          // O slot do Narrador só aceita quem é estritamente storyteller
-          // e o narrador local tem prioridade sobre sua própria tela
           if (!narratorData || !narratorData.isLocal) {
             narratorData = resolvedPeer;
           }
         } else {
-          // Jogador remoto: só entra na lista de jogadores
           if (peer.name !== state.name && peerKeyName !== state.name) {
             playersList.push(resolvedPeer);
           }
@@ -2780,9 +3248,7 @@
       const countBadge = document.getElementById('coterieCountBadge');
       if (countBadge) countBadge.innerText = `${Math.min(6, totalParticipants)}/6`;
 
-      // ==========================================
-      // SLOT 1: ESTRITAMENTE O NARRADOR
-      // ==========================================
+      // SLOT NARRADOR
       const slotNarrator = document.getElementById('coterieSlotNarrator');
       const videoNarrator = document.getElementById('videoSlotNarrator');
       const fallbackNarrator = document.getElementById('fallbackSlotNarrator');
@@ -2846,9 +3312,7 @@
         micNarrator.className = 'w-2 h-2 rounded-full bg-gray-700';
       }
 
-      // ==========================================
-      // SLOTS 1 A 5 (JOGADORES)
-      // ==========================================
+      // SLOTS JOGADORES 1 A 5
       for (let i = 0; i < 5; i++) {
         const slotEl = document.getElementById(`coterieSlot${i + 1}`);
         const videoEl = document.getElementById(`videoSlot${i + 1}`);
@@ -2907,7 +3371,6 @@
             if (statusEl) statusEl.innerText = player.isMicActive ? 'Voz Ativa' : 'Sem Câmera';
           }
         } else {
-          // VAGA VAZIA / LIBERADA
           slotEl.classList.add('opacity-50');
           slotEl.classList.remove('opacity-100', 'active-peer');
           if (videoEl.srcObject) {
@@ -2932,222 +3395,6 @@
 
       if (window.lucide) window.lucide.createIcons();
     }
-
-    window.toggleLocalCamera = async function() {
-      const camIcon = document.getElementById('camIcon');
-      const camText = document.getElementById('camText');
-
-      if (state.isCamActive) {
-        if (state.localStream) {
-          state.localStream.getVideoTracks().forEach(t => {
-            try { t.stop(); } catch(e) {}
-            state.localStream.removeTrack(t);
-          });
-        }
-        state.isCamActive = false;
-        if (camIcon) camIcon.className = 'w-3 h-3 text-gray-500';
-        if (camText) camText.innerText = 'Câmera';
-      } else {
-        try {
-          const videoStream = await navigator.mediaDevices.getUserMedia({
-            video: {
-              width: { ideal: 640 },
-              height: { ideal: 480 },
-              facingMode: 'user'
-            }
-          });
-          const newVideoTrack = videoStream.getVideoTracks()[0];
-          newVideoTrack.enabled = true;
-
-          if (state.localStream) {
-            state.localStream.getVideoTracks().forEach(t => {
-              try { t.stop(); } catch(e) {}
-              state.localStream.removeTrack(t);
-            });
-            state.localStream.addTrack(newVideoTrack);
-          } else {
-            state.localStream = new MediaStream([newVideoTrack]);
-          }
-
-          state.isCamActive = true;
-          if (camIcon) camIcon.className = 'w-3 h-3 text-emerald-400';
-          if (camText) camText.innerText = 'Desligar';
-        } catch (err) {
-          console.error("Erro ao acessar câmera:", err);
-          state.isCamActive = false;
-          if (camIcon) camIcon.className = 'w-3 h-3 text-red-500';
-          if (camText) camText.innerText = 'Erro Câm';
-          return;
-        }
-      }
-
-      renderAllCameraSlots();
-      broadcastLocalStreamUpdate();
-
-      broadcastRoomMessage({
-        type: 'PEER_MEDIA_UPDATE',
-        payload: {
-          name: state.name,
-          peerId: state.myPeerId,
-          isCamActive: state.isCamActive,
-          isMicActive: state.isMicActive
-        }
-      });
-
-      if (window.lucide) window.lucide.createIcons();
-    };
-
-    async function getEnhancedAudioStream() {
-      const audioConstraints = {
-        echoCancellation: { ideal: true },
-        noiseSuppression: { ideal: true },
-        autoGainControl: { ideal: true },
-        sampleRate: { ideal: 48000 },
-        channelCount: { ideal: 1 }
-      };
-
-      let rawStream;
-      try {
-        rawStream = await navigator.mediaDevices.getUserMedia({ audio: audioConstraints });
-      } catch (err) {
-        rawStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      }
-
-      try {
-        if (localAudioContext && localAudioContext.state !== 'closed') {
-          localAudioContext.close();
-        }
-        localAudioContext = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 48000 });
-        const source = localAudioContext.createMediaStreamSource(rawStream);
-
-        const highpass = localAudioContext.createBiquadFilter();
-        highpass.type = 'highpass';
-        highpass.frequency.value = 90;
-
-        const lowpass = localAudioContext.createBiquadFilter();
-        lowpass.type = 'lowpass';
-        lowpass.frequency.value = 8000;
-
-        const compressor = localAudioContext.createDynamicsCompressor();
-        compressor.threshold.setValueAtTime(-26, localAudioContext.currentTime);
-        compressor.knee.setValueAtTime(24, localAudioContext.currentTime);
-        compressor.ratio.setValueAtTime(4, localAudioContext.currentTime);
-        compressor.attack.setValueAtTime(0.003, localAudioContext.currentTime);
-        compressor.release.setValueAtTime(0.2, localAudioContext.currentTime);
-
-        const destination = localAudioContext.createMediaStreamDestination();
-        source.connect(highpass);
-        highpass.connect(lowpass);
-        lowpass.connect(compressor);
-        compressor.connect(destination);
-
-        const processedAudioTrack = destination.stream.getAudioTracks()[0];
-        
-        rawStream.getAudioTracks()[0].onended = () => {
-          try { 
-            if (localAudioContext && localAudioContext.state !== 'closed') {
-              localAudioContext.close();
-            }
-          } catch(e) {}
-        };
-
-        return new MediaStream([processedAudioTrack]);
-      } catch (err) {
-        return rawStream;
-      }
-    }
-
-    window.toggleLocalMic = async function() {
-      const micIcon = document.getElementById('micIcon');
-      const micText = document.getElementById('micText');
-
-      if (state.isMicActive) {
-        if (state.localStream) {
-          state.localStream.getAudioTracks().forEach(t => {
-            t.stop();
-            state.localStream.removeTrack(t);
-          });
-        }
-        if (localAudioContext && localAudioContext.state !== 'closed') {
-          try { localAudioContext.close(); } catch (e) {}
-          localAudioContext = null;
-        }
-        state.isMicActive = false;
-        micIcon.className = 'w-3 h-3 text-gray-500';
-        micText.innerText = 'Voz';
-      } else {
-        try {
-          const micStream = await getEnhancedAudioStream();
-          const newAudioTrack = micStream.getAudioTracks()[0];
-
-          if (state.localStream) {
-            state.localStream.getAudioTracks().forEach(t => {
-              t.stop();
-              state.localStream.removeTrack(t);
-            });
-            state.localStream.addTrack(newAudioTrack);
-          } else {
-            state.localStream = new MediaStream([newAudioTrack]);
-          }
-          state.isMicActive = true;
-          micIcon.className = 'w-3 h-3 text-emerald-400';
-          micText.innerText = 'Silenciar';
-        } catch (err) {
-          console.debug("Erro ao acessar microfone:", err);
-        }
-      }
-
-      broadcastLocalStreamUpdate();
-
-      broadcastRoomMessage({
-        type: 'PEER_MEDIA_UPDATE',
-        payload: {
-          name: state.name,
-          peerId: state.myPeerId,
-          isCamActive: state.isCamActive,
-          isMicActive: state.isMicActive
-        }
-      });
-
-      if (window.lucide) window.lucide.createIcons();
-    };
-
-    window.reconnectAllCameras = function() {
-      const icon = document.getElementById('reconnectIcon');
-      if (icon) icon.classList.add('animate-spin');
-
-      try {
-        // Envia ordem de sincronização forçada para todos na sala
-        broadcastRoomMessage({
-          type: 'FORCE_RECONNECT',
-          payload: {
-            senderId: state.myPeerId,
-            peerId: state.myPeerId,
-            name: state.name,
-            role: state.role,
-            isCamActive: state.isCamActive,
-            isMicActive: state.isMicActive
-          }
-        });
-
-        // Recria as conexões com os outros membros
-        state.activePeers.forEach((peer) => {
-          if (peer.peerId && peer.peerId !== state.myPeerId) {
-            callRemotePeer(peer.peerId);
-          }
-        });
-
-        // Força a reinserção de streams e .play() nos vídeos existentes
-        renderAllCameraSlots();
-      } catch (err) {
-        console.debug("Erro ao reconectar câmeras:", err);
-      }
-
-      setTimeout(() => {
-        renderAllCameraSlots();
-        if (icon) icon.classList.remove('animate-spin');
-      }, 1000);
-    };
 
     function updatePoolUI() {
       document.getElementById('inputPool').value = state.pool;
@@ -3445,7 +3692,6 @@
             </div>
           `;
         } else {
-          // Standard V5 Roll
           const evalRes = roll.evaluation;
           let bannerClass = 'text-gray-400 bg-vampire-slate/50 border-vampire-ash';
 
@@ -3462,14 +3708,12 @@
             bannerClass = 'text-emerald-400 bg-emerald-950/30 border-emerald-900/50';
           }
 
-          // Monta dados normais
           const regularDiceHtml = roll.regularResults.map(val => {
             const isSucc = val >= 6;
             const isTen = val === 10;
             return `<div class="w-5 h-5 rounded flex items-center justify-center font-mono text-[11px] font-bold die-normal ${isTen ? 'text-vampire-gold font-black border-vampire-gold/60' : isSucc ? 'text-vampire-bone' : 'text-gray-500'}">${val}</div>`;
           }).join('');
 
-          // Monta dados de fome
           const hungerDiceHtml = roll.hungerResults.map(val => {
             const isSucc = val >= 6;
             const isTen = val === 10;
@@ -3520,18 +3764,114 @@
       if (window.lucide) window.lucide.createIcons();
     }
 
-    // Window Init
+    window.handleSendChatMessage = function(e) {
+      e.preventDefault();
+      const input = document.getElementById('inputChatMessage');
+      const text = input.value.trim();
+      const target = document.getElementById('chatTargetSelect').value;
+      if (!text) return false;
+
+      const msgData = {
+        id: 'msg_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5),
+        text: text,
+        playerName: state.name,
+        role: state.role,
+        target: target,
+        timestamp: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
+      };
+
+      input.value = '';
+      state.chatMessages.push(msgData);
+      renderChatFeed();
+      
+      broadcastRoomMessage({ type: 'CHAT_MESSAGE', payload: msgData });
+      return false;
+    };
+
+    function updateChatBadge() {
+      const badge = document.getElementById('chatUnreadBadge');
+      if (!badge) return;
+      if (state.unreadChat > 0) {
+        badge.innerText = state.unreadChat > 99 ? '99+' : state.unreadChat;
+        badge.classList.remove('hidden');
+      } else {
+        badge.classList.add('hidden');
+      }
+    }
+
+    function renderChatFeed() {
+      const feed = document.getElementById('chatFeedContainer');
+      if (!feed) return;
+
+      feed.innerHTML = '';
+      if (state.chatMessages.length === 0) {
+        feed.innerHTML = `
+          <div class="text-center text-[10px] font-cinzel text-gray-600 mt-2 mb-2">
+            <span class="font-gothic text-lg text-vampire-goldMuted block mb-1">☥</span>
+            O silêncio do Elísio aguarda suas palavras...
+          </div>
+        `;
+        return;
+      }
+
+      state.chatMessages.forEach(msg => {
+        const isMe = msg.playerName === state.name;
+        const isStoryteller = msg.role === 'storyteller';
+        const isWhisper = msg.target && msg.target !== 'global';
+
+        const alignClass = isMe ? 'self-end' : 'self-start';
+        
+        let bgClass = '';
+        if (isWhisper) {
+          bgClass = 'bg-purple-950/40 border-purple-800/50 shadow-[0_0_8px_rgba(126,34,206,0.25)]';
+        } else {
+          bgClass = isStoryteller ? 'bg-vampire-driedBlood/50 border-red-950' : (isMe ? 'bg-vampire-slate/70 border-vampire-ash' : 'bg-vampire-crypt border-vampire-ash');
+        }
+
+        const textColor = isWhisper ? 'text-purple-300' : (isStoryteller ? 'text-vampire-gold' : 'text-vampire-parchment');
+        const roleBadge = isStoryteller ? '<i data-lucide="crown" class="w-3 h-3 text-vampire-gold inline-block mr-1"></i>' : '';
+        
+        let whisperLabel = '';
+        if (isWhisper) {
+          const targetName = msg.target === 'storyteller' ? 'Narrador' : msg.target;
+          whisperLabel = `<span class="text-[8px] italic text-purple-400/80 block -mt-0.5 mb-1">Sussurro para ${targetName}</span>`;
+        }
+
+        const msgEl = document.createElement('div');
+        msgEl.className = `max-w-[85%] p-2 rounded-lg border ${bgClass} ${alignClass} mb-1.5 shadow-sm`;
+        msgEl.innerHTML = `
+          <div class="flex items-baseline justify-between gap-3 mb-1 border-b border-white/5 pb-0.5">
+            <span class="text-[9px] font-cinzel font-bold ${textColor} truncate flex items-center">${roleBadge}${msg.playerName}</span>
+            <span class="text-[8px] font-mono text-gray-500 flex-shrink-0">${msg.timestamp}</span>
+          </div>
+          ${whisperLabel}
+          <p class="text-xs ${isWhisper ? 'text-purple-200' : 'text-gray-300'} font-sans leading-relaxed break-words">${msg.text}</p>
+        `;
+        feed.appendChild(msgEl);
+      });
+      
+      feed.scrollTop = feed.scrollHeight;
+      if (window.lucide) window.lucide.createIcons();
+    }
+
     window.addEventListener('DOMContentLoaded', () => {
+      const savedName = localStorage.getItem('vtm_saved_name');
+      const savedRoom = localStorage.getItem('vtm_saved_room');
+      const savedRole = localStorage.getItem('vtm_saved_role');
+      
+      if (savedName) document.getElementById('inputPlayerName').value = savedName;
+      if (savedRoom) document.getElementById('inputRoomName').value = savedRoom;
+      if (savedRole) selectRole(savedRole);
+
       const slider = document.getElementById('inputPool');
       slider.addEventListener('input', (e) => {
         state.pool = parseInt(e.target.value, 10);
         document.getElementById('poolValueBadge').innerText = state.pool;
       });
 
-      // Desbloqueio universal de áudio nos navegadores (Autoplay Policy Unlock)
       const unlockAudio = () => {
         if (Tone.context.state !== 'running') {
-          Tone.context.lookAhead = 0.1; // Garante estabilidade para o áudio não picotar
+          Tone.context.lookAhead = 0.1;
           Tone.start().catch(() => {});
         }
         const ext = document.getElementById('externalAudioPlayer');
@@ -3542,7 +3882,6 @@
       window.addEventListener('click', unlockAudio, { once: false });
       window.addEventListener('touchstart', unlockAudio, { once: false });
 
-      // Atualiza o posicionamento relativo dos tokens ao redimensionar a tela
       window.addEventListener('resize', () => {
         syncTokenLayer();
         renderAllTokens();
