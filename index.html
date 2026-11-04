@@ -537,7 +537,7 @@
               <span>Invocar Token</span>
             </button>
 
-            <!-- NOVO: Botão de Ativar Rabisco / Desenho Tático -->
+            <!-- Botão de Ativar Rabisco / Desenho Tático -->
             <button id="btnToggleDrawing" onclick="toggleDrawingTool()" title="Desenhar sobre o mapa para todos" class="px-2.5 py-1 rounded-lg bg-vampire-black hover:bg-vampire-slate border border-vampire-ash text-gray-400 hover:text-vampire-gold text-[11px] font-cinzel transition flex items-center gap-1.5">
               <i id="drawToolIcon" data-lucide="pen-tool" class="w-3 h-3 text-vampire-gold"></i>
               <span id="drawToolText">Desenho</span>
@@ -613,7 +613,7 @@
             <!-- Fog of War Canvas (z-10) -->
             <canvas id="fowCanvas" class="absolute z-10 hidden pointer-events-none cursor-crosshair touch-none"></canvas>
 
-            <!-- NOVO: Drawing Canvas (z-15: Acima da névoa e do mapa, logo abaixo dos tokens) -->
+            <!-- Drawing Canvas (z-15) -->
             <canvas id="drawingCanvas" class="absolute z-15 pointer-events-none touch-none"></canvas>
 
             <!-- Pincel Cursor Overlay (Névoa) -->
@@ -932,7 +932,7 @@
             <div id="groupWhisperPanel" class="hidden absolute bottom-full left-2 right-2 mb-1 p-2.5 rounded-xl bg-vampire-obsidian border border-vampire-gold/40 shadow-2xl z-30 space-y-2 backdrop-blur-md">
               <div class="flex items-center justify-between pb-1 border-b border-vampire-ash">
                 <span class="text-[10px] font-cinzel text-vampire-gold font-bold flex items-center gap-1">
-                  <i data-lucide="users" class="w-3 h-3"></i>
+                  <i data-lucide="users" class="w-3.5 h-3.5"></i>
                   Círculo Secreto (Vários Alvos)
                 </span>
                 <button type="button" onclick="toggleGroupWhisperPanel(false)" class="text-gray-400 hover:text-white">
@@ -1087,7 +1087,7 @@
       fow: { enabled: false, maskDataUrl: null },
       fowBrushSize: 80,
       selectedGroupWhisper: new Set(),
-      // NOVO: Desenho Tático
+      // Desenho Tático
       isDrawingToolActive: false,
       drawColor: '#c92a2a',
       drawWidth: 4,
@@ -1889,7 +1889,7 @@
       updatePoolUI();
       renderAllTokens();
       setupFowEvents(); 
-      setupDrawingEvents(); // Inicializa os eventos de desenho tático
+      setupDrawingEvents();
       if (window.lucide) window.lucide.createIcons();
 
       return false;
@@ -2363,11 +2363,9 @@
         state.fow = payload;
         renderFowState();
       } else if (type === 'DRAWING_SYNC') {
-        // Recebe o novo desenho tático enviado por outro membro
         state.drawingDataUrl = payload;
         renderDrawingState();
       } else if (type === 'DRAWING_CLEAR') {
-        // Limpa a camada de desenho
         state.drawingDataUrl = null;
         renderDrawingState();
       } else if (type === 'PEER_JOIN' || type === 'PEER_PRESENT' || type === 'PEER_HEARTBEAT') {
@@ -2402,7 +2400,6 @@
                 broadcastRoomMessage({ type: 'SYNC_ALL_TOKENS', payload: state.tokens });
               }
               broadcastRoomMessage({ type: 'FOW_SYNC', payload: state.fow });
-              // Envia o desenho atual para quem acabou de entrar
               if (state.drawingDataUrl) {
                 broadcastRoomMessage({ type: 'DRAWING_SYNC', payload: state.drawingDataUrl });
               }
@@ -2551,9 +2548,7 @@
       }
     }
 
-    // ==========================================
-    // SISTEMA DE DESENHO TÁTICO SOBRE O MAPA
-    // ==========================================
+    // DESENHO TÁTICO
     window.toggleDrawingTool = function() {
       state.isDrawingToolActive = !state.isDrawingToolActive;
       const btn = document.getElementById('btnToggleDrawing');
@@ -2562,7 +2557,6 @@
       const canvas = document.getElementById('drawingCanvas');
 
       if (state.isDrawingToolActive) {
-        // Se ativou o desenho, desliga o pincel da névoa para não haver conflito
         if (isFowBrushActive) {
           isFowBrushActive = false;
           updateBrushUI();
@@ -2592,13 +2586,13 @@
       if (window.lucide) window.lucide.createIcons();
     };
 
-    window.setDrawColor = function(color, btnElement) {
+    window.setDrawColor = function(color, btnEl) {
       state.drawColor = color;
       document.querySelectorAll('.draw-color-btn').forEach(btn => {
         btn.classList.remove('ring-1', 'ring-white/60');
       });
-      if (btnElement) {
-        btnElement.classList.add('ring-1', 'ring-white/60');
+      if (btnEl) {
+        btnEl.classList.add('ring-1', 'ring-white/60');
       }
     };
 
@@ -2675,7 +2669,6 @@
         if (!isDrawingTactical || !state.isDrawingToolActive) return;
         isDrawingTactical = false;
         
-        // Comprime e transmite o desenho para toda a mesa
         compressImageForNetwork(canvas.toDataURL('image/png'), 1280, 0.8, (compressedDataUrl) => {
           state.drawingDataUrl = compressedDataUrl;
           broadcastRoomMessage({ type: 'DRAWING_SYNC', payload: compressedDataUrl });
@@ -2701,9 +2694,7 @@
       window.addEventListener('touchend', endDraw);
     }
 
-    // ==========================================
     // NÉVOA DE GUERRA
-    // ==========================================
     window.toggleFog = function() {
       if (state.role !== 'storyteller') return;
       state.fow.enabled = !state.fow.enabled;
@@ -2723,7 +2714,7 @@
       if (state.role !== 'storyteller') return;
       isFowBrushActive = !isFowBrushActive;
       if (isFowBrushActive && state.isDrawingToolActive) {
-        window.toggleDrawingTool(); // desliga desenho se ligar o pincel de névoa
+        window.toggleDrawingTool();
       }
       updateBrushUI();
     };
@@ -2788,7 +2779,7 @@
 
       const ctx = fowCanvas.getContext('2d');
       ctx.globalCompositeOperation = 'source-over';
-      ctx.fillStyle = '#050406'; 
+      ctx.fillStyle = '#050406';
       ctx.fillRect(0, 0, fowCanvas.width, fowCanvas.height);
       
       if (state.fow.maskDataUrl) {
@@ -3541,7 +3532,7 @@
 
         const hasVideoTrack = effectiveNarratorStream && 
           effectiveNarratorStream.getVideoTracks && 
-          effectiveNarratorStream.getVideoTracks().some(t => t.readyState === 'live' && t.enabled !== false);
+          effectiveNarratorStream.getVideoTracks().length > 0;
 
         if (narratorData.isCamActive && hasVideoTrack) {
           if (videoNarrator.srcObject !== effectiveNarratorStream) {
@@ -3613,7 +3604,7 @@
 
           const hasPlayerVideoTrack = effectivePlayerStream && 
             effectivePlayerStream.getVideoTracks && 
-            effectivePlayerStream.getVideoTracks().some(t => t.readyState === 'live' && t.enabled !== false);
+            effectivePlayerStream.getVideoTracks().length > 0;
 
           if (player.isCamActive && hasPlayerVideoTrack) {
             if (videoEl.srcObject !== effectivePlayerStream) {
@@ -3655,6 +3646,684 @@
         }
       }
 
+      if (window.lucide) window.lucide.createIcons();
+    }
+
+    // CÂMERA & MICROFONE
+    window.toggleLocalCamera = async function() {
+      const camIcon = document.getElementById('camIcon');
+      const camText = document.getElementById('camText');
+
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        if (camIcon) camIcon.className = 'w-3 h-3 text-red-500';
+        if (camText) camText.innerText = 'Sem Suporte';
+        return;
+      }
+
+      if (state.isCamActive) {
+        if (state.localStream) {
+          state.localStream.getVideoTracks().forEach(t => {
+            try { t.stop(); } catch(e) {}
+            state.localStream.removeTrack(t);
+          });
+          state.localStream = new MediaStream(state.localStream.getTracks());
+        }
+        state.isCamActive = false;
+        if (camIcon) camIcon.className = 'w-3 h-3 text-gray-500';
+        if (camText) camText.innerText = 'Câmera';
+      } else {
+        try {
+          let videoStream;
+          try {
+            videoStream = await navigator.mediaDevices.getUserMedia({
+              video: {
+                width: { ideal: 640 },
+                height: { ideal: 480 },
+                facingMode: 'user'
+              }
+            });
+          } catch(fallbackErr) {
+            videoStream = await navigator.mediaDevices.getUserMedia({ video: true });
+          }
+
+          const newVideoTrack = videoStream.getVideoTracks()[0];
+          newVideoTrack.enabled = true;
+
+          if (state.localStream) {
+            state.localStream.getVideoTracks().forEach(t => {
+              try { t.stop(); } catch(e) {}
+              state.localStream.removeTrack(t);
+            });
+            state.localStream.addTrack(newVideoTrack);
+            state.localStream = new MediaStream(state.localStream.getTracks());
+          } else {
+            state.localStream = new MediaStream([newVideoTrack]);
+          }
+
+          state.isCamActive = true;
+          if (camIcon) camIcon.className = 'w-3 h-3 text-emerald-400';
+          if (camText) camText.innerText = 'Desligar';
+        } catch (err) {
+          console.error("Erro ao acessar câmera:", err);
+          state.isCamActive = false;
+          if (camIcon) camIcon.className = 'w-3 h-3 text-red-500';
+          if (camText) camText.innerText = 'Erro Câm';
+          return;
+        }
+      }
+
+      renderAllCameraSlots();
+      broadcastLocalStreamUpdate();
+
+      broadcastRoomMessage({
+        type: 'PEER_MEDIA_UPDATE',
+        payload: {
+          name: state.name,
+          peerId: state.myPeerId,
+          isCamActive: state.isCamActive,
+          isMicActive: state.isMicActive
+        }
+      });
+
+      if (window.lucide) window.lucide.createIcons();
+    };
+
+    async function getEnhancedAudioStream() {
+      const audioConstraints = {
+        echoCancellation: { ideal: true },
+        noiseSuppression: { ideal: true },
+        autoGainControl: { ideal: true },
+        sampleRate: { ideal: 48000 },
+        channelCount: { ideal: 1 }
+      };
+
+      let rawStream;
+      try {
+        rawStream = await navigator.mediaDevices.getUserMedia({ audio: audioConstraints });
+      } catch (err) {
+        rawStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      }
+
+      try {
+        if (localAudioContext && localAudioContext.state !== 'closed') {
+          localAudioContext.close();
+        }
+        localAudioContext = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 48000 });
+        const source = localAudioContext.createMediaStreamSource(rawStream);
+
+        const highpass = localAudioContext.createBiquadFilter();
+        highpass.type = 'highpass';
+        highpass.frequency.value = 90;
+
+        const lowpass = localAudioContext.createBiquadFilter();
+        lowpass.type = 'lowpass';
+        lowpass.frequency.value = 8000;
+
+        const compressor = localAudioContext.createDynamicsCompressor();
+        compressor.threshold.setValueAtTime(-26, localAudioContext.currentTime);
+        compressor.knee.setValueAtTime(24, localAudioContext.currentTime);
+        compressor.ratio.setValueAtTime(4, localAudioContext.currentTime);
+        compressor.attack.setValueAtTime(0.003, localAudioContext.currentTime);
+        compressor.release.setValueAtTime(0.2, localAudioContext.currentTime);
+
+        const destination = localAudioContext.createMediaStreamDestination();
+        source.connect(highpass);
+        highpass.connect(lowpass);
+        lowpass.connect(compressor);
+        compressor.connect(destination);
+
+        const processedAudioTrack = destination.stream.getAudioTracks()[0];
+        rawStream.getAudioTracks()[0].onended = () => {
+          try { 
+            if (localAudioContext && localAudioContext.state !== 'closed') {
+              localAudioContext.close();
+            }
+          } catch(e) {}
+        };
+
+        return new MediaStream([processedAudioTrack]);
+      } catch (err) {
+        return rawStream;
+      }
+    }
+
+    window.toggleLocalMic = async function() {
+      const micIcon = document.getElementById('micIcon');
+      const micText = document.getElementById('micText');
+
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        if (micIcon) micIcon.className = 'w-3 h-3 text-red-500';
+        if (micText) micText.innerText = 'Sem Suporte';
+        return;
+      }
+
+      if (state.isMicActive) {
+        if (state.localStream) {
+          state.localStream.getAudioTracks().forEach(t => {
+            t.stop();
+            state.localStream.removeTrack(t);
+          });
+          state.localStream = new MediaStream(state.localStream.getTracks());
+        }
+        if (localAudioContext && localAudioContext.state !== 'closed') {
+          try { localAudioContext.close(); } catch (e) {}
+          localAudioContext = null;
+        }
+        state.isMicActive = false;
+        micIcon.className = 'w-3 h-3 text-gray-500';
+        micText.innerText = 'Voz';
+      } else {
+        try {
+          const micStream = await getEnhancedAudioStream();
+          const newAudioTrack = micStream.getAudioTracks()[0];
+
+          if (state.localStream) {
+            state.localStream.getAudioTracks().forEach(t => {
+              t.stop();
+              state.localStream.removeTrack(t);
+            });
+            state.localStream.addTrack(newAudioTrack);
+            state.localStream = new MediaStream(state.localStream.getTracks());
+          } else {
+            state.localStream = new MediaStream([newAudioTrack]);
+          }
+          state.isMicActive = true;
+          micIcon.className = 'w-3 h-3 text-emerald-400';
+          micText.innerText = 'Silenciar';
+        } catch (err) {
+          console.debug("Erro ao acessar microfone:", err);
+        }
+      }
+
+      broadcastLocalStreamUpdate();
+
+      broadcastRoomMessage({
+        type: 'PEER_MEDIA_UPDATE',
+        payload: {
+          name: state.name,
+          peerId: state.myPeerId,
+          isCamActive: state.isCamActive,
+          isMicActive: state.isMicActive
+        }
+      });
+
+      if (window.lucide) window.lucide.createIcons();
+    };
+
+    function updatePoolUI() {
+      document.getElementById('inputPool').value = state.pool;
+      document.getElementById('poolValueBadge').innerText = state.pool;
+    }
+
+    function updateHungerUI() {
+      const container = document.getElementById('hungerDotsContainer');
+      container.innerHTML = '';
+      for (let i = 0; i <= 5; i++) {
+        const isSelected = i === state.hunger;
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.onclick = () => window.adjustHunger(i);
+        btn.className = `py-1 rounded font-mono font-bold text-xs transition border ${
+          isSelected 
+            ? 'bg-vampire-crimson border-red-500 text-white shadow-blood-glow' 
+            : 'bg-vampire-black border-vampire-ash text-gray-500 hover:text-white'
+        }`;
+        btn.innerText = i;
+        container.appendChild(btn);
+      }
+      document.getElementById('hungerValueBadge').innerText = state.hunger;
+    }
+
+    function evaluateV5Roll(regularResults, hungerResults, difficulty, isOpposed = false) {
+      let regularSuccesses = 0, regularTens = 0;
+      regularResults.forEach(d => {
+        if (d >= 6) regularSuccesses++;
+        if (d === 10) regularTens++;
+      });
+
+      let hungerSuccesses = 0, hungerTens = 0, hungerOnes = 0;
+      hungerResults.forEach(d => {
+        if (d >= 6) hungerSuccesses++;
+        if (d === 10) hungerTens++;
+        if (d === 1) hungerOnes++;
+      });
+
+      const totalRawSuccesses = regularSuccesses + hungerSuccesses;
+      const totalTens = regularTens + hungerTens;
+      const criticalPairs = Math.floor(totalTens / 2);
+      const criticalBonus = criticalPairs * 2;
+      const finalTotalSuccesses = totalRawSuccesses + criticalBonus;
+
+      let outcomeType = 'failure', outcomeTitle = 'Falha', outcomeDescription = '';
+
+      if (isOpposed) {
+        if (criticalPairs > 0) {
+          if (hungerTens > 0) {
+            outcomeType = 'messy';
+            outcomeTitle = 'Crítico Bagunçado em Disputa!';
+            outcomeDescription = `${finalTotalSuccesses} sucessos totais. A Besta impõe a sua vontade!`;
+          } else {
+            outcomeType = 'critical';
+            outcomeTitle = 'Sucesso Crítico em Disputa!';
+            outcomeDescription = `${finalTotalSuccesses} sucessos totais (par crítico glorioso).`;
+          }
+        } else if (finalTotalSuccesses === 0 && hungerOnes > 0) {
+          outcomeType = 'bestial';
+          outcomeTitle = 'Falha Bestial em Disputa!';
+          outcomeDescription = '0 sucessos com "1" na Fome. A Besta rompe o controle.';
+        } else if (finalTotalSuccesses === 0) {
+          outcomeType = 'total_failure';
+          outcomeTitle = 'Falha Total em Disputa';
+          outcomeDescription = 'Zero sucessos obtidos no confronto.';
+        } else if (hungerOnes > 0) {
+          outcomeType = 'success';
+          outcomeTitle = 'Confronto Perigoso';
+          outcomeDescription = `${finalTotalSuccesses} sucesso(s). Atenção: '1' no Dado de Fome.`;
+        } else {
+          outcomeType = 'success';
+          outcomeTitle = 'Resultado de Disputa';
+          outcomeDescription = `${finalTotalSuccesses} sucesso(s). Compare com o rival.`;
+        }
+      } else {
+        const passed = finalTotalSuccesses >= difficulty;
+        if (passed) {
+          if (criticalPairs > 0) {
+            if (hungerTens > 0) {
+              outcomeType = 'messy';
+              outcomeTitle = 'Crítico Bagunçado (Messy Critical)!';
+              outcomeDescription = 'Sucesso alcançado, mas a Besta quebrou a Máscara ou exigiu sangue!';
+            } else {
+              outcomeType = 'critical';
+              outcomeTitle = 'Sucesso Crítico!';
+              outcomeDescription = `Triunfo sobrenatural com ${finalTotalSuccesses} sucessos (Margem: +${finalTotalSuccesses - difficulty}).`;
+            }
+          } else {
+            outcomeType = 'success';
+            outcomeTitle = 'Sucesso';
+            outcomeDescription = `Superado com ${finalTotalSuccesses} sucessos contra Dificuldade ${difficulty}.`;
+          }
+        } else {
+          if (hungerOnes > 0) {
+            outcomeType = 'bestial';
+            outcomeTitle = 'Falha Bestial (Bestial Failure)!';
+            outcomeDescription = 'Falha com 1 na Fome: A Besta reclama o controle e engatilha Compulsão.';
+          } else if (finalTotalSuccesses === 0) {
+            outcomeType = 'total_failure';
+            outcomeTitle = 'Falha Total';
+            outcomeDescription = 'Zero sucessos. Humilhação e derrota completa.';
+          } else {
+            outcomeType = 'failure';
+            outcomeTitle = 'Falha Simples';
+            outcomeDescription = `${finalTotalSuccesses} sucessos obtidos contra Dificuldade ${difficulty}.`;
+          }
+        }
+      }
+
+      return {
+        regularResults, hungerResults,
+        regularSuccesses, hungerSuccesses,
+        criticalPairs, finalTotalSuccesses,
+        outcomeType, outcomeTitle, outcomeDescription
+      };
+    }
+
+    window.performRoll = function() {
+      playGothicDiceRollSound();
+
+      const totalPool = state.pool;
+      const hungerCount = Math.min(totalPool, state.hunger);
+      const regularCount = Math.max(0, totalPool - hungerCount);
+
+      const regularResults = [];
+      for (let i = 0; i < regularCount; i++) regularResults.push(Math.floor(Math.random() * 10) + 1);
+
+      const hungerResults = [];
+      for (let i = 0; i < hungerCount; i++) hungerResults.push(Math.floor(Math.random() * 10) + 1);
+
+      const evaluation = evaluateV5Roll(regularResults, hungerResults, state.difficulty, state.isOpposed);
+
+      if (evaluation.outcomeType === 'critical' || evaluation.outcomeType === 'messy') {
+        playGothicCriticalSound();
+      } else if (evaluation.outcomeType === 'bestial') {
+        playBeastFailureSound();
+      }
+
+      const rollData = {
+        id: 'roll_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5),
+        type: 'standard',
+        timestamp: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+        playerName: state.name,
+        role: state.role,
+        totalPool,
+        difficulty: state.difficulty,
+        isOpposed: state.isOpposed,
+        regularResults,
+        hungerResults,
+        evaluation,
+        hasWillpowerRerolled: false
+      };
+
+      state.rolls.unshift(rollData);
+      renderRollsFeed();
+      broadcastRoomMessage({ type: 'NEW_ROLL', payload: rollData });
+    };
+
+    window.performRouseCheck = function() {
+      playGothicDiceRollSound();
+      const d10 = Math.floor(Math.random() * 10) + 1;
+      const passed = d10 >= 6;
+
+      if (!passed) playBeastFailureSound();
+
+      const rouseData = {
+        id: 'rouse_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5),
+        type: 'rouse',
+        timestamp: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+        playerName: state.name,
+        role: state.role,
+        dieResult: d10,
+        passed,
+        outcomeTitle: passed ? 'Sangue Apaziguado' : 'A Fome Reclama!',
+        outcomeDescription: passed ? `Resultado ${d10}. O Sangue saciou o chamado.` : `Resultado ${d10}. Suba +1 de Fome na sua ficha!`
+      };
+
+      state.rolls.unshift(rouseData);
+      renderRollsFeed();
+      broadcastRoomMessage({ type: 'NEW_ROLL', payload: rouseData });
+    };
+
+    window.clearRoomRolls = function() {
+      state.rolls = [];
+      renderRollsFeed();
+      broadcastRoomMessage({ type: 'CLEAR_ROLLS' });
+    };
+
+    window.openWillpowerModal = function(rollId) {
+      const roll = state.rolls.find(r => r.id === rollId);
+      if (!roll || roll.hasWillpowerRerolled) return;
+
+      state.pendingWillpowerRoll = roll;
+      state.selectedDiceForReroll.clear();
+
+      const container = document.getElementById('willpowerDiceList');
+      container.innerHTML = '';
+
+      roll.regularResults.forEach((val, idx) => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.onclick = () => {
+          if (state.selectedDiceForReroll.has(idx)) {
+            state.selectedDiceForReroll.delete(idx);
+            btn.classList.remove('border-vampire-brightBlood', 'bg-vampire-blood/50');
+          } else {
+            if (state.selectedDiceForReroll.size >= 3) return;
+            state.selectedDiceForReroll.add(idx);
+            btn.classList.add('border-vampire-brightBlood', 'bg-vampire-blood/50');
+          }
+          const cnt = state.selectedDiceForReroll.size;
+          document.getElementById('selectedDiceCount').innerText = cnt;
+          document.getElementById('btnExecuteWillpower').disabled = cnt === 0;
+        };
+
+        btn.className = 'p-2 rounded-lg border border-vampire-ash bg-vampire-slate text-xs font-mono font-bold flex flex-col items-center transition cursor-pointer hover:border-vampire-gold/50';
+        btn.innerHTML = `<span class="text-sm">${val}</span><span class="text-[9px] font-cinzel opacity-80">${val >= 6 ? 'Sucesso' : 'Falha'}</span>`;
+        container.appendChild(btn);
+      });
+
+      document.getElementById('selectedDiceCount').innerText = '0';
+      document.getElementById('btnExecuteWillpower').disabled = true;
+
+      const modal = document.getElementById('willpowerModal');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    };
+
+    window.closeWillpowerModal = function() {
+      const modal = document.getElementById('willpowerModal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+      state.pendingWillpowerRoll = null;
+      state.selectedDiceForReroll.clear();
+    };
+
+    window.executeWillpowerReroll = function() {
+      if (!state.pendingWillpowerRoll || state.selectedDiceForReroll.size === 0) return;
+      playGothicDiceRollSound();
+
+      const roll = state.pendingWillpowerRoll;
+      state.selectedDiceForReroll.forEach(idx => {
+        roll.regularResults[idx] = Math.floor(Math.random() * 10) + 1;
+      });
+
+      roll.hasWillpowerRerolled = true;
+      roll.evaluation = evaluateV5Roll(roll.regularResults, roll.hungerResults, roll.difficulty, roll.isOpposed);
+
+      renderRollsFeed();
+      broadcastRoomMessage({ type: 'UPDATE_ROLL', payload: roll });
+      closeWillpowerModal();
+    };
+
+    function renderRollsFeed() {
+      const feed = document.getElementById('rollsFeedContainer');
+      const badge = document.getElementById('rollsCountBadge');
+      if (badge) badge.innerText = `(${state.rolls.length})`;
+      if (!feed) return;
+
+      if (state.rolls.length === 0) {
+        feed.innerHTML = `
+          <div id="emptyFeedState" class="border border-dashed border-vampire-ash/60 rounded-xl p-4 text-center text-[11px] text-gray-600 flex flex-col items-center justify-center gap-1.5">
+            <span class="font-gothic text-xl text-vampire-goldMuted">☥</span>
+            <span class="font-cinzel">Nenhum dado rolou na escuridão.</span>
+          </div>
+        `;
+        return;
+      }
+
+      feed.innerHTML = '';
+      state.rolls.forEach(roll => {
+        const card = document.createElement('div');
+        card.className = 'p-2.5 rounded-xl bg-vampire-black/95 border border-vampire-ash shadow-md space-y-1.5 relative overflow-hidden transition';
+
+        if (roll.type === 'rouse') {
+          card.classList.add(roll.passed ? 'border-emerald-950/60' : 'border-red-950');
+          card.innerHTML = `
+            <div class="flex items-center justify-between text-[10px]">
+              <span class="font-cinzel font-bold ${roll.role === 'storyteller' ? 'text-vampire-gold' : 'text-vampire-parchment'}">${roll.playerName}</span>
+              <span class="font-mono text-gray-500 text-[9px]">${roll.timestamp}</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <div class="w-8 h-8 rounded-lg flex items-center justify-center font-mono font-bold text-base ${roll.passed ? 'bg-emerald-950 text-emerald-300 border border-emerald-800' : 'bg-red-950 text-red-300 border border-red-800 animate-pulse'}">
+                ${roll.dieResult}
+              </div>
+              <div>
+                <p class="font-cinzel text-xs font-bold ${roll.passed ? 'text-emerald-400' : 'text-red-400'} leading-tight">${roll.outcomeTitle}</p>
+                <p class="text-[9px] text-gray-400 font-cinzel leading-tight">${roll.outcomeDescription}</p>
+              </div>
+            </div>
+          `;
+        } else {
+          const evalRes = roll.evaluation;
+          let bannerClass = 'text-gray-400 bg-vampire-slate/50 border-vampire-ash';
+
+          if (evalRes.outcomeType === 'critical') {
+            bannerClass = 'text-vampire-gold bg-vampire-gold/10 border-vampire-gold/50 shadow-sm';
+            card.classList.add('border-vampire-gold/40');
+          } else if (evalRes.outcomeType === 'messy') {
+            bannerClass = 'text-red-400 bg-red-950/40 border-red-800/60 shadow-blood-glow';
+            card.classList.add('border-red-900/60');
+          } else if (evalRes.outcomeType === 'bestial') {
+            bannerClass = 'text-red-500 bg-black border-red-950 shadow-beast-fury';
+            card.classList.add('border-red-950');
+          } else if (evalRes.outcomeType === 'success') {
+            bannerClass = 'text-emerald-400 bg-emerald-950/30 border-emerald-900/50';
+          }
+
+          const regularDiceHtml = roll.regularResults.map(val => {
+            const isSucc = val >= 6;
+            const isTen = val === 10;
+            return `<div class="w-5 h-5 rounded flex items-center justify-center font-mono text-[11px] font-bold die-normal ${isTen ? 'text-vampire-gold font-black border-vampire-gold/60' : isSucc ? 'text-vampire-bone' : 'text-gray-500'}">${val}</div>`;
+          }).join('');
+
+          const hungerDiceHtml = roll.hungerResults.map(val => {
+            const isSucc = val >= 6;
+            const isTen = val === 10;
+            const isOne = val === 1;
+            return `<div class="w-5 h-5 rounded flex items-center justify-center font-mono text-[11px] font-bold die-hunger ${isTen ? 'text-amber-300 font-black ring-1 ring-amber-400' : isOne ? 'text-red-200 ring-1 ring-red-500 font-black' : isSucc ? 'text-red-100' : 'text-red-400/60'}">${val}</div>`;
+          }).join('');
+
+          const canReroll = !roll.hasWillpowerRerolled && roll.playerName === state.name && roll.regularResults.length > 0;
+
+          card.innerHTML = `
+            <div class="flex items-center justify-between text-[10px]">
+              <span class="font-cinzel font-bold ${roll.role === 'storyteller' ? 'text-vampire-gold' : 'text-vampire-parchment'}">${roll.playerName}</span>
+              <div class="flex items-center gap-1.5 font-mono text-gray-500 text-[9px]">
+                <span>${roll.isOpposed ? 'Disputa' : 'Dif ' + roll.difficulty}</span>
+                <span>•</span>
+                <span>${roll.timestamp}</span>
+              </div>
+            </div>
+
+            <div class="p-1 rounded-lg border text-[10px] font-cinzel font-bold flex items-center justify-between ${bannerClass}">
+              <span>${evalRes.outcomeTitle}</span>
+              <span class="font-mono text-xs">${evalRes.finalTotalSuccesses} ✦</span>
+            </div>
+
+            <p class="text-[9px] text-gray-400 font-cinzel leading-tight">${evalRes.outcomeDescription}</p>
+
+            <div class="flex items-center gap-1 flex-wrap pt-0.5">
+              ${regularDiceHtml}
+              ${hungerDiceHtml}
+            </div>
+
+            ${canReroll ? `
+              <div class="pt-1 flex justify-end">
+                <button type="button" onclick="openWillpowerModal('${roll.id}')" class="px-2 py-0.5 rounded bg-vampire-slate hover:bg-vampire-blood text-vampire-parchment text-[9px] font-cinzel flex items-center gap-1 border border-vampire-ash hover:border-vampire-gold/40 transition">
+                  <i data-lucide="shield" class="w-2.5 h-2.5 text-vampire-gold"></i>
+                  <span>Força de Vontade (Re-rolar)</span>
+                </button>
+              </div>
+            ` : roll.hasWillpowerRerolled ? `
+              <div class="text-[8px] font-cinzel text-gray-500 text-right italic">Força de Vontade invocada</div>
+            ` : ''}
+          `;
+        }
+
+        feed.appendChild(card);
+      });
+
+      if (window.lucide) window.lucide.createIcons();
+    }
+
+    // ==========================================
+    // CHAT (SUSSURROS & SEGREDO)
+    // ==========================================
+    window.handleSendChatMessage = function(e) {
+      e.preventDefault();
+      const input = document.getElementById('inputChatMessage');
+      const text = input.value.trim();
+      const selectVal = document.getElementById('chatTargetSelect').value;
+      if (!text) return false;
+
+      let msgTarget = selectVal;
+      let targetList = null;
+
+      if (selectVal === 'group_custom') {
+        targetList = Array.from(state.selectedGroupWhisper);
+        msgTarget = 'group';
+      }
+
+      const msgData = {
+        id: 'msg_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5),
+        text: text,
+        playerName: state.name,
+        role: state.role,
+        target: msgTarget,
+        targets: targetList,
+        timestamp: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
+      };
+
+      input.value = '';
+      state.chatMessages.push(msgData);
+      renderChatFeed();
+      
+      broadcastRoomMessage({ type: 'CHAT_MESSAGE', payload: msgData });
+      return false;
+    };
+
+    function updateChatBadge() {
+      const badge = document.getElementById('chatUnreadBadge');
+      if (!badge) return;
+      if (state.unreadChat > 0) {
+        badge.innerText = state.unreadChat > 99 ? '99+' : state.unreadChat;
+        badge.classList.remove('hidden');
+      } else {
+        badge.classList.add('hidden');
+      }
+    }
+
+    function renderChatFeed() {
+      const feed = document.getElementById('chatFeedContainer');
+      if (!feed) return;
+
+      feed.innerHTML = '';
+      if (state.chatMessages.length === 0) {
+        feed.innerHTML = `
+          <div class="text-center text-[10px] font-cinzel text-gray-600 mt-2 mb-2">
+            <span class="font-gothic text-lg text-vampire-goldMuted block mb-1">☥</span>
+            O silêncio do Elísio aguarda suas palavras...
+          </div>
+        `;
+        return;
+      }
+
+      state.chatMessages.forEach(msg => {
+        const isMe = msg.playerName === state.name;
+        const isStoryteller = msg.role === 'storyteller';
+        const isWhisper = msg.target && msg.target !== 'global';
+        const isGroupWhisper = msg.target === 'group' && Array.isArray(msg.targets);
+        const alignClass = isMe ? 'self-end' : 'self-start';
+        
+        let bgClass = '';
+        if (isWhisper) {
+          bgClass = 'bg-purple-950/40 border-purple-800/50 shadow-[0_0_8px_rgba(126,34,206,0.25)]';
+        } else {
+          bgClass = isStoryteller ? 'bg-vampire-driedBlood/50 border-red-950' : (isMe ? 'bg-vampire-slate/70 border-vampire-ash' : 'bg-vampire-crypt border-vampire-ash');
+        }
+
+        const textColor = isWhisper ? 'text-purple-300' : (isStoryteller ? 'text-vampire-gold' : 'text-vampire-parchment');
+        const roleBadge = isStoryteller ? '<i data-lucide="crown" class="w-3 h-3 text-vampire-gold inline-block mr-1"></i>' : '';
+        
+        let whisperLabel = '';
+        if (isGroupWhisper) {
+          const namesFormatted = msg.targets.map(t => t === 'storyteller' ? 'Narrador' : t).join(', ');
+          if (state.role === 'storyteller' && !isMe) {
+            whisperLabel = `<span class="text-[8px] italic text-purple-400/90 block -mt-0.5 mb-1">🕵️ Conspiração de ${msg.playerName} com: ${namesFormatted}</span>`;
+          } else {
+            whisperLabel = `<span class="text-[8px] italic text-purple-400/80 block -mt-0.5 mb-1">Sussurro em Grupo para: ${namesFormatted}</span>`;
+          }
+        } else if (isWhisper) {
+          const targetName = msg.target === 'storyteller' ? 'Narrador' : msg.target;
+          if (state.role === 'storyteller' && !isMe && msg.target !== 'storyteller') {
+            whisperLabel = `<span class="text-[8px] italic text-purple-400/90 block -mt-0.5 mb-1">🕵️ Segredo entre ${msg.playerName} e ${targetName}</span>`;
+          } else {
+            whisperLabel = `<span class="text-[8px] italic text-purple-400/80 block -mt-0.5 mb-1">Sussurro para ${targetName}</span>`;
+          }
+        }
+
+        const msgEl = document.createElement('div');
+        msgEl.className = `max-w-[85%] p-2 rounded-lg border ${bgClass} ${alignClass} mb-1.5 shadow-sm`;
+        msgEl.innerHTML = `
+          <div class="flex items-baseline justify-between gap-3 mb-1 border-b border-white/5 pb-0.5">
+            <span class="text-[9px] font-cinzel font-bold ${textColor} truncate flex items-center">${roleBadge}${msg.playerName}</span>
+            <span class="text-[8px] font-mono text-gray-500 flex-shrink-0">${msg.timestamp}</span>
+          </div>
+          ${whisperLabel}
+          <p class="text-xs ${isWhisper ? 'text-purple-200' : 'text-gray-300'} font-sans leading-relaxed break-words">${msg.text}</p>
+        `;
+        feed.appendChild(msgEl);
+      });
+      
+      feed.scrollTop = feed.scrollHeight;
       if (window.lucide) window.lucide.createIcons();
     }
 
