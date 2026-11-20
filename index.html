@@ -29,6 +29,9 @@
   <!-- MQTT Client para sincronização de dados, rolagens e tokens pela Internet -->
   <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
 
+  <!-- Leitura da ficha V5 em PDF (campos preenchíveis) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+
   <script>
     tailwind.config = {
       darkMode: 'class',
@@ -190,6 +193,38 @@
     .token-selected {
       outline: none !important;
       box-shadow: none !important;
+    }
+
+    .sheet-dot {
+      width: 0.85rem;
+      height: 0.85rem;
+      border-radius: 999px;
+      border: 1px solid rgba(173, 140, 79, 0.75);
+      background: transparent;
+      padding: 0;
+      flex-shrink: 0;
+    }
+    .sheet-dot.on {
+      background: #ad8c4f;
+      box-shadow: 0 0 6px rgba(173, 140, 79, 0.45);
+    }
+    .sheet-dot:disabled {
+      cursor: default;
+    }
+    #fowCanvas { z-index: 10; }
+    #drawingCanvas { z-index: 20; }
+
+    #tokenHoverCard {
+      position: fixed;
+      z-index: 80;
+      width: 260px;
+      max-height: 70vh;
+      overflow: auto;
+      pointer-events: none;
+      background: rgba(13, 12, 14, 0.97);
+      border: 1px solid rgba(173, 140, 79, 0.5);
+      border-radius: 12px;
+      box-shadow: 0 16px 36px rgba(0, 0, 0, 0.88);
     }
 
     .coterie-left-strip {
@@ -511,8 +546,8 @@
             <!-- Upload de Imagem -->
             <label class="px-2 py-1 rounded-lg bg-vampire-black hover:bg-vampire-slate border border-vampire-gold/30 text-[11px] font-cinzel text-vampire-parchment cursor-pointer transition flex items-center gap-1 shadow-sm">
               <i data-lucide="upload" class="w-3 h-3 text-vampire-gold"></i>
-              <span>Imagem</span>
-              <input type="file" id="imageFileInput" accept="image/*" class="hidden" onchange="handleImageFileUpload(event)">
+              <span>Andar</span>
+              <input type="file" id="imageFileInput" accept="image/*" multiple class="hidden" onchange="handleImageFileUpload(event)">
             </label>
 
             <!-- Link URL -->
@@ -522,12 +557,14 @@
             </button>
 
             <!-- Limpar Imagem -->
-            <button onclick="clearSharedImage()" class="px-2 py-1 rounded-lg bg-vampire-driedBlood/50 hover:bg-vampire-driedBlood text-red-200 border border-red-950 text-[11px] font-cinzel transition flex items-center gap-1">
+            <button onclick="clearSharedImage()" title="Remove o andar que está na mesa" class="px-2 py-1 rounded-lg bg-vampire-driedBlood/50 hover:bg-vampire-driedBlood text-red-200 border border-red-950 text-[11px] font-cinzel transition flex items-center gap-1">
               <i data-lucide="x" class="w-3 h-3"></i>
-              <span>Limpar</span>
+              <span>Tirar andar</span>
             </button>
           </div>
         </div>
+
+        <div id="mapLayerBar" class="hidden items-center gap-1 overflow-x-auto mb-2 flex-shrink-0"></div>
 
         <!-- Tokens Action Bar + Desenho Tático Livre -->
         <div class="flex items-center justify-between gap-2 mb-2 z-20 flex-shrink-0 flex-wrap">
@@ -578,6 +615,7 @@
                 <input type="color" id="selectedTokenColorPicker" oninput="changeSelectedTokenColor(this.value)" class="w-5 h-5 rounded cursor-pointer border border-vampire-ash bg-transparent p-0 overflow-hidden appearance-none">
               </div>
 
+              <button type="button" onclick="openSheetForSelectedToken()" title="Abrir a ficha deste token" class="px-1.5 h-5 rounded bg-vampire-slate hover:bg-vampire-ash text-vampire-gold text-[10px] font-cinzel flex items-center justify-center border border-vampire-ash">Ficha</button>
               <button type="button" onclick="toggleSelectedTokenMark()" title="Alternar Marcação X Vermelho" class="px-1.5 h-5 rounded bg-vampire-slate hover:bg-red-950 text-red-500 hover:text-red-300 text-[11px] font-bold flex items-center justify-center border border-vampire-ash">✕</button>
               <button type="button" onclick="deleteSelectedToken()" title="Apagar Token" class="w-5 h-5 rounded bg-vampire-slate hover:bg-red-950 text-gray-400 hover:text-white text-xs flex items-center justify-center border border-vampire-ash">🗑</button>
             </div>
@@ -614,7 +652,7 @@
             <canvas id="fowCanvas" class="absolute z-10 hidden pointer-events-none cursor-crosshair touch-none"></canvas>
 
             <!-- Drawing Canvas (z-15) -->
-            <canvas id="drawingCanvas" class="absolute z-15 pointer-events-none touch-none"></canvas>
+            <canvas id="drawingCanvas" class="absolute pointer-events-none touch-none"></canvas>
 
             <!-- Pincel Cursor Overlay (Névoa) -->
             <div id="brushCursor" class="fixed rounded-full border-2 border-emerald-400/80 bg-emerald-400/10 pointer-events-none hidden z-[100] transition-transform duration-75" style="transform: translate(-50%, -50%);"></div>
@@ -638,7 +676,7 @@
       <aside class="w-full lg:w-72 xl:w-80 flex-shrink-0 bg-vampire-void/95 border-t lg:border-t-0 lg:border-l border-vampire-ash flex flex-col h-auto lg:h-full overflow-hidden shadow-2xl">
         
         <!-- Abas do Painel Direito -->
-        <div class="px-2 pt-2 pb-1 border-b border-vampire-ash flex items-center gap-1 bg-vampire-crypt flex-shrink-0">
+        <div class="px-2 pt-2 pb-1 border-b border-vampire-ash flex items-center gap-1 bg-vampire-crypt flex-shrink-0 overflow-x-auto">
           <button type="button" id="tabBtnDice" onclick="switchRightTab('dice')" class="relative flex-1 py-1.5 px-1 sm:px-2 rounded-lg font-gothic text-xs tracking-wider uppercase transition flex items-center justify-center gap-1 border border-red-950 bg-gradient-to-r from-vampire-driedBlood to-vampire-blood text-vampire-parchment shadow-blood-glow">
             <span class="text-vampire-gold">☥</span>
             <span class="hidden sm:inline">Julgamento</span>
@@ -651,6 +689,10 @@
             <i data-lucide="message-square" class="w-3.5 h-3.5"></i>
             <span class="hidden sm:inline">Chat</span>
             <span id="chatUnreadBadge" class="hidden absolute -top-1.5 -right-1.5 min-w-[16px] h-4 px-1 rounded-full bg-vampire-blood border border-red-900 text-[9px] font-mono font-bold text-vampire-bone flex items-center justify-center shadow-blood-glow z-10 pointer-events-none"></span>
+          </button>
+          <button type="button" id="tabBtnSheets" onclick="switchRightTab('sheets')" class="relative flex-1 py-1.5 px-1 sm:px-2 rounded-lg font-gothic text-xs tracking-wider uppercase transition flex items-center justify-center gap-1 border border-vampire-ash bg-vampire-black text-gray-500 hover:text-vampire-gold hover:border-vampire-gold/30">
+            <i data-lucide="book-open" class="w-3.5 h-3.5"></i>
+            <span class="hidden sm:inline">Fichas</span>
           </button>
         </div>
 
@@ -958,6 +1000,27 @@
           </div>
         </div>
 
+        <!-- CONTEÚDO DA ABA 4: FICHAS -->
+        <div id="rightTabSheetsContent" class="hidden flex-grow flex-col overflow-hidden bg-vampire-black">
+          <div class="px-2.5 py-2 border-b border-vampire-ash flex-shrink-0 space-y-2 bg-vampire-crypt/60">
+            <div class="flex items-center justify-between gap-2">
+              <span class="font-gothic text-sm text-vampire-gold tracking-wide">Fichas</span>
+              <span id="sheetCountLabel" class="text-[9px] font-mono text-vampire-goldMuted"></span>
+            </div>
+            <p id="sheetRoleHint" class="text-[10px] font-cinzel text-gray-400 leading-snug"></p>
+            <div class="grid grid-cols-2 gap-1.5">
+              <button type="button" onclick="createAndOpenSheet()" class="py-1.5 rounded-lg bg-gradient-to-r from-vampire-driedBlood to-vampire-blood border border-red-900/60 text-[11px] font-cinzel text-vampire-parchment font-bold">Nova ficha</button>
+              <label class="py-1.5 rounded-lg bg-vampire-black hover:bg-vampire-slate border border-vampire-gold/30 text-[11px] font-cinzel text-vampire-gold text-center cursor-pointer">
+                Anexar PDF
+                <input type="file" id="sheetPdfInput" accept="application/pdf,.pdf" class="hidden" onchange="handleSheetPdfUpload(event)">
+              </label>
+            </div>
+            <p id="sheetImportStatus" class="text-[10px] font-cinzel text-vampire-goldMuted leading-snug"></p>
+            <p id="sheetTokenHint" class="text-[10px] font-cinzel text-gray-500 leading-snug"></p>
+          </div>
+          <div id="sheetList" class="flex-grow overflow-y-auto p-2 space-y-2"></div>
+        </div>
+
       </aside>
 
     </div>
@@ -982,6 +1045,14 @@
         <div>
           <label class="block text-xs font-cinzel text-vampire-parchment font-bold mb-1">Nome no Brasão:</label>
           <input type="text" id="tokenCharNameInput" maxlength="24" class="w-full bg-vampire-black border border-vampire-ash rounded-xl px-3 py-2 text-sm text-vampire-parchment focus:outline-none focus:border-vampire-gold font-cinzel">
+        </div>
+
+        <div>
+          <label class="block text-xs font-cinzel text-vampire-parchment font-bold mb-1">Vincular ficha:</label>
+          <select id="tokenSheetSelect" onchange="onTokenSheetPicked(this.value)" class="w-full bg-vampire-black border border-vampire-ash rounded-xl px-3 py-2 text-sm text-vampire-parchment focus:outline-none focus:border-vampire-gold font-cinzel">
+            <option value="">Sem ficha</option>
+          </select>
+          <p class="text-[10px] text-gray-500 mt-1 font-cinzel leading-snug">Com a ficha vinculada, passar o mouse no token mostra vida, fome, vontade e habilidades.</p>
         </div>
 
         <div>
@@ -1049,6 +1120,52 @@
     </div>
   </div>
 
+  <div id="tokenHoverCard" class="hidden"></div>
+
+  <div id="sheetModal" class="fixed inset-0 z-[70] bg-black/80 backdrop-blur-sm hidden items-center justify-center p-3 sm:p-6">
+    <div class="bg-vampire-obsidian border-2 border-vampire-gold/30 rounded-2xl w-full max-w-5xl max-h-[92vh] flex flex-col shadow-2xl gothic-border">
+      <div class="flex items-center justify-between px-4 py-3 border-b border-vampire-ash flex-shrink-0 gap-3">
+        <h3 id="sheetModalTitle" class="font-gothic text-lg text-vampire-parchment truncate">Ficha</h3>
+        <button type="button" onclick="closeSheetModal()" class="text-gray-400 hover:text-white text-lg leading-none px-1" aria-label="Fechar ficha">✕</button>
+      </div>
+      <div id="sheetModalBody" class="overflow-y-auto p-3 sm:p-4"></div>
+      <div class="px-4 py-2 border-t border-vampire-ash flex items-center justify-between gap-3 flex-shrink-0">
+        <span id="sheetSaveStatus" class="text-[10px] font-cinzel text-vampire-goldMuted">As alterações ficam salvas neste navegador.</span>
+        <button type="button" onclick="closeSheetModal()" class="px-3 py-1.5 rounded-lg bg-vampire-slate hover:bg-vampire-ash text-xs font-cinzel text-vampire-parchment border border-vampire-ash">Fechar</button>
+      </div>
+    </div>
+  </div>
+
+  <datalist id="clanList">
+    <option value="Brujah"></option>
+    <option value="Gangrel"></option>
+    <option value="Malkaviano"></option>
+    <option value="Nosferatu"></option>
+    <option value="Toreador"></option>
+    <option value="Tremere"></option>
+    <option value="Ventrue"></option>
+    <option value="Banu Haqim"></option>
+    <option value="Ministério"></option>
+    <option value="Hecata"></option>
+    <option value="Lasombra"></option>
+    <option value="Tzimisce"></option>
+    <option value="Ravnos"></option>
+    <option value="Salubri"></option>
+    <option value="Caitiff"></option>
+    <option value="Sangue-fraco"></option>
+  </datalist>
+  <datalist id="predatorList">
+    <option value="Alleycat"></option>
+    <option value="Gatuno"></option>
+    <option value="Consensualista"></option>
+    <option value="Fazendeiro"></option>
+    <option value="Osíris"></option>
+    <option value="Rainha da Cena"></option>
+    <option value="Sereia"></option>
+    <option value="Sanguessuga"></option>
+    <option value="Família"></option>
+  </datalist>
+
   <!-- JAVASCRIPT PRINCIPAL -->
   <script>
     // State
@@ -1069,7 +1186,12 @@
       isCamActive: false,
       isMicActive: false,
       sharedImage: null,
+      mapLayers: [],
+      activeMapLayerId: null,
       tokens: [],
+      sheets: [],
+      editingSheetId: null,
+      pendingTokenSheetId: null,
       selectedTokenId: null,
       selectedTokenImage: null,
       ambientPlaying: false,
@@ -1306,10 +1428,12 @@
       const btnDice = document.getElementById('tabBtnDice');
       const btnAudio = document.getElementById('tabBtnAudio');
       const btnChat = document.getElementById('tabBtnChat');
+      const btnSheets = document.getElementById('tabBtnSheets');
       
       const contentDice = document.getElementById('rightTabDiceContent');
       const contentAudio = document.getElementById('rightTabAudioContent');
       const contentChat = document.getElementById('rightTabChatContent');
+      const contentSheets = document.getElementById('rightTabSheetsContent');
 
       const activeBtnClass = 'relative flex-1 py-1.5 px-1 sm:px-2 rounded-lg font-gothic text-xs tracking-wider uppercase transition flex items-center justify-center gap-1 border border-red-950 bg-gradient-to-r from-vampire-driedBlood to-vampire-blood text-vampire-parchment shadow-blood-glow';
       const inactiveBtnClass = 'relative flex-1 py-1.5 px-1 sm:px-2 rounded-lg font-gothic text-xs tracking-wider uppercase transition flex items-center justify-center gap-1 border border-vampire-ash bg-vampire-black text-gray-500 hover:text-vampire-gold hover:border-vampire-gold/30';
@@ -1317,6 +1441,7 @@
       btnDice.className = tab === 'dice' ? activeBtnClass : inactiveBtnClass;
       btnAudio.className = tab === 'audio' ? activeBtnClass : inactiveBtnClass;
       btnChat.className = tab === 'chat' ? activeBtnClass : inactiveBtnClass;
+      if (btnSheets) btnSheets.className = tab === 'sheets' ? activeBtnClass : inactiveBtnClass;
 
       contentDice.classList.toggle('hidden', tab !== 'dice');
       contentDice.classList.toggle('flex', tab === 'dice');
@@ -1326,6 +1451,13 @@
 
       contentChat.classList.toggle('hidden', tab !== 'chat');
       contentChat.classList.toggle('flex', tab === 'chat');
+
+      if (contentSheets) {
+        contentSheets.classList.toggle('hidden', tab !== 'sheets');
+        contentSheets.classList.toggle('flex', tab === 'sheets');
+      }
+
+      if (tab === 'sheets') renderSheetList();
 
       if (tab === 'chat') {
         state.unreadChat = 0;
@@ -1888,6 +2020,7 @@
       updateHungerUI();
       updatePoolUI();
       renderAllTokens();
+      renderSheetList();
       setupFowEvents(); 
       setupDrawingEvents();
       if (window.lucide) window.lucide.createIcons();
@@ -1922,6 +2055,7 @@
         if (playerAudioNotice) playerAudioNotice.classList.remove('hidden');
         if (stopBtn) stopBtn.classList.add('hidden');
       }
+      renderMapLayerBar();
       renderAllCameraSlots();
       if (window.lucide) window.lucide.createIcons();
     }
@@ -1939,7 +2073,7 @@
       return `vtm_v5_coterie/${getCleanRoomPrefix()}`;
     }
 
-    function compressImageForNetwork(dataUrl, maxResolution, quality, callback) {
+    function compressImageForNetwork(dataUrl, maxResolution, quality, callback, preserveAlpha) {
       const img = new Image();
       img.onload = () => {
         let width = img.width;
@@ -1958,7 +2092,7 @@
         canvas.height = height;
         const ctx = canvas.getContext('2d');
         ctx.drawImage(img, 0, 0, width, height);
-        callback(canvas.toDataURL('image/jpeg', quality));
+        callback(preserveAlpha ? canvas.toDataURL('image/png') : canvas.toDataURL('image/jpeg', quality));
       };
       img.onerror = () => callback(dataUrl);
       img.src = dataUrl;
@@ -2017,6 +2151,7 @@
                 timestamp: Date.now()
               }
             });
+            broadcastSheets();
             
             sendPresenceHeartbeat();
           });
@@ -2304,6 +2439,26 @@
         renderRollsFeed();
       } else if (type === 'SHARE_IMAGE') {
         displaySharedImage(payload);
+      } else if (type === 'MAP_LAYER_ADD') {
+        if (payload && payload.id && !state.mapLayers.find(l => l.id === payload.id)) {
+          state.mapLayers.push(payload);
+        }
+        renderMapLayerBar();
+      } else if (type === 'MAP_LAYER_REMOVE') {
+        state.mapLayers = state.mapLayers.filter(l => l.id !== payload.id);
+        if (state.activeMapLayerId === payload.id) state.activeMapLayerId = null;
+        renderMapLayerBar();
+      } else if (type === 'MAP_SHOW') {
+        const layer = state.mapLayers.find(l => l.id === payload.id);
+        state.activeMapLayerId = payload.id;
+        if (layer && state.sharedImage !== layer.src) displaySharedImage(layer.src);
+        renderMapLayerBar();
+      } else if (type === 'MAP_SYNC') {
+        state.mapLayers = (payload && payload.layers) || [];
+        state.activeMapLayerId = (payload && payload.activeId) || null;
+        const active = state.mapLayers.find(l => l.id === state.activeMapLayerId);
+        if (active) displaySharedImage(active.src);
+        renderMapLayerBar();
       } else if (type === 'CLEAR_IMAGE') {
         clearSharedImageLocal();
       } else if (type === 'ADD_TOKEN') {
@@ -2361,12 +2516,15 @@
         }
       } else if (type === 'FOW_SYNC') {
         state.fow = payload;
+        rememberSceneOnActiveLayer();
         renderFowState();
       } else if (type === 'DRAWING_SYNC') {
         state.drawingDataUrl = payload;
+        rememberSceneOnActiveLayer();
         renderDrawingState();
       } else if (type === 'DRAWING_CLEAR') {
         state.drawingDataUrl = null;
+        rememberSceneOnActiveLayer();
         renderDrawingState();
       } else if (type === 'PEER_JOIN' || type === 'PEER_PRESENT' || type === 'PEER_HEARTBEAT') {
         if (payload.name && payload.name !== state.name) {
@@ -2385,8 +2543,12 @@
 
           if (type === 'PEER_JOIN') {
             sendPresenceHeartbeat();
+            broadcastSheets();
 
             if (state.role === 'storyteller') {
+              if (state.mapLayers.length) {
+                broadcastRoomMessage({ type: 'MAP_SYNC', payload: { layers: state.mapLayers, activeId: state.activeMapLayerId } });
+              }
               if (state.sharedImage) {
                 broadcastRoomMessage({ type: 'SHARE_IMAGE', payload: state.sharedImage });
               }
@@ -2406,6 +2568,12 @@
             }
           }
         }
+      } else if (type === 'SHEET_UPSERT') {
+        applyRemoteSheet(payload);
+      } else if (type === 'SHEET_REMOVE') {
+        applyRemoteSheetRemoval(payload && payload.id);
+      } else if (type === 'SHEETS_SYNC') {
+        (payload || []).forEach(applyRemoteSheet);
       } else if (type === 'PEER_LEAVE') {
         if (payload && payload.name) {
           removePeerAndFreeSlot(payload.name);
@@ -2607,6 +2775,7 @@
         ctx.clearRect(0, 0, canvas.width, canvas.height);
       }
       state.drawingDataUrl = null;
+      rememberSceneOnActiveLayer();
       broadcastRoomMessage({ type: 'DRAWING_CLEAR' });
     };
 
@@ -2671,8 +2840,9 @@
         
         compressImageForNetwork(canvas.toDataURL('image/png'), 1280, 0.8, (compressedDataUrl) => {
           state.drawingDataUrl = compressedDataUrl;
+          rememberSceneOnActiveLayer();
           broadcastRoomMessage({ type: 'DRAWING_SYNC', payload: compressedDataUrl });
-        });
+        }, true);
       };
 
       canvas.addEventListener('mousedown', startDraw);
@@ -2707,6 +2877,7 @@
         updateBrushUI();
       }
       renderFowState();
+      rememberSceneOnActiveLayer();
       broadcastRoomMessage({ type: 'FOW_SYNC', payload: state.fow });
     };
 
@@ -2851,6 +3022,7 @@
         
         compressFowMask(canvas, (dataUrl) => {
           state.fow.maskDataUrl = dataUrl;
+          rememberSceneOnActiveLayer();
           broadcastRoomMessage({ type: 'FOW_SYNC', payload: state.fow });
         });
       };
@@ -2888,33 +3060,156 @@
       window.addEventListener('touchend', endDraw);
     }
 
+    function rememberSceneOnActiveLayer() {
+      const layer = state.mapLayers.find(l => l.id === state.activeMapLayerId);
+      if (!layer) return;
+      layer.drawingDataUrl = state.drawingDataUrl || null;
+      layer.fow = {
+        enabled: !!(state.fow && state.fow.enabled),
+        maskDataUrl: (state.fow && state.fow.maskDataUrl) || null
+      };
+    }
+
+    function renderMapLayerBar() {
+      const bar = document.getElementById('mapLayerBar');
+      if (!bar) return;
+      if (state.role !== 'storyteller' || !state.mapLayers.length) {
+        bar.classList.add('hidden');
+        bar.classList.remove('flex');
+        bar.innerHTML = '';
+        return;
+      }
+      bar.classList.remove('hidden');
+      bar.classList.add('flex');
+      bar.innerHTML = state.mapLayers.map(layer => {
+        const on = layer.id === state.activeMapLayerId;
+        const cls = on
+          ? 'bg-vampire-blood border-red-900 text-vampire-parchment'
+          : 'bg-vampire-black border-vampire-ash text-gray-400 hover:text-vampire-gold';
+        return `<button type="button" onclick="showMapLayer('${layer.id}', true)" class="px-2 py-1 rounded-lg border text-[11px] font-cinzel whitespace-nowrap ${cls}">${escapeHtml(layer.name)}</button>`;
+      }).join('') + '<button type="button" onclick="renameActiveMapLayer()" class="px-2 py-1 rounded-lg border border-vampire-ash text-[11px] font-cinzel text-gray-500 hover:text-vampire-gold whitespace-nowrap">Renomear</button>';
+    }
+
+    function syncFogControls() {
+      const brushBtn = document.getElementById('btnToggleBrush');
+      if (!brushBtn || state.role !== 'storyteller') return;
+      if (state.fow && state.fow.enabled) {
+        brushBtn.classList.remove('hidden');
+      } else {
+        brushBtn.classList.add('hidden');
+        isFowBrushActive = false;
+        if (typeof updateBrushUI === 'function') updateBrushUI();
+      }
+    }
+
+    window.showMapLayer = function(id, broadcast) {
+      if (state.role !== 'storyteller') return;
+      if (state.activeMapLayerId && state.activeMapLayerId !== id) rememberSceneOnActiveLayer();
+      const layer = state.mapLayers.find(l => l.id === id);
+      if (!layer) return;
+      state.activeMapLayerId = layer.id;
+      state.drawingDataUrl = layer.drawingDataUrl || null;
+      state.fow = layer.fow
+        ? { enabled: !!layer.fow.enabled, maskDataUrl: layer.fow.maskDataUrl || null }
+        : { enabled: false, maskDataUrl: null };
+      displaySharedImage(layer.src);
+      renderDrawingState();
+      renderFowState();
+      syncFogControls();
+      renderMapLayerBar();
+      if (!broadcast) return;
+      broadcastRoomMessage({ type: 'MAP_SHOW', payload: { id: layer.id } });
+      broadcastRoomMessage({ type: 'SHARE_IMAGE', payload: layer.src });
+      if (state.drawingDataUrl) broadcastRoomMessage({ type: 'DRAWING_SYNC', payload: state.drawingDataUrl });
+      else broadcastRoomMessage({ type: 'DRAWING_CLEAR' });
+      broadcastRoomMessage({ type: 'FOW_SYNC', payload: state.fow });
+    };
+
+    function addMapLayer(src, name) {
+      if (state.role !== 'storyteller' || !src) return;
+      const layer = {
+        id: 'map_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5),
+        name: (name || '').trim() || ('Andar ' + (state.mapLayers.length + 1)),
+        src: src,
+        drawingDataUrl: null,
+        fow: { enabled: false, maskDataUrl: null }
+      };
+      state.mapLayers.push(layer);
+      broadcastRoomMessage({ type: 'MAP_LAYER_ADD', payload: layer });
+      if (!state.sharedImage || state.mapLayers.length === 1) showMapLayer(layer.id, true);
+      else renderMapLayerBar();
+    }
+
+    function removeMapLayer(id) {
+      const idx = state.mapLayers.findIndex(l => l.id === id);
+      if (idx === -1) return;
+      const wasActive = state.activeMapLayerId === id;
+      state.mapLayers.splice(idx, 1);
+      broadcastRoomMessage({ type: 'MAP_LAYER_REMOVE', payload: { id: id } });
+      if (!wasActive) {
+        renderMapLayerBar();
+        return;
+      }
+      const next = state.mapLayers[idx] || state.mapLayers[idx - 1];
+      if (next) {
+        state.activeMapLayerId = null;
+        showMapLayer(next.id, true);
+      } else {
+        state.activeMapLayerId = null;
+        state.drawingDataUrl = null;
+        state.fow = { enabled: false, maskDataUrl: null };
+        clearSharedImageLocal();
+        renderDrawingState();
+        renderFowState();
+        syncFogControls();
+        renderMapLayerBar();
+        broadcastRoomMessage({ type: 'CLEAR_IMAGE' });
+        broadcastRoomMessage({ type: 'DRAWING_CLEAR' });
+        broadcastRoomMessage({ type: 'FOW_SYNC', payload: state.fow });
+      }
+    }
+
+    window.renameActiveMapLayer = function() {
+      if (state.role !== 'storyteller' || !state.activeMapLayerId) return;
+      const layer = state.mapLayers.find(l => l.id === state.activeMapLayerId);
+      if (!layer) return;
+      const name = prompt('Nome deste andar:', layer.name);
+      if (!name || !name.trim()) return;
+      layer.name = name.trim().slice(0, 28);
+      renderMapLayerBar();
+      broadcastRoomMessage({ type: 'MAP_SYNC', payload: { layers: state.mapLayers, activeId: state.activeMapLayerId } });
+    };
+
     window.promptImageUrl = function() {
       if (state.role !== 'storyteller') return;
-      const url = prompt("Insira a URL pública da imagem/mapa:");
-      if (url && url.trim()) {
-        const clean = url.trim();
-        displaySharedImage(clean);
-        broadcastRoomMessage({ type: 'SHARE_IMAGE', payload: clean });
-      }
+      const url = prompt('URL da imagem deste andar:');
+      if (!url || !url.trim()) return;
+      const name = prompt('Nome do andar:', 'Andar ' + (state.mapLayers.length + 1));
+      addMapLayer(url.trim(), name || '');
     };
 
     window.handleImageFileUpload = function(e) {
       if (state.role !== 'storyteller') return;
-      const file = e.target.files[0];
-      if (!file) return;
-
-      const reader = new FileReader();
-      reader.onload = function(evt) {
-        compressImageForNetwork(evt.target.result, 1280, 0.7, (compressedUrl) => {
-          displaySharedImage(compressedUrl);
-          broadcastRoomMessage({ type: 'SHARE_IMAGE', payload: compressedUrl });
-        });
-      };
-      reader.readAsDataURL(file);
+      const files = Array.from(e.target.files || []);
+      e.target.value = '';
+      files.forEach(file => {
+        const reader = new FileReader();
+        reader.onload = function(evt) {
+          compressImageForNetwork(evt.target.result, 1280, 0.7, (compressedUrl) => {
+            const name = file.name.replace(/\.[^.]+$/, '').slice(0, 28);
+            addMapLayer(compressedUrl, name);
+          });
+        };
+        reader.readAsDataURL(file);
+      });
     };
 
     window.clearSharedImage = function() {
       if (state.role !== 'storyteller') return;
+      if (state.activeMapLayerId) {
+        removeMapLayer(state.activeMapLayerId);
+        return;
+      }
       clearSharedImageLocal();
       broadcastRoomMessage({ type: 'CLEAR_IMAGE' });
     };
@@ -2929,6 +3224,7 @@
     };
 
     window.openTokenModal = function() {
+      populateTokenSheetSelect();
       document.getElementById('tokenModal').classList.remove('hidden');
       document.getElementById('tokenModal').classList.add('flex');
     };
@@ -3006,6 +3302,7 @@
           label.innerText = 'Nenhum';
           label.className = 'text-[10px] font-cinzel text-gray-500 mr-1 max-w-[90px] sm:max-w-[120px] truncate';
         }
+        if (state.currentTab === 'sheets') renderSheetList();
         return;
       }
 
@@ -3032,6 +3329,7 @@
       if (colorPicker) {
         colorPicker.value = tok.borderColor || '#9a7738';
       }
+      if (state.currentTab === 'sheets') renderSheetList();
     };
 
     window.modifySelectedTokenSize = function(delta) {
@@ -3085,6 +3383,12 @@
       const randPercentX = 35 + Math.random() * 30;
       const randPercentY = 35 + Math.random() * 30;
 
+      let sheetId = state.pendingTokenSheetId || null;
+      if (!sheetId) {
+        const matches = state.sheets.filter(s => (s.name || '').trim().toLowerCase() === charName.trim().toLowerCase());
+        if (matches.length === 1) sheetId = matches[0].id;
+      }
+
       const token = {
         id: 'tok_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5),
         name: charName,
@@ -3094,10 +3398,14 @@
         size: 54,
         percentX: randPercentX,
         percentY: randPercentY,
-        isMarked: false
+        isMarked: false,
+        sheetId: sheetId || null
       };
 
       state.tokens.push(token);
+      state.pendingTokenSheetId = null;
+      const sheetSel = document.getElementById('tokenSheetSelect');
+      if (sheetSel) sheetSel.value = '';
       renderAllTokens();
       window.selectToken(token.id);
       broadcastRoomMessage({ type: 'ADD_TOKEN', payload: token });
@@ -3175,16 +3483,16 @@
         el.innerHTML = `
           <img src="${token.image}" class="w-full h-full object-cover rounded-full pointer-events-none">
           <div class="token-mark absolute inset-0 flex items-center justify-center text-red-600 font-gothic text-3xl font-black drop-shadow-[0_2px_4px_rgba(0,0,0,1)] ${token.isMarked ? '' : 'hidden'} pointer-events-none">✕</div>
-          <div class="absolute -bottom-4 left-1/2 -translate-x-1/2 bg-black/95 px-1.5 py-0.2 rounded border border-vampire-gold/30 text-[9px] font-cinzel text-vampire-parchment whitespace-nowrap pointer-events-none">${token.name}</div>
+          <div class="absolute -bottom-4 left-1/2 -translate-x-1/2 bg-black/95 px-1.5 py-0.2 rounded border border-vampire-gold/30 text-[9px] font-cinzel text-vampire-parchment whitespace-nowrap pointer-events-none">${escapeHtml(token.name)}</div>
         `;
       } else {
-        const initials = token.name.substring(0, 2).toUpperCase();
+        const initials = escapeHtml(token.name.substring(0, 2).toUpperCase());
         el.innerHTML = `
           <div class="w-full h-full rounded-full bg-gradient-to-b from-vampire-driedBlood to-black flex items-center justify-center font-gothic text-base text-vampire-gold pointer-events-none">
             ${initials}
           </div>
           <div class="token-mark absolute inset-0 flex items-center justify-center text-red-600 font-gothic text-3xl font-black drop-shadow-[0_2px_4px_rgba(0,0,0,1)] ${token.isMarked ? '' : 'hidden'} pointer-events-none">✕</div>
-          <div class="absolute -bottom-4 left-1/2 -translate-x-1/2 bg-black/95 px-1.5 py-0.2 rounded border border-vampire-gold/30 text-[9px] font-cinzel text-vampire-parchment whitespace-nowrap pointer-events-none">${token.name}</div>
+          <div class="absolute -bottom-4 left-1/2 -translate-x-1/2 bg-black/95 px-1.5 py-0.2 rounded border border-vampire-gold/30 text-[9px] font-cinzel text-vampire-parchment whitespace-nowrap pointer-events-none">${escapeHtml(token.name)}</div>
         `;
       }
 
@@ -3201,6 +3509,8 @@
           window.selectToken(token.id);
           isDragging = true;
           hasMoved = false;
+          el.dataset.dragging = '1';
+          hideTokenHover(token.id);
           el.setPointerCapture?.(evt.pointerId);
           document.addEventListener('pointermove', onPointerMove);
           document.addEventListener('pointerup', onPointerUp);
@@ -3234,6 +3544,8 @@
         const onPointerUp = (evt) => {
           if (!isDragging) return;
           isDragging = false;
+          el.dataset.dragging = '0';
+          if (el.matches(':hover')) showTokenHover(token, el);
           el.releasePointerCapture?.(evt.pointerId);
           document.removeEventListener('pointermove', onPointerMove);
           document.removeEventListener('pointerup', onPointerUp);
@@ -3244,6 +3556,12 @@
 
         el.addEventListener('pointerdown', onPointerDown);
       }
+
+      el.addEventListener('mouseenter', () => {
+        if (el.dataset.dragging === '1') return;
+        showTokenHover(token, el);
+      });
+      el.addEventListener('mouseleave', () => hideTokenHover(token.id));
 
       return el;
     }
@@ -4326,6 +4644,1087 @@
       feed.scrollTop = feed.scrollHeight;
       if (window.lucide) window.lucide.createIcons();
     }
+
+    // ==========================================
+    // FICHAS DA COTERIE (localStorage)
+    // ==========================================
+    const SHEET_STORAGE_KEY = 'vtm_character_sheets_v1';
+    const SHEET_FIELD_CLASS = 'w-full bg-vampire-black border border-vampire-ash rounded-lg px-2 py-1.5 text-xs text-vampire-parchment focus:outline-none focus:border-vampire-gold disabled:opacity-70';
+    const sheetUi = { showAllSkills: false, ready: false };
+
+    const SHEET_ATTRS = [
+      { key: 'forca', label: 'Força', short: 'For', group: 'Físicos', pdf: 'FOR' },
+      { key: 'destreza', label: 'Destreza', short: 'Des', group: 'Físicos', pdf: 'DES' },
+      { key: 'vigor', label: 'Vigor', short: 'Vig', group: 'Físicos', pdf: 'VIG' },
+      { key: 'carisma', label: 'Carisma', short: 'Car', group: 'Sociais', pdf: 'CAR' },
+      { key: 'manipulacao', label: 'Manipulação', short: 'Man', group: 'Sociais', pdf: 'MAN' },
+      { key: 'autocontrole', label: 'Autocontrole', short: 'Aut', group: 'Sociais', pdf: 'AUT' },
+      { key: 'inteligencia', label: 'Inteligência', short: 'Int', group: 'Mentais', pdf: 'INT' },
+      { key: 'raciocinio', label: 'Raciocínio', short: 'Rac', group: 'Mentais', pdf: 'RAC' },
+      { key: 'determinacao', label: 'Determinação', short: 'Det', group: 'Mentais', pdf: 'DET' }
+    ];
+
+    const SHEET_SKILLS = [
+      { key: 'armasBrancas', label: 'Armas Brancas', group: 'Físicas', pdf: 'ArBr' },
+      { key: 'armasDeFogo', label: 'Armas de Fogo', group: 'Físicas', pdf: 'ArFo' },
+      { key: 'atletismo', label: 'Atletismo', group: 'Físicas', pdf: 'Atle' },
+      { key: 'briga', label: 'Briga', group: 'Físicas', pdf: 'Brig' },
+      { key: 'conducao', label: 'Condução', group: 'Físicas', pdf: 'Cond' },
+      { key: 'furtividade', label: 'Furtividade', group: 'Físicas', pdf: 'Fund' },
+      { key: 'ladroagem', label: 'Ladroagem', group: 'Físicas', pdf: 'Ladr' },
+      { key: 'oficios', label: 'Ofícios', group: 'Físicas', pdf: 'Ofic' },
+      { key: 'sobrevivencia', label: 'Sobrevivência', group: 'Físicas', pdf: 'Sobr' },
+      { key: 'empatia', label: 'Empatia com Animais', group: 'Sociais', pdf: 'EmCA' },
+      { key: 'etiqueta', label: 'Etiqueta', group: 'Sociais', pdf: 'Etiq' },
+      { key: 'intimidacao', label: 'Intimidação', group: 'Sociais', pdf: 'Inti' },
+      { key: 'lideranca', label: 'Liderança', group: 'Sociais', pdf: 'Lide' },
+      { key: 'manha', label: 'Manha', group: 'Sociais', pdf: 'Manh' },
+      { key: 'performance', label: 'Performance', group: 'Sociais', pdf: 'Perf' },
+      { key: 'persuasao', label: 'Persuasão', group: 'Sociais', pdf: 'Pers' },
+      { key: 'sagacidade', label: 'Sagacidade', group: 'Sociais', pdf: 'Saga' },
+      { key: 'subterfugio', label: 'Subterfúgio', group: 'Sociais', pdf: 'Subt' },
+      { key: 'ciencia', label: 'Ciência', group: 'Mentais', pdf: 'Cien' },
+      { key: 'erudicao', label: 'Erudição', group: 'Mentais', pdf: 'Erud' },
+      { key: 'financas', label: 'Finanças', group: 'Mentais', pdf: 'Fina' },
+      { key: 'investigacao', label: 'Investigação', group: 'Mentais', pdf: 'Inve' },
+      { key: 'medicina', label: 'Medicina', group: 'Mentais', pdf: 'Medi' },
+      { key: 'ocultismo', label: 'Ocultismo', group: 'Mentais', pdf: 'Ocul' },
+      { key: 'percepcao', label: 'Percepção', group: 'Mentais', pdf: 'Perc' },
+      { key: 'politica', label: 'Política', group: 'Mentais', pdf: 'Poli' },
+      { key: 'tecnologia', label: 'Tecnologia', group: 'Mentais', pdf: 'Tecn' }
+    ];
+
+    const SHEET_TEXT_KEYS = ['name','owner','chronicle','sire','concept','predator','clan','generation','ambition','desire','convictions','tenets','bane','baneSeverity','trueAge','apparentAge','birth','death','appearance','traits','history','notes','resonance','bloodSurge','recovered','reroll','powerBonus','feedingPenalty','xpTotal','xpSpent','origin'];
+
+    function escapeHtml(value) {
+      return String(value == null ? '' : value).replace(/[&<>"']/g, (ch) => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+      }[ch]));
+    }
+
+    function clampInt(n, min, max) {
+      const v = parseInt(n, 10);
+      if (Number.isNaN(v)) return min;
+      return Math.max(min, Math.min(max, v));
+    }
+
+    function skillState(sheet, key) {
+      if (!sheet.skills) sheet.skills = {};
+      if (!sheet.skills[key]) sheet.skills[key] = { dots: 0, spec: '' };
+      return sheet.skills[key];
+    }
+
+    function fitTrack(track, len) {
+      const src = Array.isArray(track) ? track : [];
+      const next = [];
+      for (let i = 0; i < len; i++) {
+        const v = src[i];
+        next.push(v === 'superficial' || v === 'aggravated' ? v : 'ok');
+      }
+      return next;
+    }
+
+    function syncDerivedTracks(sheet) {
+      const vigor = clampInt(sheet.attributes && sheet.attributes.vigor, 0, 5);
+      const comp = clampInt(sheet.attributes && sheet.attributes.autocontrole, 0, 5);
+      const res = clampInt(sheet.attributes && sheet.attributes.determinacao, 0, 5);
+      sheet.health = fitTrack(sheet.health, Math.max(1, vigor + 3));
+      sheet.willpower = fitTrack(sheet.willpower, Math.max(1, comp + res));
+    }
+
+    function normalizeSheet(input) {
+      const sheet = input || {};
+      const baseAttrs = { forca: 0, destreza: 0, vigor: 0, carisma: 0, manipulacao: 0, autocontrole: 0, inteligencia: 0, raciocinio: 0, determinacao: 0 };
+      sheet.attributes = Object.assign(baseAttrs, sheet.attributes || {});
+      SHEET_ATTRS.forEach(a => { sheet.attributes[a.key] = clampInt(sheet.attributes[a.key], 0, 5); });
+      if (!sheet.skills) sheet.skills = {};
+      SHEET_SKILLS.forEach(s => {
+        const cur = sheet.skills[s.key] || {};
+        sheet.skills[s.key] = { dots: clampInt(cur.dots, 0, 5), spec: cur.spec || '' };
+      });
+      if (!Array.isArray(sheet.disciplines) || !sheet.disciplines.length) sheet.disciplines = [{ name: '', dots: 0, desc: '' }];
+      sheet.disciplines = sheet.disciplines.map(d => ({ name: d.name || '', dots: clampInt(d.dots, 0, 5), desc: d.desc || '' }));
+      if (!Array.isArray(sheet.merits) || !sheet.merits.length) sheet.merits = [{ name: '', dots: 0 }];
+      sheet.merits = sheet.merits.map(m => ({ name: m.name || '', dots: clampInt(m.dots, 0, 5) }));
+      if (sheet.hunger == null) sheet.hunger = 1;
+      if (sheet.humanity == null) sheet.humanity = 7;
+      if (sheet.bloodPotency == null) sheet.bloodPotency = 1;
+      sheet.hunger = clampInt(sheet.hunger, 0, 5);
+      sheet.humanity = clampInt(sheet.humanity, 0, 10);
+      sheet.bloodPotency = clampInt(sheet.bloodPotency, 0, 10);
+      SHEET_TEXT_KEYS.forEach(k => { if (sheet[k] == null) sheet[k] = ''; });
+      if (!sheet.id) sheet.id = 'sheet_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+      syncDerivedTracks(sheet);
+      return sheet;
+    }
+
+    function loadSheetsFromStorage() {
+      try {
+        const raw = localStorage.getItem(SHEET_STORAGE_KEY);
+        const parsed = raw ? JSON.parse(raw) : [];
+        if (!Array.isArray(parsed)) return [];
+        return parsed.map(item => normalizeSheet(item));
+      } catch (e) {
+        return [];
+      }
+    }
+
+    function saveSheets() {
+      try {
+        localStorage.setItem(SHEET_STORAGE_KEY, JSON.stringify(state.sheets));
+        localStorage.setItem(SHEET_STORAGE_KEY + '_removed', JSON.stringify(state.removedSheetIds || []));
+      } catch (e) {
+        const status = document.getElementById('sheetSaveStatus');
+        if (status) status.textContent = 'O navegador recusou gravar a ficha.';
+      }
+    }
+
+    function publishSheet(sheet) {
+      if (!sheet) return;
+      broadcastRoomMessage({ type: 'SHEET_UPSERT', payload: sheet });
+    }
+
+    function broadcastSheets() {
+      if (!state.sheets.length) return;
+      broadcastRoomMessage({ type: 'SHEETS_SYNC', payload: state.sheets });
+    }
+
+    function rememberRemovedSheet(id) {
+      if (!id) return;
+      if (!state.removedSheetIds) state.removedSheetIds = [];
+      if (!state.removedSheetIds.includes(id)) state.removedSheetIds.push(id);
+    }
+
+    function applyRemoteSheet(raw) {
+      if (!raw || !raw.id) return;
+      if (state.removedSheetIds && state.removedSheetIds.includes(raw.id)) {
+        broadcastRoomMessage({ type: 'SHEET_REMOVE', payload: { id: raw.id } });
+        return;
+      }
+      const incoming = normalizeSheet(raw);
+      const idx = state.sheets.findIndex(s => s.id === incoming.id);
+      if (idx === -1) state.sheets.push(incoming);
+      else if ((incoming.updatedAt || 0) >= (state.sheets[idx].updatedAt || 0)) state.sheets[idx] = incoming;
+      else return;
+      saveSheets();
+      if (state.editingSheetId === incoming.id) rerenderEditingSheet();
+      else renderSheetList();
+      populateTokenSheetSelect();
+    }
+
+    function applyRemoteSheetRemoval(id) {
+      if (!id) return;
+      rememberRemovedSheet(id);
+      const had = state.sheets.some(s => s.id === id);
+      state.sheets = state.sheets.filter(s => s.id !== id);
+      state.tokens.forEach(tok => { if (tok.sheetId === id) tok.sheetId = null; });
+      saveSheets();
+      if (!had) return;
+      renderAllTokens();
+      if (state.editingSheetId === id) closeSheetModal();
+      else renderSheetList();
+      populateTokenSheetSelect();
+    }
+
+    function touchSheet(sheet) {
+      sheet.updatedAt = Date.now();
+      saveSheets();
+      publishSheet(sheet);
+      const status = document.getElementById('sheetSaveStatus');
+      if (status) status.textContent = 'Salvo e enviado à mesa';
+    }
+
+    function canEditSheet(sheet) {
+      if (!sheet) return false;
+      if (state.role === 'storyteller') return true;
+      if (!sheet.owner) return true;
+      return sheet.owner === state.name;
+    }
+
+    function buildBlankSheet(partial) {
+      partial = partial || {};
+      return normalizeSheet({
+        id: 'sheet_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+        owner: partial.owner != null ? partial.owner : (state.name || ''),
+        origin: 'manual',
+        updatedAt: Date.now(),
+        name: partial.name || '',
+        generation: partial.generation || '13',
+        attributes: { forca: 1, destreza: 1, vigor: 1, carisma: 1, manipulacao: 1, autocontrole: 1, inteligencia: 1, raciocinio: 1, determinacao: 1 },
+        hunger: 1,
+        humanity: 7,
+        bloodPotency: 1,
+        disciplines: [{ name: '', dots: 0, desc: '' }, { name: '', dots: 0, desc: '' }, { name: '', dots: 0, desc: '' }],
+        merits: [{ name: '', dots: 0 }, { name: '', dots: 0 }, { name: '', dots: 0 }]
+      });
+    }
+
+    function findSheetForToken(token) {
+      if (!token || !state.sheets) return null;
+      if (token.sheetId) {
+        const byId = state.sheets.find(s => s.id === token.sheetId);
+        if (byId) return byId;
+      }
+      const name = (token.name || '').trim().toLowerCase();
+      if (!name) return null;
+      return state.sheets.find(s => (s.name || '').trim().toLowerCase() === name) || null;
+    }
+
+    function trackSummary(track) {
+      const t = Array.isArray(track) ? track : [];
+      let sup = 0;
+      let agg = 0;
+      t.forEach(b => {
+        if (b === 'superficial') sup += 1;
+        else if (b === 'aggravated') agg += 1;
+      });
+      return { ok: t.length - sup - agg, sup: sup, agg: agg, total: t.length };
+    }
+
+    function trackLabel(track) {
+      const s = trackSummary(track);
+      if (!s.sup && !s.agg) return s.total + (s.total === 1 ? ' íntegra' : ' íntegras');
+      const bits = [];
+      if (s.sup) bits.push(s.sup + (s.sup > 1 ? ' superficiais' : ' superficial'));
+      if (s.agg) bits.push(s.agg + (s.agg > 1 ? ' agravados' : ' agravado'));
+      return bits.join(', ');
+    }
+
+    function nextBox(box) {
+      if (box === 'ok') return 'superficial';
+      if (box === 'superficial') return 'aggravated';
+      return 'ok';
+    }
+
+    function trackGlyphs(track) {
+      return (track || []).map(box => {
+        if (box === 'aggravated') return '<span class="text-red-400">✕</span>';
+        if (box === 'superficial') return '<span class="text-vampire-parchment">/</span>';
+        return '<span class="text-gray-600">·</span>';
+      }).join(' ');
+    }
+
+    function hungerPips(n) {
+      let s = '';
+      const cur = clampInt(n, 0, 5);
+      for (let i = 1; i <= 5; i++) s += i <= cur ? '●' : '○';
+      return s;
+    }
+
+    function applySheetHunger(sheet) {
+      state.hunger = clampInt(sheet.hunger, 0, 5);
+      updateHungerUI();
+    }
+
+    function sheetInput(field, label, value, editable, extra) {
+      return `<label class="block min-w-0">
+        <span class="block text-[10px] font-cinzel text-gray-400 mb-0.5">${label}</span>
+        <input type="text" data-field="${field}" ${editable ? '' : 'disabled'} ${extra || ''} value="${escapeHtml(value || '')}" class="${SHEET_FIELD_CLASS} font-cinzel">
+      </label>`;
+    }
+
+    function sheetArea(field, label, value, editable, rows) {
+      return `<label class="block">
+        <span class="block text-[10px] font-cinzel text-gray-400 mb-0.5">${label}</span>
+        <textarea data-field="${field}" rows="${rows || 3}" ${editable ? '' : 'disabled'} class="${SHEET_FIELD_CLASS} font-sans leading-relaxed">${escapeHtml(value || '')}</textarea>
+      </label>`;
+    }
+
+    function renderDots(current, max, kind, key, editable) {
+      const cur = clampInt(current, 0, max);
+      let html = '<span class="inline-flex items-center gap-1 align-middle">';
+      for (let i = 1; i <= max; i++) {
+        html += `<button type="button" ${editable ? '' : 'disabled'} data-set-dots="${kind}" data-key="${key}" data-value="${i}" class="sheet-dot ${i <= cur ? 'on' : ''}" aria-label="${i}"></button>`;
+      }
+      html += '</span>';
+      return html;
+    }
+
+    function hungerButtons(current, editable) {
+      let html = '<div class="flex flex-wrap gap-1">';
+      for (let i = 0; i <= 5; i++) {
+        const on = i === clampInt(current, 0, 5);
+        html += `<button type="button" ${editable ? '' : 'disabled'} data-set-hunger="${i}" class="w-6 h-6 rounded font-mono text-[11px] border ${on ? 'bg-vampire-crimson border-red-500 text-white' : 'bg-vampire-black border-vampire-ash text-gray-500'}">${i}</button>`;
+      }
+      html += '</div>';
+      return html;
+    }
+
+    function trackButtons(track, kind, editable) {
+      return `<div class="flex flex-wrap gap-1">${(track || []).map((box, i) => {
+        const cls = box === 'aggravated'
+          ? 'bg-vampire-driedBlood border-red-700 text-red-200'
+          : box === 'superficial'
+            ? 'bg-vampire-slate border-vampire-parchment/60 text-vampire-parchment'
+            : 'bg-vampire-black border-vampire-ash text-gray-600';
+        const glyph = box === 'aggravated' ? '✕' : box === 'superficial' ? '/' : '·';
+        return `<button type="button" ${editable ? '' : 'disabled'} data-cycle="${kind}" data-index="${i}" title="Clique: íntegra, superficial, agravada" class="w-6 h-6 rounded-sm border text-[11px] font-bold leading-none ${cls}">${glyph}</button>`;
+      }).join('')}</div>`;
+    }
+
+    function stepper(label, key, value, editable) {
+      if (!editable) {
+        return `<div class="text-[10px] font-cinzel text-gray-300"><span class="text-gray-500">${label}</span> <span class="font-mono text-vampire-parchment">${value}</span></div>`;
+      }
+      return `<div class="flex items-center gap-1 text-[10px] font-cinzel text-gray-400">
+        <span>${label}</span>
+        <button type="button" data-step="${key}" data-delta="-1" class="w-5 h-5 rounded bg-vampire-black border border-vampire-ash text-vampire-parchment">−</button>
+        <span class="font-mono text-vampire-parchment min-w-[1rem] text-center">${value}</span>
+        <button type="button" data-step="${key}" data-delta="1" class="w-5 h-5 rounded bg-vampire-black border border-vampire-ash text-vampire-parchment">+</button>
+      </div>`;
+    }
+
+    function sheetSection(title, body, extra) {
+      return `<section class="rounded-xl border border-vampire-ash bg-black/30 p-3 space-y-2">
+        <div class="flex items-center justify-between gap-2">
+          <h4 class="font-gothic text-vampire-gold text-sm">${title}</h4>
+          ${extra || ''}
+        </div>
+        ${body}
+      </section>`;
+    }
+
+    function groupedAttrHtml(sheet, editable) {
+      const groups = [];
+      SHEET_ATTRS.forEach(item => {
+        let g = groups.find(x => x.name === item.group);
+        if (!g) {
+          g = { name: item.group, items: [] };
+          groups.push(g);
+        }
+        g.items.push(item);
+      });
+      return `<div class="grid md:grid-cols-3 gap-3">${groups.map(g => `
+        <div class="space-y-1.5">
+          <div class="text-[10px] font-cinzel uppercase tracking-wider text-vampire-gold/80">${g.name}</div>
+          ${g.items.map(item => `
+            <div class="flex items-center justify-between gap-2">
+              <span class="text-[11px] font-cinzel text-vampire-parchment">${item.label}</span>
+              ${renderDots(sheet.attributes[item.key], 5, 'attr', item.key, editable)}
+            </div>
+          `).join('')}
+        </div>
+      `).join('')}</div>`;
+    }
+
+    function renderSkillsBlock(sheet, editable) {
+      const groups = [];
+      SHEET_SKILLS.forEach(item => {
+        const sk = skillState(sheet, item.key);
+        if (!sheetUi.showAllSkills && !(sk.dots > 0 || sk.spec)) return;
+        let g = groups.find(x => x.name === item.group);
+        if (!g) {
+          g = { name: item.group, items: [] };
+          groups.push(g);
+        }
+        g.items.push(item);
+      });
+      if (!groups.length) {
+        return '<p class="text-[11px] font-cinzel text-gray-500">Nenhuma habilidade com pontos. Mostre todas para preencher.</p>';
+      }
+      return `<div class="grid md:grid-cols-3 gap-3">${groups.map(g => `
+        <div class="space-y-2">
+          <div class="text-[10px] font-cinzel uppercase tracking-wider text-vampire-gold/80">${g.name}</div>
+          ${g.items.map(item => {
+            const sk = skillState(sheet, item.key);
+            const spec = (sk.dots > 0 || sk.spec) ? `<input type="text" data-spec="${item.key}" ${editable ? '' : 'disabled'} value="${escapeHtml(sk.spec || '')}" placeholder="Especialidade" class="${SHEET_FIELD_CLASS} font-sans mt-1">` : '';
+            return `<div>
+              <div class="flex items-center justify-between gap-2">
+                <span class="text-[11px] font-cinzel text-vampire-parchment">${item.label}</span>
+                ${renderDots(sk.dots, 5, 'skill', item.key, editable)}
+              </div>
+              ${spec}
+            </div>`;
+          }).join('')}
+        </div>
+      `).join('')}</div>`;
+    }
+
+    function renderSheetModal(sheet) {
+      const editable = canEditSheet(sheet);
+      const title = document.getElementById('sheetModalTitle');
+      if (title) title.textContent = sheet.name || 'Ficha sem nome';
+      const body = document.getElementById('sheetModalBody');
+      if (!body) return;
+
+      const tracks = `
+        <div class="grid sm:grid-cols-2 gap-3">
+          <div>
+            <div class="text-[10px] font-cinzel text-red-400 mb-1">Fome <span class="text-gray-500">— também ajusta o rolador</span></div>
+            ${hungerButtons(sheet.hunger, editable)}
+          </div>
+          <div class="flex flex-wrap items-end gap-4">
+            ${stepper('Humanidade', 'humanity', sheet.humanity, editable)}
+            ${stepper('Potência de Sangue', 'bloodPotency', sheet.bloodPotency, editable)}
+          </div>
+          <div>
+            <div class="flex items-center justify-between text-[10px] font-cinzel mb-1">
+              <span class="text-vampire-parchment">Saúde <span class="text-gray-500">Vigor + 3</span></span>
+              <span class="text-gray-500">${escapeHtml(trackLabel(sheet.health))}</span>
+            </div>
+            ${trackButtons(sheet.health, 'health', editable)}
+          </div>
+          <div>
+            <div class="flex items-center justify-between text-[10px] font-cinzel mb-1">
+              <span class="text-vampire-parchment">Vontade <span class="text-gray-500">Autocontrole + Determinação</span></span>
+              <span class="text-gray-500">${escapeHtml(trackLabel(sheet.willpower))}</span>
+            </div>
+            ${trackButtons(sheet.willpower, 'willpower', editable)}
+          </div>
+        </div>
+        <p class="text-[10px] font-cinzel text-gray-500">Clique numa caixa para alternar: íntegra, superficial (/) e agravada (✕).</p>`;
+
+      const identity = `<div class="grid sm:grid-cols-2 gap-2">
+        ${sheetInput('name', 'Nome', sheet.name, editable)}
+        ${sheetInput('chronicle', 'Crônica', sheet.chronicle, editable)}
+        ${sheetInput('clan', 'Clã', sheet.clan, editable, 'list="clanList"')}
+        ${sheetInput('predator', 'Predador', sheet.predator, editable, 'list="predatorList"')}
+        ${sheetInput('concept', 'Conceito', sheet.concept, editable)}
+        ${sheetInput('sire', 'Senhor', sheet.sire, editable)}
+        ${sheetInput('generation', 'Geração', sheet.generation, editable)}
+        ${state.role === 'storyteller' ? sheetInput('owner', 'Dono (nome de quem entrou). Em branco, qualquer um edita.', sheet.owner, true) : `<p class="text-[10px] font-cinzel text-gray-500 self-end">Dono: ${escapeHtml(sheet.owner || 'qualquer um na mesa')}</p>`}
+        ${sheetInput('ambition', 'Ambição', sheet.ambition, editable)}
+        ${sheetInput('desire', 'Desejo', sheet.desire, editable)}
+      </div>`;
+
+      const discs = (sheet.disciplines || []).map((d, i) => `
+        <div class="rounded-lg border border-vampire-ash/80 p-2 space-y-1.5 bg-vampire-crypt/40">
+          <div class="flex items-center gap-2">
+            <input type="text" data-disc-field="name" data-index="${i}" ${editable ? '' : 'disabled'} value="${escapeHtml(d.name || '')}" placeholder="Disciplina" class="${SHEET_FIELD_CLASS} font-cinzel flex-1">
+            ${renderDots(d.dots, 5, 'disc', String(i), editable)}
+            ${editable ? `<button type="button" data-action="remove-disc" data-index="${i}" class="text-gray-500 hover:text-red-300 text-xs px-1" title="Remover">✕</button>` : ''}
+          </div>
+          <textarea data-disc-field="desc" data-index="${i}" rows="2" ${editable ? '' : 'disabled'} placeholder="Poderes" class="${SHEET_FIELD_CLASS} font-sans leading-relaxed">${escapeHtml(d.desc || '')}</textarea>
+        </div>`).join('');
+
+      const merits = (sheet.merits || []).map((m, i) => `
+        <div class="flex items-center gap-2">
+          <input type="text" data-merit-field="name" data-index="${i}" ${editable ? '' : 'disabled'} value="${escapeHtml(m.name || '')}" placeholder="Vantagem ou defeito" class="${SHEET_FIELD_CLASS} font-cinzel flex-1">
+          ${renderDots(m.dots, 5, 'merit', String(i), editable)}
+          ${editable ? `<button type="button" data-action="remove-merit" data-index="${i}" class="text-gray-500 hover:text-red-300 text-xs px-1" title="Remover">✕</button>` : ''}
+        </div>`).join('');
+
+      const chronicle = `<div class="grid sm:grid-cols-2 gap-2">
+        ${sheetArea('convictions', 'Pilares e convicções', sheet.convictions, editable, 3)}
+        ${sheetArea('tenets', 'Princípios da crônica', sheet.tenets, editable, 3)}
+        ${sheetArea('bane', 'Perdição do clã', sheet.bane, editable, 2)}
+        ${sheetInput('baneSeverity', 'Gravidade da perdição', sheet.baneSeverity, editable)}
+        ${sheetArea('notes', 'Notas', sheet.notes, editable, 4)}
+        ${sheetArea('history', 'História', sheet.history, editable, 4)}
+        ${sheetArea('appearance', 'Aparência', sheet.appearance, editable, 2)}
+        ${sheetArea('traits', 'Traços distintivos', sheet.traits, editable, 2)}
+      </div>`;
+
+      const blood = `<div class="grid sm:grid-cols-2 gap-2">
+        ${sheetInput('resonance', 'Ressonância', sheet.resonance, editable)}
+        ${sheetInput('bloodSurge', 'Surto de sangue', sheet.bloodSurge, editable)}
+        ${sheetInput('recovered', 'Quantidade recuperada', sheet.recovered, editable)}
+        ${sheetInput('reroll', 'Rerrolagem de sangue', sheet.reroll, editable)}
+        ${sheetInput('powerBonus', 'Bônus de poder', sheet.powerBonus, editable)}
+        ${sheetInput('feedingPenalty', 'Penalidade de alimentação', sheet.feedingPenalty, editable)}
+        ${sheetInput('xpTotal', 'Experiência total', sheet.xpTotal, editable)}
+        ${sheetInput('xpSpent', 'Experiência gasta', sheet.xpSpent, editable)}
+        ${sheetInput('trueAge', 'Idade verdadeira', sheet.trueAge, editable)}
+        ${sheetInput('apparentAge', 'Idade aparente', sheet.apparentAge, editable)}
+        ${sheetInput('birth', 'Data de nascimento', sheet.birth, editable)}
+        ${sheetInput('death', 'Data de morte', sheet.death, editable)}
+      </div>`;
+
+      const parts = [`<div data-sheet-id="${escapeHtml(sheet.id)}" class="space-y-3">`];
+      if (!editable) {
+        parts.push('<p class="text-[11px] font-cinzel text-vampire-gold bg-vampire-black border border-vampire-gold/30 rounded-lg px-3 py-2">Consulta. Só o narrador, ou quem entrou com o nome do dono, pode alterar esta ficha.</p>');
+      }
+      parts.push(sheetSection('Durante a sessão', tracks));
+      parts.push(sheetSection('Quem é', identity));
+      parts.push(sheetSection('Atributos', groupedAttrHtml(sheet, editable)));
+      parts.push(sheetSection(
+        'Habilidades',
+        renderSkillsBlock(sheet, editable),
+        `<button type="button" data-action="toggle-skills" class="text-[10px] font-cinzel text-vampire-gold hover:text-white">${sheetUi.showAllSkills ? 'Ocultar zeros' : 'Mostrar todas'}</button>`
+      ));
+      parts.push(sheetSection(
+        'Disciplinas',
+        discs + (editable && sheet.disciplines.length < 6 ? '<button type="button" data-action="add-disc" class="text-[11px] font-cinzel text-vampire-gold hover:text-white">Adicionar disciplina</button>' : ''),
+      ));
+      parts.push(sheetSection(
+        'Vantagens e defeitos',
+        `<div class="space-y-2">${merits}</div>` + (editable && sheet.merits.length < 11 ? '<button type="button" data-action="add-merit" class="text-[11px] font-cinzel text-vampire-gold hover:text-white">Adicionar linha</button>' : ''),
+      ));
+      parts.push(sheetSection('Crônica', chronicle));
+      parts.push(sheetSection('Sangue e registros', blood));
+      if (editable) {
+        parts.push('<div class="flex justify-end"><button type="button" data-action="delete" class="text-[11px] font-cinzel text-red-300 hover:text-red-200">Apagar ficha</button></div>');
+      }
+      parts.push('</div>');
+      body.innerHTML = parts.join('');
+    }
+
+    function sheetIsOnMap(sheet) {
+      return state.tokens.some(t => t.sheetId === sheet.id || (!t.sheetId && sheet.name && (t.name || '').trim().toLowerCase() === sheet.name.trim().toLowerCase()));
+    }
+
+    function renderSheetCard(sheet) {
+      const editable = canEditSheet(sheet);
+      const meta = [sheet.clan, sheet.concept, sheet.predator].filter(Boolean).map(escapeHtml).join(' · ');
+      const onMap = sheetIsOnMap(sheet);
+      return `<article data-sheet-id="${escapeHtml(sheet.id)}" class="rounded-xl border border-vampire-ash bg-vampire-crypt p-2.5 space-y-2">
+        <div class="flex items-start justify-between gap-2">
+          <div class="min-w-0">
+            <div class="font-cinzel text-sm text-vampire-parchment font-bold truncate">${escapeHtml(sheet.name || 'Sem nome')}</div>
+            <div class="text-[10px] font-cinzel text-gray-400 truncate">${meta || 'Sem clã ou conceito'}</div>
+          </div>
+          <div class="flex flex-col items-end gap-0.5 flex-shrink-0">
+            <span class="text-[9px] uppercase tracking-wider font-cinzel ${onMap ? 'text-vampire-gold' : 'text-gray-600'}">${onMap ? 'No mapa' : 'Fora do mapa'}</span>
+            ${sheet.origin === 'pdf' ? '<span class="text-[9px] font-mono text-vampire-goldMuted">PDF</span>' : ''}
+          </div>
+        </div>
+        <div>
+          <div class="text-[10px] font-cinzel text-red-400 mb-1">Fome</div>
+          ${hungerButtons(sheet.hunger, editable)}
+        </div>
+        <div>
+          <div class="flex items-center justify-between text-[10px] font-cinzel mb-1"><span class="text-gray-300">Saúde</span><span class="text-gray-500">${escapeHtml(trackLabel(sheet.health))}</span></div>
+          ${trackButtons(sheet.health, 'health', editable)}
+        </div>
+        <div>
+          <div class="flex items-center justify-between text-[10px] font-cinzel mb-1"><span class="text-gray-300">Vontade</span><span class="text-gray-500">${escapeHtml(trackLabel(sheet.willpower))}</span></div>
+          ${trackButtons(sheet.willpower, 'willpower', editable)}
+        </div>
+        <div class="flex items-center justify-between gap-2">
+          ${stepper('Humanidade', 'humanity', sheet.humanity, editable)}
+          ${stepper('Potência', 'bloodPotency', sheet.bloodPotency, editable)}
+        </div>
+        <div class="flex gap-1">
+          <button type="button" data-action="open" class="flex-1 py-1 rounded-lg bg-vampire-black border border-vampire-ash text-[10px] font-cinzel text-vampire-parchment hover:border-vampire-gold/40">${editable ? 'Editar' : 'Ver'}</button>
+          <button type="button" data-action="link" class="flex-1 py-1 rounded-lg bg-vampire-black border border-vampire-gold/30 text-[10px] font-cinzel text-vampire-gold hover:border-vampire-gold">Vincular</button>
+          ${editable ? '<button type="button" data-action="delete" class="px-2 py-1 rounded-lg bg-vampire-black border border-red-950 text-[10px] font-cinzel text-red-300">Apagar</button>' : ''}
+        </div>
+      </article>`;
+    }
+
+    function renderSheetList() {
+      const list = document.getElementById('sheetList');
+      const count = document.getElementById('sheetCountLabel');
+      const hint = document.getElementById('sheetRoleHint');
+      const tokenHint = document.getElementById('sheetTokenHint');
+      if (count) count.textContent = state.sheets.length + (state.sheets.length === 1 ? ' ficha' : ' fichas');
+      if (hint) {
+        hint.textContent = state.role === 'storyteller'
+          ? 'Você altera qualquer ficha durante a sessão. O que um jogador cria ou apaga chega aqui.'
+          : 'Preencha a sua ficha ou anexe o PDF da ficha V5. O narrador recebe a ficha na hora.';
+      }
+      if (tokenHint) {
+        const tok = state.tokens.find(t => t.id === state.selectedTokenId);
+        tokenHint.textContent = tok
+          ? 'Token selecionado: ' + tok.name + '. Use Vincular na ficha correspondente.'
+          : 'Selecione um token no mapa para vincular a ficha. Passe o mouse nele para ver o resumo.';
+      }
+      if (!list) return;
+      if (!state.sheets.length) {
+        list.innerHTML = '<div class="border border-dashed border-vampire-ash/70 rounded-xl p-4 text-center text-[11px] font-cinzel text-gray-500 leading-relaxed">Nenhuma ficha ainda. Crie uma ou anexe o PDF preenchido.</div>';
+        return;
+      }
+      const ordered = state.sheets.slice().sort((a, b) => (a.name || '').localeCompare(b.name || '', 'pt'));
+      list.innerHTML = ordered.map(renderSheetCard).join('');
+    }
+
+    function rerenderEditingSheet() {
+      renderSheetList();
+      if (!state.editingSheetId) return;
+      const sheet = state.sheets.find(s => s.id === state.editingSheetId);
+      if (!sheet) return;
+      const body = document.getElementById('sheetModalBody');
+      const top = body ? body.scrollTop : 0;
+      renderSheetModal(sheet);
+      if (body) body.scrollTop = top;
+    }
+
+    function openSheetModal(id) {
+      hideTokenHover();
+      const sheet = state.sheets.find(s => s.id === id);
+      if (!sheet) return;
+      state.editingSheetId = id;
+      const anySkill = SHEET_SKILLS.some(s => ((sheet.skills[s.key] || {}).dots || 0) > 0);
+      sheetUi.showAllSkills = !anySkill;
+      renderSheetModal(sheet);
+      const modal = document.getElementById('sheetModal');
+      if (!modal) return;
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+      const body = document.getElementById('sheetModalBody');
+      if (body) body.scrollTop = 0;
+    }
+
+    function closeSheetModal() {
+      state.editingSheetId = null;
+      const modal = document.getElementById('sheetModal');
+      if (!modal) return;
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+      renderSheetList();
+    }
+
+    function createAndOpenSheet() {
+      const sheet = buildBlankSheet();
+      state.sheets.push(sheet);
+      saveSheets();
+      publishSheet(sheet);
+      renderSheetList();
+      openSheetModal(sheet.id);
+    }
+
+    function deleteSheet(id) {
+      const sheet = state.sheets.find(s => s.id === id);
+      if (!sheet || !canEditSheet(sheet)) return;
+      const label = sheet.name || 'sem nome';
+      if (!confirm('Apagar a ficha de ' + label + '?')) return;
+      state.sheets = state.sheets.filter(s => s.id !== id);
+      rememberRemovedSheet(id);
+      saveSheets();
+      broadcastRoomMessage({ type: 'SHEET_REMOVE', payload: { id: id } });
+      state.tokens.forEach(tok => {
+        if (tok.sheetId === id) {
+          tok.sheetId = null;
+          broadcastRoomMessage({ type: 'UPDATE_TOKEN', payload: tok });
+        }
+      });
+      renderAllTokens();
+      if (state.editingSheetId === id) closeSheetModal();
+      else renderSheetList();
+    }
+
+    function linkSheetToSelectedToken(sheetId) {
+      const hint = document.getElementById('sheetTokenHint');
+      const sheet = state.sheets.find(s => s.id === sheetId);
+      const tok = state.tokens.find(t => t.id === state.selectedTokenId);
+      if (!tok) {
+        if (hint) hint.textContent = 'Selecione um token no mapa antes de vincular.';
+        return;
+      }
+      if (state.role !== 'storyteller' && tok.owner !== state.name) {
+        if (hint) hint.textContent = 'Você só vincula fichas aos seus próprios tokens.';
+        return;
+      }
+      tok.sheetId = sheetId;
+      if (sheet && sheet.name) tok.name = sheet.name;
+      renderAllTokens();
+      broadcastRoomMessage({ type: 'UPDATE_TOKEN', payload: tok });
+      renderSheetList();
+      if (hint) hint.textContent = 'Ficha vinculada a ' + tok.name + '. Passe o mouse no token para ver o resumo.';
+    }
+
+    function syncLinkedTokenNames(sheet) {
+      let changed = false;
+      state.tokens.forEach(tok => {
+        if (tok.sheetId === sheet.id && sheet.name && tok.name !== sheet.name) {
+          tok.name = sheet.name;
+          broadcastRoomMessage({ type: 'UPDATE_TOKEN', payload: tok });
+          changed = true;
+        }
+      });
+      if (changed) renderAllTokens();
+    }
+
+    function openSheetForSelectedToken() {
+      const tok = state.tokens.find(t => t.id === state.selectedTokenId);
+      if (!tok) return;
+      let sheet = findSheetForToken(tok);
+      const canMake = state.role === 'storyteller' || tok.owner === state.name;
+      if (!sheet) {
+        if (!canMake) return;
+        sheet = buildBlankSheet({ name: tok.name, owner: tok.owner || state.name });
+        state.sheets.push(sheet);
+        saveSheets();
+        publishSheet(sheet);
+        tok.sheetId = sheet.id;
+        renderAllTokens();
+        broadcastRoomMessage({ type: 'UPDATE_TOKEN', payload: tok });
+      } else if (!tok.sheetId) {
+        tok.sheetId = sheet.id;
+        broadcastRoomMessage({ type: 'UPDATE_TOKEN', payload: tok });
+      }
+      openSheetModal(sheet.id);
+    }
+
+    function populateTokenSheetSelect() {
+      const sel = document.getElementById('tokenSheetSelect');
+      if (!sel) return;
+      const current = state.pendingTokenSheetId || '';
+      const options = ['<option value="">Sem ficha</option>'];
+      state.sheets.forEach(s => {
+        const label = (s.name || 'Sem nome') + (s.clan ? ' · ' + s.clan : '');
+        options.push('<option value="' + escapeHtml(s.id) + '">' + escapeHtml(label) + '</option>');
+      });
+      sel.innerHTML = options.join('');
+      sel.value = current;
+    }
+
+    function onTokenSheetPicked(id) {
+      state.pendingTokenSheetId = id || null;
+      if (!id) return;
+      const sheet = state.sheets.find(s => s.id === id);
+      const input = document.getElementById('tokenCharNameInput');
+      if (sheet && input && sheet.name) input.value = sheet.name;
+    }
+
+    function buildTokenHoverHtml(token) {
+      const sheet = findSheetForToken(token);
+      if (!sheet) {
+        return `<div class="p-2.5 space-y-1">
+          <div class="font-cinzel text-xs font-bold text-vampire-gold">${escapeHtml(token.name || 'Token')}</div>
+          <p class="text-[10px] font-cinzel text-gray-400 leading-snug">Sem ficha. Na aba Fichas, preencha ou anexe o PDF e vincule este token.</p>
+        </div>`;
+      }
+      const meta = [sheet.clan, sheet.predator, sheet.concept].filter(Boolean).map(escapeHtml).join(' · ');
+      const skills = SHEET_SKILLS.map(s => ({
+        label: s.label,
+        dots: (sheet.skills && sheet.skills[s.key] && sheet.skills[s.key].dots) || 0
+      })).filter(s => s.dots > 0).sort((a, b) => b.dots - a.dots);
+      const shown = skills.slice(0, 6);
+      const extra = skills.length - shown.length;
+      const skillLine = shown.map(s => escapeHtml(s.label) + ' ' + s.dots).join(' · ');
+      const discs = (sheet.disciplines || []).filter(d => (d.name && d.name.trim()) || d.dots);
+      const discLine = discs.map(d => escapeHtml(d.name || 'Disciplina') + ' ' + (d.dots || 0)).join(' · ');
+      const attrLine = SHEET_ATTRS.map(a => a.short + ' ' + (sheet.attributes[a.key] || 0)).join(' ');
+      const gen = sheet.generation ? ' <span class="text-gray-500">· Ger. ' + escapeHtml(sheet.generation) + '</span>' : '';
+      return `<div class="p-2.5 space-y-1.5">
+        <div>
+          <div class="font-cinzel text-sm font-bold text-vampire-parchment leading-tight">${escapeHtml(sheet.name || token.name || 'Sem nome')}${gen}</div>
+          ${meta ? `<div class="text-[10px] font-cinzel text-vampire-gold/90 leading-snug">${meta}</div>` : ''}
+        </div>
+        <div class="text-[10px] font-cinzel text-gray-300 leading-relaxed"><span class="text-red-400">Saúde</span> ${trackGlyphs(sheet.health)} <span class="text-gray-500">${escapeHtml(trackLabel(sheet.health))}</span></div>
+        <div class="text-[10px] font-cinzel text-gray-300"><span class="text-red-400">Fome</span> <span class="tracking-wide text-red-300">${hungerPips(sheet.hunger || 0)}</span></div>
+        <div class="text-[10px] font-cinzel text-gray-300 leading-relaxed"><span class="text-vampire-gold">Vontade</span> ${trackGlyphs(sheet.willpower)} <span class="text-gray-500">${escapeHtml(trackLabel(sheet.willpower))}</span></div>
+        <div class="text-[10px] font-cinzel text-gray-400">Humanidade ${sheet.humanity || 0} · Potência ${sheet.bloodPotency || 0}</div>
+        <div class="text-[10px] font-mono text-vampire-parchment/90 leading-relaxed">${attrLine}</div>
+        <div class="text-[10px] font-cinzel text-gray-300 leading-snug"><span class="text-gray-500">Habilidades</span> ${skillLine || '—'}${extra > 0 ? ' e mais ' + extra : ''}</div>
+        ${discLine ? `<div class="text-[10px] font-cinzel text-gray-300 leading-snug"><span class="text-gray-500">Disciplinas</span> ${discLine}</div>` : ''}
+      </div>`;
+    }
+
+    function showTokenHover(token, el) {
+      const card = document.getElementById('tokenHoverCard');
+      if (!card || !token || !el) return;
+      card.innerHTML = buildTokenHoverHtml(token);
+      card.classList.remove('hidden');
+      const rect = el.getBoundingClientRect();
+      const margin = 10;
+      const cw = card.offsetWidth || 260;
+      const ch = card.offsetHeight || 180;
+      let left = rect.right + margin;
+      let top = rect.top;
+      if (left + cw > window.innerWidth - 8) left = rect.left - cw - margin;
+      if (left < 8) left = 8;
+      if (top + ch > window.innerHeight - 8) top = window.innerHeight - ch - 8;
+      if (top < 8) top = 8;
+      card.style.left = left + 'px';
+      card.style.top = top + 'px';
+      card.dataset.tokenId = token.id;
+    }
+
+    function hideTokenHover(tokenId) {
+      const card = document.getElementById('tokenHoverCard');
+      if (!card) return;
+      if (tokenId && card.dataset.tokenId && card.dataset.tokenId !== tokenId) return;
+      card.classList.add('hidden');
+      card.dataset.tokenId = '';
+    }
+
+    function onSheetEdit(e) {
+      const el = e.target;
+      if (!el || !el.dataset) return;
+      const host = el.closest('[data-sheet-id]');
+      if (!host) return;
+      const sheet = state.sheets.find(s => s.id === host.dataset.sheetId);
+      if (!sheet || !canEditSheet(sheet)) return;
+      if (el.dataset.field) {
+        sheet[el.dataset.field] = el.value;
+        if (el.dataset.field === 'name' && e.type === 'input') {
+          const title = document.getElementById('sheetModalTitle');
+          if (title) title.textContent = el.value.trim() || 'Ficha sem nome';
+        }
+        if (el.dataset.field === 'name' && e.type === 'change') syncLinkedTokenNames(sheet);
+      } else if (el.dataset.spec) {
+        skillState(sheet, el.dataset.spec).spec = el.value;
+      } else if (el.dataset.discField) {
+        const d = sheet.disciplines[parseInt(el.dataset.index, 10)];
+        if (d) d[el.dataset.discField] = el.value;
+      } else if (el.dataset.meritField) {
+        const m = sheet.merits[parseInt(el.dataset.index, 10)];
+        if (m) m[el.dataset.meritField] = el.value;
+      } else return;
+      touchSheet(sheet);
+      if (e.type === 'change') renderSheetList();
+    }
+
+    function onSheetClick(e) {
+      const trigger = e.target.closest('[data-cycle], [data-set-hunger], [data-step], [data-set-dots], [data-action]');
+      if (!trigger) return;
+      const host = trigger.closest('[data-sheet-id]');
+      if (!host) return;
+      const sheet = state.sheets.find(s => s.id === host.dataset.sheetId);
+      if (!sheet) return;
+      const action = trigger.dataset.action;
+
+      if (action === 'toggle-skills') {
+        sheetUi.showAllSkills = !sheetUi.showAllSkills;
+        rerenderEditingSheet();
+        return;
+      }
+      if (action === 'open') {
+        openSheetModal(sheet.id);
+        return;
+      }
+      if (action === 'link') {
+        linkSheetToSelectedToken(sheet.id);
+        return;
+      }
+      if (action === 'delete') {
+        deleteSheet(sheet.id);
+        return;
+      }
+      if (!canEditSheet(sheet)) return;
+
+      if (action === 'add-disc') {
+        if (sheet.disciplines.length >= 6) return;
+        sheet.disciplines.push({ name: '', dots: 0, desc: '' });
+        touchSheet(sheet);
+        rerenderEditingSheet();
+        return;
+      }
+      if (action === 'remove-disc') {
+        sheet.disciplines.splice(parseInt(trigger.dataset.index, 10), 1);
+        if (!sheet.disciplines.length) sheet.disciplines.push({ name: '', dots: 0, desc: '' });
+        touchSheet(sheet);
+        rerenderEditingSheet();
+        return;
+      }
+      if (action === 'add-merit') {
+        if (sheet.merits.length >= 11) return;
+        sheet.merits.push({ name: '', dots: 0 });
+        touchSheet(sheet);
+        rerenderEditingSheet();
+        return;
+      }
+      if (action === 'remove-merit') {
+        sheet.merits.splice(parseInt(trigger.dataset.index, 10), 1);
+        if (!sheet.merits.length) sheet.merits.push({ name: '', dots: 0 });
+        touchSheet(sheet);
+        rerenderEditingSheet();
+        return;
+      }
+      if (trigger.dataset.cycle) {
+        const kind = trigger.dataset.cycle === 'willpower' ? 'willpower' : 'health';
+        const index = parseInt(trigger.dataset.index, 10);
+        const track = sheet[kind];
+        if (!Array.isArray(track) || index < 0 || index >= track.length) return;
+        track[index] = nextBox(track[index]);
+        touchSheet(sheet);
+        rerenderEditingSheet();
+        return;
+      }
+      if (trigger.dataset.setHunger != null && trigger.hasAttribute('data-set-hunger')) {
+        sheet.hunger = clampInt(trigger.dataset.setHunger, 0, 5);
+        applySheetHunger(sheet);
+        touchSheet(sheet);
+        rerenderEditingSheet();
+        return;
+      }
+      if (trigger.dataset.step) {
+        const key = trigger.dataset.step === 'bloodPotency' ? 'bloodPotency' : 'humanity';
+        const delta = parseInt(trigger.dataset.delta, 10) || 0;
+        sheet[key] = clampInt((sheet[key] || 0) + delta, 0, 10);
+        touchSheet(sheet);
+        rerenderEditingSheet();
+        return;
+      }
+      if (trigger.dataset.setDots) {
+        const kind = trigger.dataset.setDots;
+        const key = trigger.dataset.key;
+        const value = clampInt(trigger.dataset.value, 0, 5);
+        if (kind === 'attr' && Object.prototype.hasOwnProperty.call(sheet.attributes, key)) {
+          const cur = sheet.attributes[key] || 0;
+          sheet.attributes[key] = cur === value ? Math.max(0, value - 1) : value;
+          syncDerivedTracks(sheet);
+        } else if (kind === 'skill') {
+          const sk = skillState(sheet, key);
+          sk.dots = sk.dots === value ? Math.max(0, value - 1) : value;
+        } else if (kind === 'disc') {
+          const d = sheet.disciplines[Number(key)];
+          if (!d) return;
+          d.dots = d.dots === value ? Math.max(0, value - 1) : value;
+        } else if (kind === 'merit') {
+          const m = sheet.merits[Number(key)];
+          if (!m) return;
+          m.dots = m.dots === value ? Math.max(0, value - 1) : value;
+        } else return;
+        touchSheet(sheet);
+        rerenderEditingSheet();
+      }
+    }
+
+    function fieldRaw(fields, name) {
+      const entry = fields[name];
+      if (!entry) return undefined;
+      const item = Array.isArray(entry) ? entry[0] : entry;
+      return item ? item.value : undefined;
+    }
+
+    function isChecked(fields, name) {
+      const v = fieldRaw(fields, name);
+      return v === true || v === 'Yes' || v === '/Yes' || v === 'On';
+    }
+
+    function textValue(fields, name) {
+      const v = fieldRaw(fields, name);
+      if (v == null || typeof v === 'boolean') return '';
+      return String(v).trim();
+    }
+
+    function countDots(fields, prefix, max) {
+      let n = 0;
+      for (let i = 1; i <= max; i++) {
+        const key = prefix + (i === 10 ? '0' : String(i));
+        if (isChecked(fields, key)) n = i;
+      }
+      return n;
+    }
+
+    function countIndexed(fields, prefix, index) {
+      let n = 0;
+      for (let i = 1; i <= 5; i++) {
+        if (isChecked(fields, prefix + index + '.' + i)) n = i;
+      }
+      return n;
+    }
+
+    function mapPdfFields(fields) {
+      const attributes = {};
+      SHEET_ATTRS.forEach(a => { attributes[a.key] = countDots(fields, a.pdf, 5); });
+      const skills = {};
+      SHEET_SKILLS.forEach(s => { skills[s.key] = { dots: countDots(fields, s.pdf, 5), spec: '' }; });
+      const disciplines = [];
+      for (let i = 1; i <= 6; i++) {
+        const name = textValue(fields, 'DISCIPLINA ' + i);
+        const dots = countIndexed(fields, 'DSCP', i);
+        const desc = textValue(fields, 'Desc.Disc.' + i);
+        if (name || dots || desc) disciplines.push({ name: name, dots: dots, desc: desc });
+      }
+      const merits = [];
+      for (let i = 1; i <= 11; i++) {
+        const name = textValue(fields, 'Vantagens e Defeitos ' + i);
+        const dots = countIndexed(fields, 'V&D', i);
+        if (name || dots) merits.push({ name: name, dots: dots });
+      }
+      return normalizeSheet({
+        id: 'sheet_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+        origin: 'pdf',
+        updatedAt: Date.now(),
+        name: textValue(fields, 'NOME DO PERSONAGEM'),
+        chronicle: textValue(fields, 'CRÔNICA'),
+        sire: textValue(fields, 'SENHOR'),
+        concept: textValue(fields, 'CONCEITO'),
+        predator: textValue(fields, 'PREDADOR'),
+        clan: textValue(fields, 'CLÃ'),
+        generation: textValue(fields, 'GERAÇÃO'),
+        ambition: textValue(fields, 'AMBIÇÃO'),
+        desire: textValue(fields, 'DESEJO'),
+        convictions: textValue(fields, 'Pilares & Convicções'),
+        tenets: textValue(fields, 'Princípios da Crônica'),
+        bane: textValue(fields, 'Perdição do Clã'),
+        baneSeverity: textValue(fields, 'Gravidade da Perdição'),
+        notes: textValue(fields, 'Notas'),
+        resonance: textValue(fields, 'Ressonância'),
+        bloodSurge: textValue(fields, 'Surto de Sangue'),
+        recovered: textValue(fields, 'Quantidade Recuperada'),
+        reroll: textValue(fields, 'Rerrolagem de Sangue'),
+        powerBonus: textValue(fields, 'Bônus de Poder'),
+        feedingPenalty: textValue(fields, 'Penalidade de Alimentação'),
+        xpTotal: textValue(fields, 'XP Total'),
+        xpSpent: textValue(fields, 'XP Gasta'),
+        trueAge: textValue(fields, 'Idade Verdadeira'),
+        apparentAge: textValue(fields, 'Idade Aparente'),
+        birth: textValue(fields, 'Data de Nascimento'),
+        death: textValue(fields, 'Data de Morte'),
+        appearance: textValue(fields, 'Aparência'),
+        traits: textValue(fields, 'Traços Distintivos'),
+        history: textValue(fields, 'História'),
+        attributes: attributes,
+        skills: skills,
+        disciplines: disciplines,
+        merits: merits,
+        hunger: countDots(fields, 'Fome', 5),
+        humanity: countDots(fields, 'Humanidade', 10),
+        bloodPotency: countDots(fields, 'PdS', 10)
+      });
+    }
+
+    async function sheetFromPdfBuffer(buffer) {
+      if (!window.pdfjsLib) throw new Error('pdfjs');
+      const data = buffer instanceof Uint8Array ? buffer : new Uint8Array(buffer);
+      const pdf = await window.pdfjsLib.getDocument({ data: data, disableWorker: true }).promise;
+      const raw = await pdf.getFieldObjects();
+      const fields = {};
+      Object.keys(raw || {}).forEach(k => { fields[String(k).trim()] = raw[k]; });
+      if (!fields['NOME DO PERSONAGEM'] && !fields['FOR1'] && !fields['CLÃ']) throw new Error('unrecognized');
+      return mapPdfFields(fields);
+    }
+
+    async function handleSheetPdfUpload(e) {
+      const file = e.target.files && e.target.files[0];
+      e.target.value = '';
+      const status = document.getElementById('sheetImportStatus');
+      if (!file) return;
+      if (status) status.textContent = 'Lendo a ficha...';
+      try {
+        const sheet = await sheetFromPdfBuffer(await file.arrayBuffer());
+        sheet.owner = state.name || '';
+        state.sheets.push(sheet);
+        saveSheets();
+        publishSheet(sheet);
+        renderSheetList();
+        if (status) status.textContent = (sheet.name || 'Ficha') + ' entrou na coterie.';
+        openSheetModal(sheet.id);
+      } catch (err) {
+        console.error(err);
+        if (status) status.textContent = 'Não reconheci este PDF.';
+        alert('Não consegui ler os campos deste PDF. Use a ficha V5 editável, com as caixinhas preenchíveis, ou preencha a ficha na mão.');
+      }
+    }
+
+    function initSheetUi() {
+      if (sheetUi.ready) return;
+      sheetUi.ready = true;
+      document.addEventListener('click', onSheetClick);
+      const body = document.getElementById('sheetModalBody');
+      if (body) {
+        body.addEventListener('input', onSheetEdit);
+        body.addEventListener('change', onSheetEdit);
+      }
+      const modal = document.getElementById('sheetModal');
+      if (modal) {
+        modal.addEventListener('click', (e) => {
+          if (e.target === modal) closeSheetModal();
+        });
+      }
+      document.addEventListener('keydown', (e) => {
+        if (e.key !== 'Escape') return;
+        const m = document.getElementById('sheetModal');
+        if (m && !m.classList.contains('hidden')) closeSheetModal();
+      });
+      window.addEventListener('scroll', () => hideTokenHover(), true);
+      state.sheets = loadSheetsFromStorage();
+      try {
+        const removed = JSON.parse(localStorage.getItem(SHEET_STORAGE_KEY + '_removed') || '[]');
+        state.removedSheetIds = Array.isArray(removed) ? removed : [];
+      } catch (e) {
+        state.removedSheetIds = [];
+      }
+      renderSheetList();
+    }
+
+    initSheetUi();
+
 
     // Inicialização da Página
     window.addEventListener('DOMContentLoaded', () => {
