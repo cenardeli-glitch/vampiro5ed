@@ -3132,7 +3132,7 @@
         name: (name || '').trim() || ('Andar ' + (state.mapLayers.length + 1)),
         src: src,
         drawingDataUrl: null,
-        fow: { enabled: false, maskDataUrl: null }
+        fow: { enabled: true, maskDataUrl: null }
       };
       state.mapLayers.push(layer);
       broadcastRoomMessage({ type: 'MAP_LAYER_ADD', payload: layer });
@@ -4834,11 +4834,18 @@
       if (status) status.textContent = 'Salvo e enviado à mesa';
     }
 
-    function canEditSheet(sheet) {
+    function canViewSheet(sheet) {
       if (!sheet) return false;
       if (state.role === 'storyteller') return true;
-      if (!sheet.owner) return true;
-      return sheet.owner === state.name;
+      return !!sheet.owner && sheet.owner === state.name;
+    }
+
+    function canEditSheet(sheet) {
+      return canViewSheet(sheet);
+    }
+
+    function visibleSheets() {
+      return state.sheets.filter(canViewSheet);
     }
 
     function buildBlankSheet(partial) {
@@ -5082,7 +5089,7 @@
         ${sheetInput('concept', 'Conceito', sheet.concept, editable)}
         ${sheetInput('sire', 'Senhor', sheet.sire, editable)}
         ${sheetInput('generation', 'Geração', sheet.generation, editable)}
-        ${state.role === 'storyteller' ? sheetInput('owner', 'Dono (nome de quem entrou). Em branco, qualquer um edita.', sheet.owner, true) : `<p class="text-[10px] font-cinzel text-gray-500 self-end">Dono: ${escapeHtml(sheet.owner || 'qualquer um na mesa')}</p>`}
+        ${state.role === 'storyteller' ? sheetInput('owner', 'Dono (nome de quem entrou). Só essa pessoa e você veem a ficha.', sheet.owner, true) : `<p class="text-[10px] font-cinzel text-gray-500 self-end">Dono: ${escapeHtml(sheet.owner || 'narrador')}</p>`}
         ${sheetInput('ambition', 'Ambição', sheet.ambition, editable)}
         ${sheetInput('desire', 'Desejo', sheet.desire, editable)}
       </div>`;
@@ -5207,11 +5214,12 @@
       const count = document.getElementById('sheetCountLabel');
       const hint = document.getElementById('sheetRoleHint');
       const tokenHint = document.getElementById('sheetTokenHint');
-      if (count) count.textContent = state.sheets.length + (state.sheets.length === 1 ? ' ficha' : ' fichas');
+      const visible = visibleSheets();
+      if (count) count.textContent = visible.length + (visible.length === 1 ? ' ficha' : ' fichas');
       if (hint) {
         hint.textContent = state.role === 'storyteller'
-          ? 'Você altera qualquer ficha durante a sessão. O que um jogador cria ou apaga chega aqui.'
-          : 'Preencha a sua ficha ou anexe o PDF da ficha V5. O narrador recebe a ficha na hora.';
+          ? 'Você vê e altera todas as fichas. Cada jogador só vê a própria.'
+          : 'Só você e o narrador veem esta ficha. Os outros jogadores não têm acesso.';
       }
       if (tokenHint) {
         const tok = state.tokens.find(t => t.id === state.selectedTokenId);
@@ -5220,11 +5228,11 @@
           : 'Selecione um token no mapa para vincular a ficha. Passe o mouse nele para ver o resumo.';
       }
       if (!list) return;
-      if (!state.sheets.length) {
+      if (!visible.length) {
         list.innerHTML = '<div class="border border-dashed border-vampire-ash/70 rounded-xl p-4 text-center text-[11px] font-cinzel text-gray-500 leading-relaxed">Nenhuma ficha ainda. Crie uma ou anexe o PDF preenchido.</div>';
         return;
       }
-      const ordered = state.sheets.slice().sort((a, b) => (a.name || '').localeCompare(b.name || '', 'pt'));
+      const ordered = visible.slice().sort((a, b) => (a.name || '').localeCompare(b.name || '', 'pt'));
       list.innerHTML = ordered.map(renderSheetCard).join('');
     }
 
@@ -5232,7 +5240,10 @@
       renderSheetList();
       if (!state.editingSheetId) return;
       const sheet = state.sheets.find(s => s.id === state.editingSheetId);
-      if (!sheet) return;
+      if (!sheet || !canViewSheet(sheet)) {
+        closeSheetModal();
+        return;
+      }
       const body = document.getElementById('sheetModalBody');
       const top = body ? body.scrollTop : 0;
       renderSheetModal(sheet);
@@ -5242,7 +5253,7 @@
     function openSheetModal(id) {
       hideTokenHover();
       const sheet = state.sheets.find(s => s.id === id);
-      if (!sheet) return;
+      if (!sheet || !canViewSheet(sheet)) return;
       state.editingSheetId = id;
       const anySkill = SHEET_SKILLS.some(s => ((sheet.skills[s.key] || {}).dots || 0) > 0);
       sheetUi.showAllSkills = !anySkill;
@@ -5301,6 +5312,10 @@
         if (hint) hint.textContent = 'Selecione um token no mapa antes de vincular.';
         return;
       }
+      if (sheet && !canViewSheet(sheet)) {
+        if (hint) hint.textContent = 'Essa ficha não é sua.';
+        return;
+      }
       if (state.role !== 'storyteller' && tok.owner !== state.name) {
         if (hint) hint.textContent = 'Você só vincula fichas aos seus próprios tokens.';
         return;
@@ -5329,6 +5344,7 @@
       const tok = state.tokens.find(t => t.id === state.selectedTokenId);
       if (!tok) return;
       let sheet = findSheetForToken(tok);
+      if (sheet && !canViewSheet(sheet)) return;
       const canMake = state.role === 'storyteller' || tok.owner === state.name;
       if (!sheet) {
         if (!canMake) return;
@@ -5351,7 +5367,7 @@
       if (!sel) return;
       const current = state.pendingTokenSheetId || '';
       const options = ['<option value="">Sem ficha</option>'];
-      state.sheets.forEach(s => {
+      visibleSheets().forEach(s => {
         const label = (s.name || 'Sem nome') + (s.clan ? ' · ' + s.clan : '');
         options.push('<option value="' + escapeHtml(s.id) + '">' + escapeHtml(label) + '</option>');
       });
@@ -5369,6 +5385,11 @@
 
     function buildTokenHoverHtml(token) {
       const sheet = findSheetForToken(token);
+      if (sheet && !canViewSheet(sheet)) {
+        return `<div class="p-2.5">
+          <div class="font-cinzel text-xs font-bold text-vampire-gold">${escapeHtml(token.name || 'Token')}</div>
+        </div>`;
+      }
       if (!sheet) {
         return `<div class="p-2.5 space-y-1">
           <div class="font-cinzel text-xs font-bold text-vampire-gold">${escapeHtml(token.name || 'Token')}</div>
