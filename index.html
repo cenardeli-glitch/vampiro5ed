@@ -4578,11 +4578,27 @@
       return next;
     }
 
+    function getFortitudeResilienceBonus(sheet) {
+      if (!sheet || !Array.isArray(sheet.disciplines)) return 0;
+      const normalize = (str) => String(str || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+      let bonus = 0;
+      sheet.disciplines.forEach(d => {
+        if (!d) return;
+        const nameNorm = normalize(d.name);
+        const descNorm = normalize(d.desc);
+        if (nameNorm.includes('fortitude') && descNorm.includes('resiliencia')) {
+          bonus += clampInt(d.dots, 0, 5);
+        }
+      });
+      return bonus;
+    }
+
     function syncDerivedTracks(sheet) {
       const vigor = clampInt(sheet.attributes && sheet.attributes.vigor, 0, 5);
       const comp = clampInt(sheet.attributes && sheet.attributes.autocontrole, 0, 5);
       const res = clampInt(sheet.attributes && sheet.attributes.determinacao, 0, 5);
-      sheet.health = fitTrack(sheet.health, Math.max(1, vigor + 3));
+      const fortitudeBonus = getFortitudeResilienceBonus(sheet);
+      sheet.health = fitTrack(sheet.health, Math.max(1, vigor + 3 + fortitudeBonus));
       sheet.willpower = fitTrack(sheet.willpower, Math.max(1, comp + res));
     }
 
@@ -4920,7 +4936,7 @@
           </div>
           <div>
             <div class="flex items-center justify-between text-[10px] font-cinzel mb-1">
-              <span class="text-vampire-parchment">Saúde <span class="text-gray-500">Vigor + 3</span></span>
+              <span class="text-vampire-parchment">Saúde <span class="text-gray-500">${getFortitudeResilienceBonus(sheet) > 0 ? `Vigor + 3 + Fortitude (${getFortitudeResilienceBonus(sheet)})` : 'Vigor + 3'}</span></span>
               <span class="text-gray-500">${escapeHtml(trackLabel(sheet.health))}</span>
             </div>
             ${trackButtons(sheet.health, 'health', editable)}
@@ -5323,7 +5339,10 @@
         skillState(sheet, el.dataset.spec).spec = el.value;
       } else if (el.dataset.discField) {
         const d = sheet.disciplines[parseInt(el.dataset.index, 10)];
-        if (d) d[el.dataset.discField] = el.value;
+        if (d) {
+          d[el.dataset.discField] = el.value;
+          syncDerivedTracks(sheet);
+        }
       } else if (el.dataset.meritField) {
         const m = sheet.merits[parseInt(el.dataset.index, 10)];
         if (m) m[el.dataset.meritField] = el.value;
@@ -5370,6 +5389,7 @@
       if (action === 'remove-disc') {
         sheet.disciplines.splice(parseInt(trigger.dataset.index, 10), 1);
         if (!sheet.disciplines.length) sheet.disciplines.push({ name: '', dots: 0, desc: '' });
+        syncDerivedTracks(sheet);
         touchSheet(sheet);
         rerenderEditingSheet();
         return;
@@ -5428,6 +5448,7 @@
           const d = sheet.disciplines[Number(key)];
           if (!d) return;
           d.dots = d.dots === value ? Math.max(0, value - 1) : value;
+          syncDerivedTracks(sheet);
         } else if (kind === 'merit') {
           const m = sheet.merits[Number(key)];
           if (!m) return;
