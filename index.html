@@ -735,28 +735,6 @@
               <div class="grid grid-cols-6 gap-1" id="hungerDotsContainer"></div>
             </div>
 
-            <!-- Dificuldade vs Disputa -->
-            <div>
-              <div class="flex items-center justify-between text-[11px] mb-0.5">
-                <span class="font-cinzel text-vampire-parchment font-semibold">Dificuldade:</span>
-                <button type="button" id="btnToggleOpposed" onclick="toggleOpposedMode()" class="text-[9px] font-cinzel font-bold text-vampire-gold hover:text-white px-1 py-0.2 rounded border border-vampire-gold/30 bg-vampire-black">
-                  <span id="opposedModeText">Fixa</span>
-                </button>
-              </div>
-              <div id="difficultyRow" class="grid grid-cols-7 gap-0.5">
-                <button type="button" onclick="setDifficulty(1)" class="diff-btn py-0.5 rounded bg-vampire-black border border-vampire-ash text-[10px] font-mono font-bold text-gray-400">1</button>
-                <button type="button" onclick="setDifficulty(2)" class="diff-btn py-0.5 rounded bg-vampire-blood border border-red-900 text-white text-[10px] font-mono font-bold shadow-blood-glow">2</button>
-                <button type="button" onclick="setDifficulty(3)" class="diff-btn py-0.5 rounded bg-vampire-black border border-vampire-ash text-[10px] font-mono font-bold text-gray-400">3</button>
-                <button type="button" onclick="setDifficulty(4)" class="diff-btn py-0.5 rounded bg-vampire-black border border-vampire-ash text-[10px] font-mono font-bold text-gray-400">4</button>
-                <button type="button" onclick="setDifficulty(5)" class="diff-btn py-0.5 rounded bg-vampire-black border border-vampire-ash text-[10px] font-mono font-bold text-gray-400">5</button>
-                <button type="button" onclick="setDifficulty(6)" class="diff-btn py-0.5 rounded bg-vampire-black border border-vampire-ash text-[10px] font-mono font-bold text-gray-400">6</button>
-                <button type="button" onclick="setDifficulty(7)" class="diff-btn py-0.5 rounded bg-vampire-black border border-vampire-ash text-[10px] font-mono font-bold text-gray-400">7+</button>
-              </div>
-              <div id="opposedNotice" class="hidden p-1 mt-1 rounded bg-vampire-driedBlood/30 border border-vampire-driedBlood text-[9px] text-red-300 font-cinzel leading-tight">
-                Modo Disputa: Sem dificuldade fixa.
-              </div>
-            </div>
-
             <!-- Botão Rolar -->
             <button type="button" onclick="performRoll()" class="w-full py-2 rounded-xl bg-gradient-to-r from-vampire-driedBlood via-vampire-blood to-vampire-driedBlood hover:from-vampire-crimson hover:to-vampire-blood text-vampire-parchment font-gothic text-sm tracking-widest uppercase transition shadow-blood-glow flex items-center justify-center gap-1.5 border border-red-900/60">
               <span class="text-vampire-gold">☥</span>
@@ -1178,7 +1156,7 @@
       pool: 6,
       hunger: 1,
       difficulty: 2,
-      isOpposed: false,
+      isOpposed: true,
       rolls: [],
       pendingWillpowerRoll: null,
       selectedDiceForReroll: new Set(),
@@ -1322,89 +1300,6 @@
       }
       if (window.lucide) window.lucide.createIcons();
     };
-
-    function playGothicDiceRollSound() {
-      try {
-        const gain = getPersonalGainNode();
-        const now = Tone.now();
-        for (let i = 0; i < 4; i++) {
-          const delay = now + (i * 0.045) + (Math.random() * 0.02);
-          const filter = new Tone.Filter({ frequency: 2800 + Math.random() * 1200, type: "bandpass", Q: 3 }).connect(gain);
-          const noise = new Tone.NoiseSynth({
-            noise: { type: 'white' },
-            envelope: { attack: 0.001, decay: 0.04, sustain: 0, release: 0.02 }
-          }).connect(filter);
-          noise.volume.value = -10 + (i * 1.5);
-          noise.triggerAttackRelease('32n', delay);
-          setTimeout(() => { noise.dispose(); filter.dispose(); }, 400);
-        }
-        setTimeout(() => {
-          const woodImpact = new Tone.MembraneSynth({
-            pitchDecay: 0.015,
-            octaves: 1.5,
-            oscillator: { type: 'sine' },
-            envelope: { attack: 0.001, decay: 0.08, sustain: 0 }
-          }).connect(gain);
-          woodImpact.volume.value = -12;
-          woodImpact.triggerAttackRelease('G2', '16n');
-          setTimeout(() => woodImpact.dispose(), 300);
-        }, 160);
-      } catch (e) {}
-    }
-
-    function playGothicCriticalSound() {
-      try {
-        const gain = getPersonalGainNode();
-        const bell = new Tone.MetalSynth({
-          frequency: 146.8,
-          envelope: { attack: 0.001, decay: 2.2, release: 0.4 },
-          harmonicity: 3.2,
-          modulationIndex: 18,
-          resonance: 750,
-          octaves: 2.2
-        }).connect(gain);
-        bell.volume.value = -5;
-        bell.triggerAttackRelease('D3', '1n');
-
-        const choir = new Tone.PolySynth(Tone.Synth, {
-          oscillator: { type: 'triangle' },
-          envelope: { attack: 0.15, decay: 1.6, sustain: 0.2, release: 1.2 }
-        }).connect(gain);
-        choir.volume.value = -16;
-        choir.triggerAttackRelease(['D3', 'A3', 'D4', 'F#4'], '2n', Tone.now() + 0.05);
-
-        setTimeout(() => {
-          bell.dispose();
-          choir.dispose();
-        }, 3000);
-      } catch (e) {}
-    }
-
-    function playBeastFailureSound() {
-      try {
-        const gain = getPersonalGainNode();
-        const sub = new Tone.MembraneSynth({
-          pitchDecay: 0.12,
-          octaves: 4.5,
-          oscillator: { type: 'sawtooth' },
-          envelope: { attack: 0.01, decay: 0.8, sustain: 0.02, release: 0.6 }
-        }).connect(gain);
-        sub.volume.value = 0;
-        sub.triggerAttackRelease('Bb0', '1n');
-
-        const growl = new Tone.NoiseSynth({
-          noise: { type: 'brown' },
-          envelope: { attack: 0.08, decay: 0.6, sustain: 0.1, release: 0.4 }
-        }).connect(gain);
-        growl.volume.value = -8;
-        growl.triggerAttackRelease('2n', Tone.now() + 0.05);
-
-        setTimeout(() => {
-          sub.dispose();
-          growl.dispose();
-        }, 1500);
-      } catch (e) {}
-    }
 
     function playChatNotification() {
       try {
@@ -2423,11 +2318,6 @@
       if (type === 'NEW_ROLL') {
         state.rolls.unshift(payload);
         renderRollsFeed();
-        if (payload.evaluation?.outcomeType === 'critical' || payload.evaluation?.outcomeType === 'messy') {
-          playGothicCriticalSound();
-        } else if (payload.evaluation?.outcomeType === 'bestial') {
-          playBeastFailureSound();
-        }
       } else if (type === 'UPDATE_ROLL') {
         const idx = state.rolls.findIndex(r => r.id === payload.id);
         if (idx !== -1) {
@@ -3579,32 +3469,7 @@
       updateHungerUI();
     };
 
-    window.setDifficulty = function(val) {
-      state.difficulty = val;
-      document.querySelectorAll('.diff-btn').forEach((btn, idx) => {
-        if (idx + 1 === val) {
-          btn.className = 'diff-btn py-0.5 rounded bg-vampire-blood border border-red-900 text-white text-[10px] font-mono font-bold shadow-blood-glow';
-        } else {
-          btn.className = 'diff-btn py-0.5 rounded bg-vampire-black border border-vampire-ash text-[10px] font-mono font-bold text-gray-400';
-        }
-      });
-    };
 
-    window.toggleOpposedMode = function() {
-      state.isOpposed = !state.isOpposed;
-      const text = document.getElementById('opposedModeText');
-      const diffRow = document.getElementById('difficultyRow');
-      const notice = document.getElementById('opposedNotice');
-      if (state.isOpposed) {
-        text.innerText = 'Disputa';
-        diffRow.classList.add('opacity-30', 'pointer-events-none');
-        notice.classList.remove('hidden');
-      } else {
-        text.innerText = 'Fixa';
-        diffRow.classList.remove('opacity-30', 'pointer-events-none');
-        notice.classList.add('hidden');
-      }
-    };
 
     window.handleLeaveRoom = function() {
       if (confirm("Deseja abandonar este santuário e voltar à escuridão?")) {
@@ -4192,7 +4057,7 @@
       document.getElementById('hungerValueBadge').innerText = state.hunger;
     }
 
-    function evaluateV5Roll(regularResults, hungerResults, difficulty, isOpposed = false) {
+    function evaluateV5Roll(regularResults, hungerResults, difficulty, isOpposed = true) {
       let regularSuccesses = 0, regularTens = 0;
       regularResults.forEach(d => {
         if (d >= 6) regularSuccesses++;
@@ -4286,7 +4151,6 @@
     }
 
     window.performRoll = function() {
-      playGothicDiceRollSound();
 
       const totalPool = state.pool;
       const hungerCount = Math.min(totalPool, state.hunger);
@@ -4300,12 +4164,6 @@
 
       const evaluation = evaluateV5Roll(regularResults, hungerResults, state.difficulty, state.isOpposed);
 
-      if (evaluation.outcomeType === 'critical' || evaluation.outcomeType === 'messy') {
-        playGothicCriticalSound();
-      } else if (evaluation.outcomeType === 'bestial') {
-        playBeastFailureSound();
-      }
-
       const rollData = {
         id: 'roll_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5),
         type: 'standard',
@@ -4314,7 +4172,7 @@
         role: state.role,
         totalPool,
         difficulty: state.difficulty,
-        isOpposed: state.isOpposed,
+        isOpposed: true,
         regularResults,
         hungerResults,
         evaluation,
@@ -4327,11 +4185,8 @@
     };
 
     window.performRouseCheck = function() {
-      playGothicDiceRollSound();
       const d10 = Math.floor(Math.random() * 10) + 1;
       const passed = d10 >= 6;
-
-      if (!passed) playBeastFailureSound();
 
       const rouseData = {
         id: 'rouse_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5),
@@ -4406,7 +4261,6 @@
 
     window.executeWillpowerReroll = function() {
       if (!state.pendingWillpowerRoll || state.selectedDiceForReroll.size === 0) return;
-      playGothicDiceRollSound();
 
       const roll = state.pendingWillpowerRoll;
       state.selectedDiceForReroll.forEach(idx => {
